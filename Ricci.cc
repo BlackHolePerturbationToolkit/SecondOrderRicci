@@ -11,6 +11,7 @@
 #include <boost/multi_array.hpp>
 #include "h1.h"
 #include "R2.h"
+#include "utils.h"
 
 using namespace std;
 using boost::multi_array;
@@ -34,6 +35,9 @@ int main(int argc, char* argv[])
   for(int m3=-l3; m3<=l3; ++m3)
   for(int i3=1; i3<=10; ++i3)
   {
+    if(((i3<=7) && isOdd(l3+m3)) || ((i3>7) && isEven(l3+m3)))
+      continue;
+
     /* Sum over l1, l2, m1, m2 = m3-m1 */
     vector<complex<double>> tmp(r.size(), 0.0);
     for(int l1=0; l1<=lmax; ++l1)
