@@ -14,6 +14,8 @@
 using namespace std;
 using boost::multi_array;
 typedef boost::multi_array_types::extent_range range;
+typedef boost::multi_array_types::index_range irange;
+typedef boost::multi_array<complex<double>,4> field_type;
 
 const double M = 1.0;
 
@@ -112,8 +114,8 @@ complex<double> d2hdr2(int i, int l, int m, double r, double f, double fp, doubl
 }
 
 /* Read HDF5 files containing first order fields */
-void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp, multi_array<complex<double>,4> &h,
-             multi_array<complex<double>,4> &dh, multi_array<complex<double>,4> &ddh)
+void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
+             field_type &h, field_type &dh, field_type &ddh)
 {
   cout << "Reading first order fields" << endl;
 
@@ -245,12 +247,10 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp, multi_arr
       int i = fields[it];
       double a = a_il(i, l);
       for(int j=0; j<N; ++j) {
-        multi_array<complex<double>, 1> hbarj(boost::extents[range(1,11)]);
-        multi_array<complex<double>, 1> dhbarj(boost::extents[range(1,11)]);
-        for(int ii=1; ii<=10; ++ii) {
-          hbarj[ii] = h[ii][l][m][j];
-          dhbarj[ii] = dh[ii][l][m][j];
-        }
+        field_type::array_view<1>::type hbarj = h[boost::indices[irange()][l][m][j]];
+        field_type::array_view<1>::type dhbarj = dh[boost::indices[irange()][l][m][j]];
+        hbarj.reindex(1);
+        dhbarj.reindex(1);
         const double rj = r[j], fj = f[j], fpj = fp[j];
         const complex<double> ddhbar = d2hdr2(i, l, m, rj, fj, fpj, r0, hbarj, dhbarj);
         const complex<double> hbar  = hbarj[i];
