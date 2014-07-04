@@ -14,3 +14,6 @@ struct lm_mode
 
 lm_mode filenameToMode(std::string filename);
 std::vector<std::string> list_files(std::string dirname);
+
+bool isOdd(int n);
+bool isEven(int n);

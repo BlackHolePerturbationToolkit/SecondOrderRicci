@@ -260,6 +260,18 @@ int main(int argc, char* argv[])
         ddh[i][l][m][j] = a*(ddhbar - 2.0*(dhbar - hbar/rj)/rj)/rj;
       }
     }
+
+    /* Negative m modes */
+    double sign = isOdd(m) ? -1.0 : 1.0;
+    for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
+      int i = fields[it];
+      for(int j=0; j<N; ++j) {
+        h[i][l][-m][j] = sign*conj(h[i][l][m][j]);
+        dh[i][l][-m][j] = sign*conj(dh[i][l][m][j]);
+        ddh[i][l][-m][j] = sign*conj(ddh[i][l][m][j]);
+      }
+    }
+
     cout << "done" << endl;
   }
 
