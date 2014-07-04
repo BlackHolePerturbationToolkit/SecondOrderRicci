@@ -15,6 +15,8 @@
 using namespace std;
 using boost::multi_array;
 
+typedef boost::multi_array_types::extent_range range;
+
 double a_il(int i, int l) {
   double a = pow(2, -0.5);
   switch(i) {
@@ -37,17 +39,25 @@ double a_il(int i, int l) {
   return a;
 }
 
-complex<double> d2hdr2(int i, int l, int m, double r, double f, double fp, vector<complex<double>> hbar, vector<complex<double>> dhbar, double M, double r0)
+/*
+ * Given the field and its first derivative, use the field equations to compute
+ * the second derivative. This assumes a circular orbit and requires the
+ * orbital radius r0, spacetime mass M, field indices (i, l, m), radial grid
+ * points r, f = 1-2M/r and fp = df/dr.
+ */
+complex<double> d2hdr2(int i, int l, int m, double r, double f, double fp,
+   multi_array<complex<double>, 1> hbar, multi_array<complex<double>, 1> dhbar,
+   double M, double r0)
 {
   double Omega = sqrt(M)*pow(r0, -1.5);
   complex<double> dt = - complex<double>(0.0, m)*Omega;
   complex<double> ddhbar;
   switch(i) {
     case 1:
-      ddhbar = -(fp/f)*dhbar[1-1] + hbar[1-1]*(-Omega*Omega*m*m)/(f*f)
-               + hbar[1-1]*((2.0*M)/r0 + l*(l+1))/(f*r0*r0)
-               + 4.0/(f*f)*(0.5*f*fp*dhbar[1-1] - 0.5*fp*dt*hbar[2-1]
-               + f*f/(2.0*r0*r0)*(hbar[1-1] - f*hbar[3-1] - hbar[5-1] - f*hbar[6-1]));
+      ddhbar = -(fp/f)*dhbar[1] + hbar[1]*(-Omega*Omega*m*m)/(f*f)
+               + hbar[1]*((2.0*M)/r0 + l*(l+1))/(f*r0*r0)
+               + 4.0/(f*f)*(0.5*f*fp*dhbar[1] - 0.5*fp*dt*hbar[2]
+               + f*f/(2.0*r0*r0)*(hbar[1] - f*hbar[3] - hbar[5] - f*hbar[6]));
       break;
     case 2:
       ddhbar = - ((dhbar[2]*fp)/f) + (4.*(-(dt*hbar[1]*fp)/2. + (dhbar[2]*f*fp)/2.
@@ -165,84 +175,92 @@ int main(int argc, char* argv[])
   cout << "Grid size: [" << r.front() << ", " << r.back() << "] (" << N << " points)" << endl;
   cout << "Worldline: r_0 = " << r0 << " (index " << r0i << ")" << endl;
   cout << "Modes: (" << modes.size() << " total, l_max = " << l_max << ")" << endl;
-  for (auto mode: modes)
-  {
-    cout << "[" << mode.l << ", " << mode.m << "] ";
-  }
-  cout << endl;
 
   /* Read the first order data */
-  /* FIXME: This is wasteful of memory by up to a factor of 4, but it probably doesn't matter */
-  multi_array<complex<double>, 4> h(boost::extents[10][l_max+1][2*l_max+1][N]);
-  multi_array<complex<double>, 4> dh(boost::extents[10][l_max+1][2*l_max+1][N]);
-  multi_array<complex<double>, 4> ddh(boost::extents[10][l_max+1][2*l_max+1][N]);
-  fill(h.origin(), h.origin() + h.size(), 0.0);
-  fill(dh.origin(), dh.origin() + dh.size(), 0.0);
-  fill(ddh.origin(), ddh.origin() + ddh.size(), 0.0);
+  multi_array<complex<double>, 4> h(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+  multi_array<complex<double>, 4> dh(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+  multi_array<complex<double>, 4> ddh(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+
+  fill(h.data(), h.data() + h.num_elements(), 0.0);
+  fill(dh.data(), dh.data() + dh.num_elements(), 0.0);
+  fill(ddh.data(), ddh.data() + ddh.num_elements(), 0.0);
 
   for(auto file: files)
   {
     lm_mode lm = filenameToMode(file);
-    int l = lm.l;
-    int m = lm.m;
+    const int l = lm.l;
+    const int m = lm.m;
+    cout << "Reading mode l = " << l << ", m = " << m << " ... ";
 
     H5F h5_file(file, H5F_ACC_RDONLY);
     H5D dataset(h5_file, "inhom");
     H5S dataspace(dataset);
 
-    /* Check the dataset is a 2D array */
+    /* Check the dataset is a 2D array or the right size */
     const int rank = dataspace.getSimpleExtentNDims();
     assert(rank == 2);
 
     vector<hsize_t> size = dataspace.getSimpleExtentDims();
     assert(size[0] == N);
+    hsize_t num_fields = size[1];
 
-    H5S memspace(size);
-    multi_array<double, 2> data(boost::extents[size[0]][size[1]]);
-    multi_array<complex<double>, 2> hbar(boost::extents[size[1]][N]);
-    multi_array<complex<double>, 2> dhbar(boost::extents[size[1]][N]);
-    multi_array<complex<double>, 2> ddhbar(boost::extents[size[1]][N]);
-    H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, data.data());
     vector<int> fields;
     if( (l+m) % 2 == 0) {
       if (l==1) {
-        assert(size[1] == 4*6);
+        assert(num_fields == 4*6);
         fields = {1, 3, 5, 6, 2, 4};
       } else {
-        assert(size[1] == 4*7);
+        assert(num_fields == 4*7);
         fields = {1, 3, 5, 6, 7, 2, 4};
       }
     } else {
       if (l==1) {
-        assert(size[1] == 4*2);
+        assert(num_fields == 4*2);
         fields = {9, 8};
       } else {
-        assert(size[1] == 4*3);
+        assert(num_fields == 4*3);
         fields = {9, 10, 8};
       }
     }
-    for(vector<int>::size_type i=0; i!=fields.size(); ++i) {
-      double a = a_il(fields[i], l);
-      for(int j=0; j<size[0]; ++j) {
-        hbar[i][j] = complex<double>(data[j][2*i], data[j][2*i+1]);
-        dhbar[i][j] = complex<double>(data[j][2*i+2], data[j][2*i+3]);
-        h[fields[i]-1][l][m][j] = a*hbar[i][j]/r[j];
-        dh[fields[i]-1][l][m][j] = a*(dhbar[i][j] - hbar[i][j]/r[j])/r[j];
+
+    /* Read data for a single dataset */
+    H5S memspace(size);
+    multi_array<double, 2> data(boost::extents[N][num_fields]);
+    H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, data.data());
+
+    /* Transfer the data to the appropriate locations */
+    /* The field and its first derivative */
+    for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
+      int i = fields[it];
+      double a = a_il(i, l);
+      for(int j=0; j<N; ++j) {
+        const complex<double> hbar(data[j][2*it], data[j][2*it+1]);
+        const complex<double> dhbar(data[j][2*it+2], data[j][2*it+3]);
+        const double rj = r[j];
+        h[i][l][m][j] = a*hbar/rj;
+        dh[i][l][m][j] = a*(dhbar - hbar/rj)/rj;
       }
     }
 
-    for(vector<int>::size_type i=0; i!=fields.size(); ++i) {
-      double a = a_il(fields[i], l);
-      for(int j=0; j<size[0]; ++j) {
-        vector<complex<double>> hbarj(10), dhbarj(10);
-        for(int k=0; k<10; ++k) {
-          hbarj[k] = h[k][l][m][j];
-          dhbarj[k] = dh[k][l][m][j];
+    /* Second derivative of the field */
+    for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
+      int i = fields[it];
+      double a = a_il(i, l);
+      for(int j=0; j<N; ++j) {
+        multi_array<complex<double>, 1> hbarj(boost::extents[range(1,11)]);
+        multi_array<complex<double>, 1> dhbarj(boost::extents[range(1,11)]);
+        for(int ii=1; ii<=10; ++ii) {
+          hbarj[ii] = h[ii][l][m][j];
+          dhbarj[ii] = dh[ii][l][m][j];
         }
-        ddhbar[i][j] = d2hdr2(i, l, m, r[j], f[j], fp[j], hbarj, dhbarj, M, r0);
-        ddh[fields[i]-1][l][m][j] = a*(ddhbar[i][j] - 2.0*(dhbar[i][j] - hbar[i][j]/r[j])/r[j])/r[j];
+        const double rj = r[j], fj = f[j], fpj = fp[j];
+        const complex<double> ddhbar = d2hdr2(i, l, m, rj, fj, fpj, hbarj, dhbarj, M, r0);
+        const complex<double> hbar  = hbarj[i];
+        const complex<double> dhbar = dhbarj[i];
+        ddh[i][l][m][j] = a*(ddhbar - 2.0*(dhbar - hbar/rj)/rj)/rj;
       }
     }
+    cout << "done" << endl;
   }
 
   return 0;
