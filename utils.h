@@ -6,6 +6,9 @@
  *
  */
 
+#include <string>
+#include <vector>
+
 struct lm_mode
 {
   int l;
