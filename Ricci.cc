@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
     hsize_t num_fields = size[1];
 
     vector<int> fields;
-    if( (l+m) % 2 == 0) {
+    if (isEven(l+m)) {
       if (l==1) {
         assert(num_fields == 4*6);
         fields = {1, 3, 5, 6, 2, 4};
