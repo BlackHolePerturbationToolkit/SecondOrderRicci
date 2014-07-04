@@ -1,3 +1,11 @@
+/*
+ * Copyright 2014 Barry Wardell
+ *
+ * This file is distributed under the University of Illinois/NCSA
+ * Open Source License. See LICENSE file for details.
+ *
+ */
+
 #include <boost/multi_array.hpp>
 
 void read_h1(std::vector<double> &r, std::vector<double> &f, std::vector<double> &fp,
