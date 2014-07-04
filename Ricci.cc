@@ -106,31 +106,70 @@ int main(int argc, char* argv[])
   const double M = 1.0;
 
   /* Read input HDF5 files containing first order fields */
+  cout << "Reading first order fields" << endl;
+
+  /* Determine all available modes */
   vector<string> files = list_files("../h1_fields");
 
-  /* FIXME: don't hardcode these */
-  const int l_max = 23;   /* Number of l modes */
-  const int N     = 210;  /* Number of grid points */
-  const int r0i   = 23;   /* Index of worldline point */
+  vector<lm_mode> modes;
+  for (auto file: files) {
+    modes.push_back(filenameToMode(file));
+  }
 
-  /* Read the grid coordinates - assume the same for all fields */
-  vector<double> r(N), f(N), fp(N);
-  double Omega;
+  int l_max = 0;
+  for (auto mode: modes) {
+    if (mode.l > l_max)
+      l_max = mode.l;
+  }
+
+  /* Read the grid structure - assume the same for all fields */
+  int N;     /* Number of grid points */
+  int r0i;   /* Index of worldline point */
+  double r0; /* Radius of the worldline point */
+  vector<double> r, f, fp;
   {
     H5F h5_file(files[0], H5F_ACC_RDONLY);
     H5D dataset(h5_file, "grid");
     H5S dataspace(dataset);
-    vector<hsize_t> gridSize = {N};
+
+    const int rank = dataspace.getSimpleExtentNDims();
+    assert(rank == 1);
+
+    vector<hsize_t> gridSize = dataspace.getSimpleExtentDims();
+    N = gridSize[0];
+    r.resize(N);
+    f.resize(N);
+    fp.resize(N);
+
     H5S memspace(gridSize);
 
     H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, r.data());
-    Omega = sqrt(M) * pow(r[r0i], -1.5);
     for(int i=0; i<N; ++i) {
       f[i] = 1.0 - 2.0*M/r[i];
       fp[i] = 2.0*M/(r[i]*r[i]);
     }
+
+    /* Determine the radius of the worldline point */
+    H5A r0index(dataset.getId(), "r0index");
+
+    H5S r0_dataspace(r0index);
+    assert(r0_dataspace.getSimpleExtentNDims() == 1);
+
+    vector<hsize_t> r0_dims = r0_dataspace.getSimpleExtentDims();
+    assert(r0_dims[0] == 1);
+
+    H5Aread(r0index.getId(), H5T_NATIVE_INT, &r0i);
+    r0 = r[r0i];
   }
-  const double r0 = r[r0i];
+
+  cout << "Grid size: [" << r.front() << ", " << r.back() << "] (" << N << " points)" << endl;
+  cout << "Worldline: r_0 = " << r0 << " (index " << r0i << ")" << endl;
+  cout << "Modes: (" << modes.size() << " total, l_max = " << l_max << ")" << endl;
+  for (auto mode: modes)
+  {
+    cout << "[" << mode.l << ", " << mode.m << "] ";
+  }
+  cout << endl;
 
   /* Read the first order data */
   /* FIXME: This is wasteful of memory by up to a factor of 4, but it probably doesn't matter */
