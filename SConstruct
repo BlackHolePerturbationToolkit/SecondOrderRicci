@@ -20,7 +20,7 @@ env['GIT_VERSION'] = "$(shell sh -c 'git describe --dirty --always 2>/dev/null |
 env['CXX']      = 'clang++'
 
 
-sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'Ricci.cc', 'utils.cc']
+sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'R2.cc', 'Ricci.cc', 'utils.cc']
 executable = 'Ricci'
 
 Program(executable, sources)
