@@ -8,57 +8,12 @@
 
 #include <vector>
 #include <complex>
-#include <iostream>
-#include <regex>
-#include <dirent.h>
 #include <boost/multi_array.hpp>
 #include "h5wrapper.h"
+#include "utils.h"
 
 using namespace std;
 using boost::multi_array;
-
-/* Return a list of all files in a directory */
-vector<string> list_files(string dirname)
-{
-  DIR *dir;
-  struct dirent *ent;
-  vector<string> files;
-
-  dir = opendir(dirname.c_str());
-  if (dir != NULL) {
-    while ((ent = readdir(dir)) != NULL) {
-      if(ent->d_type == DT_REG) {
-        files.push_back(dirname + '/' + ent->d_name);
-      }
-    }
-    closedir(dir);
-  } else {
-    cerr << "Cannot open directory: " << dirname << endl;
-  }
-
-  sort(files.begin(), files.end());
-
-  return files;
-}
-
-struct lm_mode
-{
-  int l;
-  int m;
-};
-
-struct lm_mode filenameToMode(string filename)
-{
-  smatch match;
-  regex  pattern("h1-l([\\d]+)m([\\d]+).h5");
-
-  regex_search(filename, match, pattern);
-  assert(match.size() == 3);
-  int l = stoi(match[1]);
-  int m = stoi(match[2]);
-  struct lm_mode lm = {l, m};
-  return lm;
-}
 
 double a_il(int i, int l) {
   double a = pow(2, -0.5);
@@ -188,7 +143,7 @@ int main(int argc, char* argv[])
 
   for(auto file: files)
   {
-    struct lm_mode lm = filenameToMode(file);
+    lm_mode lm = filenameToMode(file);
     int l = lm.l;
     int m = lm.m;
 
