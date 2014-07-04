@@ -208,10 +208,10 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
     if (isEven(l+m)) {
       if (l==1) {
         assert(num_fields == 4*6);
-        fields = {1, 3, 5, 6, 2, 4};
+        fields = {1, 6, 5, 3, 2, 4};
       } else {
         assert(num_fields == 4*7);
-        fields = {1, 3, 5, 6, 7, 2, 4};
+        fields = {1, 6, 5, 3, 7, 2, 4};
       }
     } else {
       if (l==1) {
@@ -234,8 +234,8 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
       int i = fields[it];
       double a = a_il(i, l);
       for(int j=0; j<N; ++j) {
-        const complex<double> hbar(data[j][2*it], data[j][2*it+1]);
-        const complex<double> dhbar(data[j][2*it+2], data[j][2*it+3]);
+        const complex<double> hbar(data[j][4*it], data[j][4*it+1]);
+        const complex<double> dhbar(data[j][4*it+2], data[j][4*it+3]);
         const double rj = r[j];
         h[i][l][m][j] = a*hbar/rj;
         dh[i][l][m][j] = a*(dhbar - hbar/rj)/rj;
