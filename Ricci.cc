@@ -14,6 +14,7 @@
 
 using namespace std;
 using boost::multi_array;
+typedef boost::multi_array_types::extent_range range;
 
 int main(int argc, char* argv[])
 {
@@ -21,9 +22,30 @@ int main(int argc, char* argv[])
   vector<double> r, f, fp;
   multi_array<complex<double>, 4> h, dh, ddh;
   read_h1(r, f, fp, h, dh, ddh);
-  vector<complex<double>> r2_1 = R2_1(r, f, fp, h, dh, 2, 2, 2, 0, 2, 2);
-  for(auto r2: r2_1)
-    cout << r2 << endl;
+  const int lmax = h[1].size()-1;
+  const int N = r.size();
+
+  /* Compute the source */
+  multi_array<complex<double>,4> src(boost::extents[range(1,11)][lmax+1][range(-lmax,lmax+1)][N]);
+  fill(src.data(), src.data() + src.num_elements(), 0.0);
+
+  /* Loop over i3, l3, m3 */
+  for(int l3=0; l3<=3; ++l3)
+  for(int m3=-l3; m3<=l3; ++m3)
+  for(int i3=1; i3<=10; ++i3)
+  {
+    /* Sum over l1, l2, m1, m2 = m3-m1 */
+    vector<complex<double>> tmp(r.size(), 0.0);
+    for(int l1=0; l1<=lmax; ++l1)
+      for(int l2=max(0,abs(l3-l1)); l2<=min(l3+l1, lmax); ++l2)
+        for(int m1=-l1; m1<=l1; ++m1) {
+          if(abs(m3 - m1) > l2)
+            continue;
+          tmp = R2_1(r, f, fp, h, dh, l3, m3, l1, m1, l2, m3-m1);
+          for(int j=0; j< tmp.size(); ++j)
+            src[i3][l3][m3][j] += tmp[j];
+        }
+  }
 
   return 0;
 }
