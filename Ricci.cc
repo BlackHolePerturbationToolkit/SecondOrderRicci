@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
     lm_mode lm = filenameToMode(file);
     const int l = lm.l;
     const int m = lm.m;
-    cout << "Reading mode l = " << l << ", m = " << m << " ... ";
+    cout << "[" << l << ", " << m << "] ";
 
     H5F h5_file(file, H5F_ACC_RDONLY);
     H5D dataset(h5_file, "inhom");
@@ -271,9 +271,8 @@ int main(int argc, char* argv[])
         ddh[i][l][-m][j] = sign*conj(ddh[i][l][m][j]);
       }
     }
-
-    cout << "done" << endl;
   }
+  cout << endl;
 
   return 0;
 }
