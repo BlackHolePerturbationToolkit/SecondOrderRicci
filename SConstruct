@@ -12,7 +12,7 @@ if ARGUMENTS.get('VERBOSE') != '1':
     env['LINKCOMSTR'] = "Linking $TARGET"
 
 # Build options
-env['LIBS']     = ['gsl', 'm', 'gslcblas', 'mpi_cxx', 'mpi', 'hdf5', 'hdf5_hl', 'boost_program_options-mt']
+env['LIBS']     = ['gsl', 'm', 'hdf5']
 env['LIBPATH']  = ['/usr/local/lib/']
 env['LINKFLAGS']= ['-fopenmp']
 env['CPPPATH']  = ['/usr/local/include']
