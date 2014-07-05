@@ -136,8 +136,8 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
   }
 
   /* Read the grid structure - assume the same for all fields */
-  int N;     /* Number of grid points */
-  int r0i;   /* Index of worldline point */
+  size_t N;  /* Number of grid points */
+  size_t r0i;   /* Index of worldline point */
   double r0; /* Radius of the worldline point */
   {
     H5F h5_file(files[0], H5F_ACC_RDONLY);
@@ -156,7 +156,7 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
     H5S memspace(gridSize);
 
     H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, r.data());
-    for(int i=0; i<N; ++i) {
+    for(size_t i=0; i<N; ++i) {
       f[i] = 1.0 - 2.0*M/r[i];
       fp[i] = 2.0*M/(r[i]*r[i]);
     }
@@ -235,7 +235,7 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
     for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
       int i = fields[it];
       double a = a_il(i, l);
-      for(int j=0; j<N; ++j) {
+      for(size_t j=0; j<N; ++j) {
         const complex<double> hbar(data[j][4*it], data[j][4*it+1]);
         const complex<double> dhbar(data[j][4*it+2], data[j][4*it+3]);
         const double rj = r[j];
@@ -248,7 +248,7 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
     for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
       int i = fields[it];
       double a = a_il(i, l);
-      for(int j=0; j<N; ++j) {
+      for(size_t j=0; j<N; ++j) {
         field_type::array_view<1>::type hbarj = h[boost::indices[irange()][l][m][j]];
         field_type::array_view<1>::type dhbarj = dh[boost::indices[irange()][l][m][j]];
         hbarj.reindex(1);
@@ -265,7 +265,7 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
     double sign = isOdd(m) ? -1.0 : 1.0;
     for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
       int i = fields[it];
-      for(int j=0; j<N; ++j) {
+      for(size_t j=0; j<N; ++j) {
         h[i][l][-m][j] = sign*conj(h[i][l][m][j]);
         dh[i][l][-m][j] = sign*conj(dh[i][l][m][j]);
         ddh[i][l][-m][j] = sign*conj(ddh[i][l][m][j]);
