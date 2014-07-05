@@ -37,10 +37,10 @@ vector<complex<double>> R2_7(const double M, const double r0,
   const double sqrtl9 = sqrt(-6. + l1d + l1d*l1d);
   const double sqrtl10 = sqrt(l1d*(1. + l1d)*(-2. + l2d + l2d*l2d));
   const double sqrtl11 = sqrt((-2. + l1d + l1d*l1d)*l2d);
-  const double sqrtl12 = 1/sqrt(1. + l2d);
+  const double sqrtl12 = 1./sqrt(1. + l2d);
   const double sqrtl13 = sqrt(-6. + l2d + l2d*l2d);
   const double sqrtl14 = sqrt(-2. + l2d + l2d*l2d);
-  const double sqrtl15 = 1/sqrt(1. + l1d);
+  const double sqrtl15 = 1./sqrt(1. + l1d);
   const double sqrtl16 = sqrt((-2. + l1d + l1d*l1d)*l2d*(1. + l2d));
   const double sqrtl17 = sqrt(l1d*(-2. + l2d + l2d*l2d));
   const double sqrtl18 = sqrt(l1d*(-2. + l1d*l1d + l1d));
