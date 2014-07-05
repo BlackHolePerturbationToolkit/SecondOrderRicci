@@ -44,7 +44,7 @@ vector<string> list_files(string dirname)
 lm_mode filenameToMode(string filename)
 {
   smatch match;
-  regex  pattern("h1-l([\\d]+)m([\\d]+).h5");
+  regex  pattern("h1-l([0-9]+)m([0-9]+).h5");
 
   regex_search(filename, match, pattern);
   assert(match.size() == 3);
