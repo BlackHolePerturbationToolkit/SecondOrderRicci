@@ -137,7 +137,7 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
 
   /* Read the grid structure - assume the same for all fields */
   size_t N;  /* Number of grid points */
-  size_t r0i;   /* Index of worldline point */
+  int r0i;   /* Index of worldline point */
   double r0; /* Radius of the worldline point */
   {
     H5F h5_file(files[0], H5F_ACC_RDONLY);
