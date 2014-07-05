@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "h5wrapper.h"
 #include <complex>
+#include <iostream>
 
 using namespace std;
 using boost::multi_array;
