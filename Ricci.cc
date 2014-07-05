@@ -8,10 +8,12 @@
 
 #include <vector>
 #include <complex>
+#include <sstream>
 #include <boost/multi_array.hpp>
 #include "h1.h"
 #include "R2.h"
 #include "utils.h"
+#include "h5wrapper.h"
 
 using namespace std;
 using boost::multi_array;
@@ -94,6 +96,24 @@ int main(int argc, char* argv[])
       }
     }
   }
+  
+  /* Output result */
+  H5F src_h5("src.h5", H5F_ACC_TRUNC);
+  for(vector<ilm_mode>::iterator mode = modes.begin(); mode < modes.end(); mode++) {
+    int i = mode->i;
+    int l = mode->l;
+    int m = mode->m;
 
+    stringstream dsName;
+    dsName << "src i=" << i << " l=" << l << " m=" << m;
+
+    multi_array<double,2> data(boost::extents[N][2]);
+    for(int j=0; j<N; ++j) {
+      data[j][0] = real(src[i][l][m][j]);
+      data[j][1] = imag(src[i][l][m][j]);
+    }
+    
+    src_h5.write_dataset(dsName.str(), data);
+  }
   return 0;
 }
