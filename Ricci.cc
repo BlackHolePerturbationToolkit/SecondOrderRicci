@@ -117,6 +117,7 @@ int main(int argc, char* argv[])
     cout << "Finished " << status << " of " << num_modes << " modes" << endl;
   
   /* Output result */
+  cout << "Saving results" << endl;
   H5F src_h5("src.h5", H5F_ACC_TRUNC);
   for(vector<ilm_mode>::iterator mode = modes.begin(); mode < modes.end(); mode++) {
     int i = mode->i;
@@ -134,5 +135,6 @@ int main(int argc, char* argv[])
     
     src_h5.write_dataset(dsName.str(), data);
   }
+  cout << "Done" << endl;
   return 0;
 }
