@@ -16,12 +16,13 @@
 using std::complex;
 using std::vector;
 
-vector<complex<double>> R2_6(const vector<double> &r, const vector<double> &f, const vector<double> &fp,
+vector<complex<double>> R2_6(const double M, const double r0,
+                     const vector<double> &r, const vector<double> &f, const vector<double> &fp,
                      const field_type &h, const field_type &dh, const field_type &ddh,
                      int l3, int m3, int l1, int m1, int l2, int m2) {
   vector<complex<double>> ricci(r.size());
   const complex<double> I(0.0, 1.0);
-  const double Omega = sqrt(1./1000.);
+  const double Omega = sqrt(M/(r0*r0*r0));
   const double Omega_2 = Omega*Omega;
   const double l1d = l1, m1d = m1, l2d = l2, m2d = m2;
   const double sqrtl1 = sqrt(l1d*(1. + l1d));

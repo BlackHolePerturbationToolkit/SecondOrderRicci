@@ -23,6 +23,8 @@ using namespace std;
 using boost::multi_array;
 typedef boost::multi_array_types::extent_range range;
 
+const double M = 1.0;
+
 int main(int argc, char* argv[])
 {
 #ifdef _OPENMP
@@ -32,8 +34,9 @@ int main(int argc, char* argv[])
 
   /* Read in first-order fields */
   vector<double> r, f, fp;
+  double r0;
   multi_array<complex<double>, 4> h, dh, ddh;
-  read_h1(r, f, fp, h, dh, ddh);
+  read_h1(r0, r, f, fp, h, dh, ddh);
   const int lmax = h[1].size()-1;
   const int N = r.size();
 
@@ -71,34 +74,34 @@ int main(int argc, char* argv[])
             continue;
           switch(i3) {
             case 1:
-              tmp = R2_1(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_1(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 2:
-              tmp = R2_2(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_2(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 3:
-              tmp = R2_3(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_3(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 4:
-              tmp = R2_4(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_4(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 5:
-              tmp = R2_5(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_5(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 6:
-              tmp = R2_6(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_6(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 7:
-              tmp = R2_7(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_7(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 8:
-              tmp = R2_8(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_8(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 9:
-              tmp = R2_9(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_9(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 10:
-              tmp = R2_10(r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_10(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
           }
           for(size_t j = 0; j < tmp.size(); ++j)

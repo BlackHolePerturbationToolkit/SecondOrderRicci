@@ -116,7 +116,7 @@ complex<double> d2hdr2(int i, int l, int m, double r, double f, double fp, doubl
 }
 
 /* Read HDF5 files containing first order fields */
-void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
+void read_h1(double &r0, vector<double> &r, vector<double> &f, vector<double> &fp,
              field_type &h, field_type &dh, field_type &ddh)
 {
   cout << "Reading first order fields" << endl;
@@ -138,7 +138,6 @@ void read_h1(vector<double> &r, vector<double> &f, vector<double> &fp,
   /* Read the grid structure - assume the same for all fields */
   size_t N;  /* Number of grid points */
   int r0i;   /* Index of worldline point */
-  double r0; /* Radius of the worldline point */
   {
     H5F h5_file(files[0], H5F_ACC_RDONLY);
     H5D dataset(h5_file, "grid");
