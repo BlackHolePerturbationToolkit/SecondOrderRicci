@@ -11,6 +11,7 @@
 #include "h5wrapper.h"
 #include <complex>
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 using boost::multi_array;
