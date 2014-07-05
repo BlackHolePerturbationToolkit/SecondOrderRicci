@@ -116,13 +116,13 @@ complex<double> d2hdr2(int i, int l, int m, double r, double f, double fp, doubl
 }
 
 /* Read HDF5 files containing first order fields */
-void read_h1(double &r0, vector<double> &r, vector<double> &f, vector<double> &fp,
+void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f, vector<double> &fp,
              field_type &h, field_type &dh, field_type &ddh)
 {
-  cout << "Reading first order fields" << endl;
+  cout << "Reading first order fields from directory: " << dir << endl;
 
   /* Determine all available modes */
-  vector<string> files = list_files("../h1_fields");
+  vector<string> files = list_files(dir);
 
   vector<lm_mode> modes;
   for (auto file: files) {

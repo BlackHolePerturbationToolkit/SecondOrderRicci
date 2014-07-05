@@ -27,16 +27,23 @@ const double M = 1.0;
 
 int main(int argc, char* argv[])
 {
+  if(argc != 2)
+  {
+    cout << "Usage: " << argv[0] << " <dir>" << endl;
+    exit(1);
+  }
+
 #ifdef _OPENMP
   int num_threads = omp_get_max_threads();
   cout << "Running with " << num_threads << " OpenMP threads" << endl;
 #endif
 
   /* Read in first-order fields */
+  string dir(argv[1]);
   vector<double> r, f, fp;
   double r0;
   multi_array<complex<double>, 4> h, dh, ddh;
-  read_h1(r0, r, f, fp, h, dh, ddh);
+  read_h1(dir, r0, r, f, fp, h, dh, ddh);
   const int lmax = h[1].size()-1;
   const int N = r.size();
 
