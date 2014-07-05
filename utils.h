@@ -9,6 +9,13 @@
 #include <string>
 #include <vector>
 
+struct ilm_mode
+{
+  int i;
+  int l;
+  int m;
+};
+
 struct lm_mode
 {
   int l;
