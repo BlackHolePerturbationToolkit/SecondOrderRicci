@@ -38,13 +38,13 @@ int main(int argc, char* argv[])
   const int N = r.size();
 
   /* Compute the source */
-  multi_array<complex<double>,4> src(boost::extents[range(1,11)][lmax+1][range(-lmax,lmax+1)][N]);
+  multi_array<complex<double>,4> src(boost::extents[range(1,11)][lmax+1][lmax+1][N]);
   fill(src.data(), src.data() + src.num_elements(), 0.0);
 
   /* Loop over i3, l3, m3 */
   vector<ilm_mode> modes;
   for(int l3=2; l3<=lmax; ++l3) {
-    for(int m3=-l3; m3<=l3; ++m3) {
+    for(int m3=0; m3<=l3; ++m3) {
       for(int i3=1; i3<=10; ++i3) {
         if(((i3<=7) && isOdd(l3+m3)) || ((i3>7) && isEven(l3+m3)))
           continue;
