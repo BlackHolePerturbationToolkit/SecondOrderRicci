@@ -8,8 +8,12 @@
 
 #include <vector>
 #include <complex>
+#include <iostream>
 #include <sstream>
 #include <boost/multi_array.hpp>
+#ifdef _OPENMP
+#  include <omp.h>
+#endif
 #include "h1.h"
 #include "R2.h"
 #include "utils.h"
@@ -21,6 +25,11 @@ typedef boost::multi_array_types::extent_range range;
 
 int main(int argc, char* argv[])
 {
+#ifdef _OPENMP
+  int num_threads = omp_get_max_threads();
+  cout << "Running with " << num_threads << " OpenMP threads" << endl;
+#endif
+
   /* Read in first-order fields */
   vector<double> r, f, fp;
   multi_array<complex<double>, 4> h, dh, ddh;
@@ -37,19 +46,21 @@ int main(int argc, char* argv[])
   for(int l3=0; l3<=3; ++l3) {
     for(int m3=-l3; m3<=l3; ++m3) {
       for(int i3=1; i3<=10; ++i3) {
+        if(((i3<=7) && isOdd(l3+m3)) || ((i3>7) && isEven(l3+m3)))
+          continue;
         modes.push_back(ilm_mode({i3, l3, m3}));
       }
     }
   }
 
+  int status = 0;
+  const int status_frequency = 4*num_threads;
+  const int num_modes = modes.size();
 #pragma omp parallel for
   for(vector<ilm_mode>::iterator mode = modes.begin(); mode < modes.end(); mode++) {
     int i3 = mode->i;
     int l3 = mode->l;
     int m3 = mode->m;
-
-    if(((i3<=7) && isOdd(l3+m3)) || ((i3>7) && isEven(l3+m3)))
-      continue;
 
     /* Sum over l1, l2, m1, m2 = m3-m1 */
     vector<complex<double>> tmp(r.size(), 0.0);
@@ -95,7 +106,15 @@ int main(int argc, char* argv[])
         }
       }
     }
+
+#pragma omp critical
+    {
+      if(++status % status_frequency == 0)
+        cout << "Finished " << status << " of " << num_modes << " modes" << endl;
+    }
   }
+  if(num_modes % status_frequency != 0)
+    cout << "Finished " << status << " of " << num_modes << " modes" << endl;
   
   /* Output result */
   H5F src_h5("src.h5", H5F_ACC_TRUNC);
