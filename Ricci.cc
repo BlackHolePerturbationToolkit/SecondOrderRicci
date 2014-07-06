@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 
   /* Loop over i3, l3, m3 */
   vector<ilm_mode> modes;
-  for(int l3=2; l3<=lmax; ++l3) {
+  for(int l3=0; l3<=lmax; ++l3) {
     for(int m3=0; m3<=l3; ++m3) {
       for(int i3=1; i3<=10; ++i3) {
         if(((i3<=7) && isOdd(l3+m3)) || ((i3>7) && isEven(l3+m3)))
@@ -74,8 +74,8 @@ int main(int argc, char* argv[])
 
     /* Sum over l1, l2, m1, m2 = m3-m1 */
     vector<complex<double>> tmp(r.size(), 0.0);
-    for(int l1=2; l1<=lmax; ++l1) {
-      for(int l2=max(2,abs(l3-l1)); l2<=min(l3+l1, lmax); ++l2) {
+    for(int l1=0; l1<=lmax; ++l1) {
+      for(int l2=max(0,abs(l3-l1)); l2<=min(l3+l1, lmax); ++l2) {
         for(int m1=-l1; m1<=l1; ++m1) {
           if(abs(m3 - m1) > l2)
             continue;
