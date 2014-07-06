@@ -123,6 +123,8 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
 
   /* Determine all available modes */
   vector<string> files = list_files(dir);
+  if(files.size() == 0)
+    exit(1);
 
   vector<lm_mode> modes;
   for (auto file: files) {
