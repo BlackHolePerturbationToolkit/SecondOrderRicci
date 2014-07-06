@@ -277,48 +277,24 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
 
   /* Include analytic expressions for the l=0 mode */
   for(size_t j=0; j<N; ++j) {
-    complex<double> h1bar, h2bar, h3bar, h6bar, dh1bar, dh2bar, dh3bar, dh6bar;
-    const double rj = r[j], fj = f[j], fpj = fp[j];
-    if(rj<r0) {
-      h1bar = (-1.6710855164206668*(4. + (3. - 1.*r0)*log(1. - 2./r0))*pow(2. - 1.*r[j],3)*(2. + r[j]))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
-      h2bar = 0.0;
-      h3bar = (-1.6710855164206668*(64. - 2.*pow(r[j],3) + (3. - 1.*r0)*log(1. - 2./r0)*(16. + pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
-      h6bar = (-3.3421710328413337*(32. - 1.*pow(r[j],3) + (3. - 1.*r0)*log(1. - 2./r0)*(8. - 1.*pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
-      dh1bar = (-6.684342065682667*(-4. + (-3. + r0)*log((-2. + r0)/r0))*pow(-2. + r[j],2)*(4. + r[j]))/(sqrt((-3. + r0)*r0)*pow(r[j],5));
-      dh2bar = 0.0;
-      dh3bar = (-80.21210478819201*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
-      dh6bar = (-80.21210478819201*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+    if(r[j]<r0) {
+      h[1][0][0][j] = (-1.6710855164206668*(4. + (3. - 1.*r0)*log(1. - 2./r0))*pow(2. - 1.*r[j],3)*(2. + r[j]))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+      h[2][0][0][j] = 0.0;
+      h[3][0][0][j] = (-1.6710855164206668*(64. - 2.*pow(r[j],3) + (3. - 1.*r0)*log(1. - 2./r0)*(16. + pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+      h[6][0][0][j] = (-3.3421710328413337*(32. - 1.*pow(r[j],3) + (3. - 1.*r0)*log(1. - 2./r0)*(8. - 1.*pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+      dh[1][0][0][j] = (-6.684342065682667*(-4. + (-3. + r0)*log((-2. + r0)/r0))*pow(-2. + r[j],2)*(4. + r[j]))/(sqrt((-3. + r0)*r0)*pow(r[j],5));
+      dh[2][0][0][j] = 0.0;
+      dh[3][0][0][j] = (-80.21210478819201*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+      dh[6][0][0][j] = (-80.21210478819201*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
     } else {
-      h1bar = (-1.6710855164206668*((3. - 1.*r0)*(16.*log(r[j]/r0)*(1. - 1.*r[j]) + log(1. - 2./r[j])*pow(2. - 1.*r[j],3)*(2. + r[j])) + 2.*(32. - 2.*r0*pow(r[j],3) - 4.*(3.*r0 + 5.*r[j]) - 1.*(-1.*r0 + r[j])*(r0 + 9.*r[j]) + r[j]*(-1.*pow(r0,2) + 3.*r0*r[j] + 6.*pow(r[j],2)))))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
-      h2bar = 0.0;
-      h3bar = (-1.6710855164206668*((3. - 1.*r0)*(16.*log((-2. + r[j])/r0) + log(1. - 2./r[j])*pow(r[j],3)) + 2.*(32. + pow(r0,2) - 4.*r0*r[j] + 3.*pow(r[j],2) - 1.*r0*pow(r[j],2) + 12.*(-1.*r0 + r[j]))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
-      h6bar = (-3.3421710328413337*(32. + pow(r0,2) - 4.*r0*r[j] + 3.*pow(r[j],2) - 1.*r0*pow(r[j],2) + 12.*(-1.*r0 + r[j]) + (3. - 1.*r0)*(8.*log((-2. + r[j])/r0) - 1.*log(1. - 2./r[j])*pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
-      dh1bar = (-3.3421710328413337*(-4.*(-8. + r0)*(-4. + r0) + 32.*(-3. + r0)*log(1. - 2./r[j]) + 32.*(-3. + r0)*log(r[j]/r0) + r[j]*(48. + r0*(-20. + 3.*r0) - 24.*(-3. + r0)*log(1. - 2./r[j]) - 24.*(-3. + r0)*log(r[j]/r0) + (-3. + r0)*r[j]*(-8. + (3. + 2.*log(1. - 2./r[j]))*r[j]))))/(sqrt((-3. + r0)*r0)*pow(r[j],5));
-      dh2bar = 0.0;
-      dh3bar = (10.026513098524001*(-2.*(-8. + r0)*(-4. + r0) + 16.*(-3. + r0)*log((-2. + r[j])/r0) + r[j]*(8. + (-4. + r0)*r0 - 8.*(-3. + r0)*log((-2. + r[j])/r0) - 2.*(-3. + r0)*r[j])))/(sqrt((-3. + r0)*r0)*(-2. + r[j])*pow(r[j],4));
-      dh6bar = (10.026513098524001*((-8. + r0)*(-4. + r0) - 8.*(-3. + r0)*log((-2. + r[j])/r0) - 1.*(-3. + r0)*r[j]*(4. + r[j])))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+      h[1][0][0][j] = (-1.6710855164206668*((3. - 1.*r0)*(16.*log(r[j]/r0)*(1. - 1.*r[j]) + log(1. - 2./r[j])*pow(2. - 1.*r[j],3)*(2. + r[j])) + 2.*(32. - 2.*r0*pow(r[j],3) - 4.*(3.*r0 + 5.*r[j]) - 1.*(-1.*r0 + r[j])*(r0 + 9.*r[j]) + r[j]*(-1.*pow(r0,2) + 3.*r0*r[j] + 6.*pow(r[j],2)))))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+      h[2][0][0][j] = 0.0;
+      h[3][0][0][j] = (-1.6710855164206668*((3. - 1.*r0)*(16.*log((-2. + r[j])/r0) + log(1. - 2./r[j])*pow(r[j],3)) + 2.*(32. + pow(r0,2) - 4.*r0*r[j] + 3.*pow(r[j],2) - 1.*r0*pow(r[j],2) + 12.*(-1.*r0 + r[j]))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+      h[6][0][0][j] = (-3.3421710328413337*(32. + pow(r0,2) - 4.*r0*r[j] + 3.*pow(r[j],2) - 1.*r0*pow(r[j],2) + 12.*(-1.*r0 + r[j]) + (3. - 1.*r0)*(8.*log((-2. + r[j])/r0) - 1.*log(1. - 2./r[j])*pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+      dh[1][0][0][j] = (-3.3421710328413337*(-4.*(-8. + r0)*(-4. + r0) + 32.*(-3. + r0)*log(1. - 2./r[j]) + 32.*(-3. + r0)*log(r[j]/r0) + r[j]*(48. + r0*(-20. + 3.*r0) - 24.*(-3. + r0)*log(1. - 2./r[j]) - 24.*(-3. + r0)*log(r[j]/r0) + (-3. + r0)*r[j]*(-8. + (3. + 2.*log(1. - 2./r[j]))*r[j]))))/(sqrt((-3. + r0)*r0)*pow(r[j],5));
+      dh[2][0][0][j] = 0.0;
+      dh[3][0][0][j] = (10.026513098524001*(-2.*(-8. + r0)*(-4. + r0) + 16.*(-3. + r0)*log((-2. + r[j])/r0) + r[j]*(8. + (-4. + r0)*r0 - 8.*(-3. + r0)*log((-2. + r[j])/r0) - 2.*(-3. + r0)*r[j])))/(sqrt((-3. + r0)*r0)*(-2. + r[j])*pow(r[j],4));
+      dh[6][0][0][j] = (10.026513098524001*((-8. + r0)*(-4. + r0) - 8.*(-3. + r0)*log((-2. + r[j])/r0) - 1.*(-3. + r0)*r[j]*(4. + r[j])))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
     }
-    multi_array<complex<double>,1> hbarj(boost::extents[range(1,11)]);
-    hbarj[1] = h1bar; hbarj[2] = h2bar; hbarj[3] = h3bar; hbarj[4] = 0.0; hbarj[5] = 0.0;
-    hbarj[6] = h6bar; hbarj[7] = 0.0; hbarj[8] = 0.0; hbarj[9] = 0.0; hbarj[10] = 0.0;
-    multi_array<complex<double>,1> dhbarj(boost::extents[range(1,11)]);
-    dhbarj[1] = dh1bar; dhbarj[2] = dh2bar; dhbarj[3] = dh3bar; dhbarj[4] = 0.0; dhbarj[5] = 0.0;
-    dhbarj[6] = dh6bar; dhbarj[7] = 0.0; dhbarj[8] = 0.0; dhbarj[9] = 0.0; dhbarj[10] = 0.0;
-    const complex<double> ddh1bar = d2hdr2(1, 0, 0, rj, fj, fpj, r0, hbarj, dhbarj);
-    const complex<double> ddh2bar = d2hdr2(2, 0, 0, rj, fj, fpj, r0, hbarj, dhbarj);
-    const complex<double> ddh3bar = d2hdr2(3, 0, 0, rj, fj, fpj, r0, hbarj, dhbarj);
-    const complex<double> ddh6bar = d2hdr2(6, 0, 0, rj, fj, fpj, r0, hbarj, dhbarj);
-    h[1][0][0][j] = a_il(1, 0)*h1bar/rj;
-    h[2][0][0][j] = a_il(2, 0)*h2bar/rj;
-    h[3][0][0][j] = a_il(3, 0)*h3bar/rj;
-    h[6][0][0][j] = a_il(6, 0)*h6bar/rj;
-    dh[1][0][0][j] = a_il(1, 0)*(dh1bar - h1bar/rj)/rj;
-    dh[2][0][0][j] = a_il(2, 0)*(dh2bar - h2bar/rj)/rj;
-    dh[3][0][0][j] = a_il(3, 0)*(dh3bar - h3bar/rj)/rj;
-    dh[6][0][0][j] = a_il(6, 0)*(dh6bar - h6bar/rj)/rj;
-    ddh[1][0][0][j] = a_il(1, 0)*(ddh1bar - 2.0*(dh1bar - h1bar/rj)/rj)/rj;
-    ddh[2][0][0][j] = a_il(2, 0)*(ddh2bar - 2.0*(dh2bar - h2bar/rj)/rj)/rj;
-    ddh[3][0][0][j] = a_il(3, 0)*(ddh3bar - 2.0*(dh3bar - h3bar/rj)/rj)/rj;
-    ddh[6][0][0][j] = a_il(6, 0)*(ddh6bar - 2.0*(dh6bar - h6bar/rj)/rj)/rj;
   }
 }
