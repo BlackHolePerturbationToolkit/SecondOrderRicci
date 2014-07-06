@@ -56,10 +56,10 @@ lm_mode filenameToMode(string filename)
 
 bool isOdd(int n)
 {
-  return (n % 2) == 1;
+  return n % 2;
 }
 
 bool isEven(int n)
 {
-  return (n % 2) == 0;
+  return !isOdd(n);
 }
