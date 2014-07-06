@@ -59,57 +59,57 @@ complex<double> d2hdr2(int i, int l, int m, double r, double f, double fp, doubl
   switch(i) {
     case 1:
       ddhbar = -(fp/f)*dhbar[1] + hbar[1]*(-Omega*Omega*m*m)/(f*f)
-               + hbar[1]*((2.0*M)/r0 + l*(l+1))/(f*r0*r0)
+               + hbar[1]*((2.0*M)/r + l*(l+1))/(f*r*r)
                + 4.0/(f*f)*(0.5*f*fp*dhbar[1] - 0.5*fp*dt*hbar[2]
-               + f*f/(2.0*r0*r0)*(hbar[1] - f*hbar[3] - hbar[5] - f*hbar[6]));
+               + f*f/(2.0*r*r)*(hbar[1] - f*hbar[3] - hbar[5] - f*hbar[6]));
       break;
     case 2:
       ddhbar = - ((dhbar[2]*fp)/f) + (4.*(-(dt*hbar[1]*fp)/2. + (dhbar[2]*f*fp)/2.
-                 + (pow(f,2)*(hbar[2] - hbar[4]))/(2.*pow(r0,2))))/pow(f,2)
-               + (hbar[2]*((2*M)/pow(r0,3) + (l*(1 + l))/pow(r0,2)))/f
-               - (hbar[2]*pow(m,2)*M)/(pow(f,2)*pow(r0,3));
+                 + (pow(f,2)*(hbar[2] - hbar[4]))/(2.*pow(r,2))))/pow(f,2)
+               + (hbar[2]*((2*M)/pow(r,3) + (l*(1 + l))/pow(r,2)))/f
+               + hbar[2]*(-Omega*Omega*m*m)/(f*f);
       break;
     case 3:
-      ddhbar = -((dhbar[3]*fp)/f) + (hbar[3]*((2*M)/pow(r0,3) + (l*(1 + l))/pow(r0,2)))/f
-               -(hbar[3]*pow(m,2)*M)/(pow(f,2)*pow(r0,3))
-               - (2.*(hbar[1] - hbar[5] - (hbar[3] + hbar[6])*(1 - (4*M)/r0)))/(f*pow(r0,2));
+      ddhbar = -((dhbar[3]*fp)/f) + (hbar[3]*((2*M)/pow(r,3) + (l*(1 + l))/pow(r,2)))/f
+               + hbar[3]*(-Omega*Omega*m*m)/(f*f)
+               - (2.*(hbar[1] - hbar[5] - (hbar[3] + hbar[6])*(1 - (4*M)/r)))/(f*pow(r,2));
       break;
     case 4:
-      ddhbar = -((dhbar[4]*fp)/f) + (hbar[4]*((2*M)/pow(r0,3) + (l*(1 + l))/pow(r0,2)))/f
-               + (4.*(-(dt*hbar[5]*fp)/4. + (dhbar[4]*f*fp)/4. - (f*hbar[2]*(l*(1. + l)))/(2.*pow(r0,2))
-               - (3.*f*fp*hbar[4])/(4.*r0)))/pow(f,2) - (hbar[4]*pow(m,2)*M)/(pow(f,2)*pow(r0,3));
+      ddhbar = -((dhbar[4]*fp)/f) + (hbar[4]*((2*M)/pow(r,3) + (l*(1 + l))/pow(r,2)))/f
+               + (4.*(-(dt*hbar[5]*fp)/4. + (dhbar[4]*f*fp)/4. - (f*hbar[2]*(l*(1. + l)))/(2.*pow(r,2))
+               - (3.*f*fp*hbar[4])/(4.*r)))/pow(f,2) + hbar[4]*(-Omega*Omega*m*m)/(f*f);
       break;
     case 5:
-      ddhbar = -((dhbar[5]*fp)/f) + (hbar[5]*((2*M)/pow(r0,3) + (l*(1 + l))/pow(r0,2)))/f
-               + (4.*(-(dt*hbar[4]*fp)/4. + (dhbar[5]*f*fp)/4. - (pow(f,2)*hbar[7])/(2.*pow(r0,2))
-               - (f*(hbar[1] - f*hbar[3] - f*hbar[6])*(l*(1. + l)))/(2.*pow(r0,2))
-               + (f*hbar[5]*(1 - (7*M)/(2.*r0)))/pow(r0,2)))/pow(f,2) - (hbar[5]*pow(m,2)*M)/(pow(f,2)*pow(r0,3));
+      ddhbar = -((dhbar[5]*fp)/f) + (hbar[5]*((2*M)/pow(r,3) + (l*(1 + l))/pow(r,2)))/f
+               + (4.*(-(dt*hbar[4]*fp)/4. + (dhbar[5]*f*fp)/4. - (pow(f,2)*hbar[7])/(2.*pow(r,2))
+               - (f*(hbar[1] - f*hbar[3] - f*hbar[6])*(l*(1. + l)))/(2.*pow(r,2))
+               + (f*hbar[5]*(1 - (7*M)/(2.*r)))/pow(r,2)))/pow(f,2) + hbar[5]*(-Omega*Omega*m*m)/(f*f);
       break;
     case 6:
-      ddhbar = -((dhbar[6]*fp)/f) + (hbar[6]*((2*M)/pow(r0,3) + (l*(1. + l))/pow(r0,2)))/f
-               - (hbar[6]*pow(m,2)*M)/(pow(f,2)*pow(r0,3))
-               - (2.*(hbar[1] - hbar[5] - (hbar[3] + hbar[6])*(1 - (4*M)/r0)))/(f*pow(r0,2));
+      ddhbar = -((dhbar[6]*fp)/f) + (hbar[6]*((2*M)/pow(r,3) + (l*(1. + l))/pow(r,2)))/f
+               + hbar[6]*(-Omega*Omega*m*m)/(f*f)
+               - (2.*(hbar[1] - hbar[5] - (hbar[3] + hbar[6])*(1 - (4*M)/r)))/(f*pow(r,2));
       break;
     case 7:
-      ddhbar = - ((dhbar[7]*fp)/f) + (hbar[7]*((2*M)/pow(r0,3) + (l*(1. + l))/pow(r0,2)))/f
-               - (hbar[7]*pow(m,2)*M)/(pow(f,2)*pow(r0,3))
-               - (2.*(hbar[7] + hbar[5]*(-1. + l)*(2. + l)))/(f*pow(r0,2));
+      ddhbar = - ((dhbar[7]*fp)/f) + (hbar[7]*((2*M)/pow(r,3) + (l*(1. + l))/pow(r,2)))/f
+               + hbar[7]*(-Omega*Omega*m*m)/(f*f)
+               - (2.*(hbar[7] + hbar[5]*(-1. + l)*(2. + l)))/(f*pow(r,2));
       break;
     case 8:
-      ddhbar = - ((dhbar[8]*fp)/f) + (hbar[8]*((2*M)/pow(r0,3) + (l*(1. + l))/pow(r0,2)))/f
-               + (4.*(-(dt*hbar[9]*fp)/4. + (dhbar[8]*f*fp)/4. - (3*f*fp*hbar[8])/(4.*r0)))/pow(f,2)
-               - (hbar[8]*pow(m,2)*M)/(pow(f,2)*pow(r0,3));
+      ddhbar = - ((dhbar[8]*fp)/f) + (hbar[8]*((2*M)/pow(r,3) + (l*(1. + l))/pow(r,2)))/f
+               + (4.*(-(dt*hbar[9]*fp)/4. + (dhbar[8]*f*fp)/4. - (3*f*fp*hbar[8])/(4.*r)))/pow(f,2)
+               + hbar[8]*(-Omega*Omega*m*m)/(f*f);
       break;
     case 9:
-      ddhbar = - ((dhbar[9]*fp)/f) + (hbar[9]*((2*M)/pow(r0,3) + (l*(1. + l))/pow(r0,2)))/f
+      ddhbar = - ((dhbar[9]*fp)/f) + (hbar[9]*((2*M)/pow(r,3) + (l*(1. + l))/pow(r,2)))/f
                + (4.*(((-dt*hbar[8] + dhbar[9]*f)*fp)/4.
-               + (f*(-(f*hbar[10])/2. + hbar[9]*(1 - (7*M)/(2.*r0))))/pow(r0,2)))/pow(f,2)
-               - (hbar[9]*pow(m,2)*M)/(pow(f,2)*pow(r0,3));
+               + (f*(-(f*hbar[10])/2. + hbar[9]*(1 - (7*M)/(2.*r))))/pow(r,2)))/pow(f,2)
+               + hbar[9]*(-Omega*Omega*m*m)/(f*f);
       break;
     case 10:
-      ddhbar = - ((dhbar[10]*fp)/f) + (hbar[10]*((2*M)/pow(r0,3) + (l*(1. + l))/pow(r0,2)))/f
-               - (hbar[10]*pow(m,2)*M)/(pow(f,2)*pow(r0,3))
-               - (2.*(hbar[10] + hbar[9]*(-1. + l)*(2. + l)))/(f*pow(r0,2));
+      ddhbar = - ((dhbar[10]*fp)/f) + (hbar[10]*((2*M)/pow(r,3) + (l*(1. + l))/pow(r,2)))/f
+               + hbar[10]*(-Omega*Omega*m*m)/(f*f)
+               - (2.*(hbar[10] + hbar[9]*(-1. + l)*(2. + l)))/(f*pow(r,2));
       break;
   }
   return ddhbar;
@@ -180,10 +180,16 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
   cout << "Modes: (" << modes.size() << " total, l_max = " << l_max << ")" << endl;
 
   /* Read the first order data */
+  field_type hbar(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+  field_type dhbar(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+  field_type ddhbar(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
   h.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
   dh.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
   ddh.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
 
+  fill(hbar.data(), hbar.data() + hbar.num_elements(), 0.0);
+  fill(dhbar.data(), dhbar.data() + dhbar.num_elements(), 0.0);
+  fill(ddhbar.data(), ddhbar.data() + ddhbar.num_elements(), 0.0);
   fill(h.data(), h.data() + h.num_elements(), 0.0);
   fill(dh.data(), dh.data() + dh.num_elements(), 0.0);
   fill(ddh.data(), ddh.data() + ddh.num_elements(), 0.0);
@@ -211,10 +217,10 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     if (isEven(l+m)) {
       if (l==1) {
         assert(num_fields == 4*6);
-        fields = {1, 6, 5, 3, 2, 4};
+        fields = {1, 3, 5, 6, 2, 4};
       } else {
         assert(num_fields == 4*7);
-        fields = {1, 6, 5, 3, 7, 2, 4};
+        fields = {1, 3, 5, 6, 7, 2, 4};
       }
     } else {
       if (l==1) {
@@ -232,33 +238,48 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, data.data());
 
     /* Transfer the data to the appropriate locations */
-    /* The field and its first derivative */
+
+    /* The trace-reversed field and its first derivative.
+     * We don't include the a or 1/r factors here.
+     */
     for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
       int i = fields[it];
-      double a = a_il(i, l);
       for(size_t j=0; j<N; ++j) {
-        const complex<double> hbar(data[j][4*it], data[j][4*it+1]);
-        const complex<double> dhbar(data[j][4*it+2], data[j][4*it+3]);
-        const double rj = r[j];
-        h[i][l][m][j] = a*hbar/rj;
-        dh[i][l][m][j] = a*(dhbar - hbar/rj)/rj;
+        hbar[i][l][m][j]  = complex<double>(data[j][4*it], data[j][4*it+1]);
+        dhbar[i][l][m][j] = complex<double>(data[j][4*it+2], data[j][4*it+3]);
       }
     }
 
-    /* Second derivative of the field */
+    /* Second derivative of the trace-reversed field */
     for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
       int i = fields[it];
-      double a = a_il(i, l);
       for(size_t j=0; j<N; ++j) {
-        field_type::array_view<1>::type hbarj = h[boost::indices[irange()][l][m][j]];
-        field_type::array_view<1>::type dhbarj = dh[boost::indices[irange()][l][m][j]];
+        const double rj = r[j], fj = f[j], fpj = fp[j];
+        field_type::array_view<1>::type hbarj = hbar[boost::indices[irange()][l][m][j]];
+        field_type::array_view<1>::type dhbarj = dhbar[boost::indices[irange()][l][m][j]];
         hbarj.reindex(1);
         dhbarj.reindex(1);
-        const double rj = r[j], fj = f[j], fpj = fp[j];
-        const complex<double> ddhbar = d2hdr2(i, l, m, rj, fj, fpj, r0, hbarj, dhbarj);
-        const complex<double> hbar  = hbarj[i];
-        const complex<double> dhbar = dhbarj[i];
-        ddh[i][l][m][j] = a*(ddhbar - 2.0*(dhbar - hbar/rj)/rj)/rj;
+        ddhbar[i][l][m][j] = d2hdr2(i, l, m, rj, fj, fpj, r0, hbarj, dhbarj);
+      }
+    }
+
+    /* The non-trace-reversed field and its first and second derivatives.
+     * Here we do include the factor of a and 1/r.
+     */
+    for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
+      int i = fields[it];
+      /* Trace-reversal corresponds to swapping 3 and 6 */
+      int ih = (i==3) ? 6 : ((i==6) ? 3: i);
+
+      double a = a_il(ih, l);
+      for(size_t j=0; j<N; ++j) {
+        const complex<double> hbarj = hbar[i][l][m][j];
+        const complex<double> dhbarj = dhbar[i][l][m][j];
+        const complex<double> ddhbarj = ddhbar[i][l][m][j];
+        const double rj = r[j];
+        h[ih][l][m][j] = a*hbarj/rj;
+        dh[ih][l][m][j] = a*(dhbarj - hbarj/rj)/rj;
+        ddh[ih][l][m][j] = a*(ddhbarj - 2.0*(dhbarj - hbarj/rj)/rj)/rj;
       }
     }
 
