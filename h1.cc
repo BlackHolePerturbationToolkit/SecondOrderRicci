@@ -298,7 +298,7 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
 
   /* Include analytic expressions for the l=0 mode */
   for(size_t j=0; j<N; ++j) {
-    if(r[j]<r0) {
+    if(r[j]<=r0) {
       h[1][0][0][j] = (-1.6710855164206668*(4. + (3. - 1.*r0)*log(1. - 2./r0))*pow(2. - 1.*r[j],3)*(2. + r[j]))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
       h[2][0][0][j] = 0.0;
       h[3][0][0][j] = (-1.6710855164206668*(64. - 2.*pow(r[j],3) + (3. - 1.*r0)*log(1. - 2./r0)*(16. + pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
