@@ -27,9 +27,9 @@ const double M = 1.0;
 
 int main(int argc, char* argv[])
 {
-  if(argc < 2 || argc > 3)
+  if(argc < 2 || argc > 4)
   {
-    cout << "Usage: " << argv[0] << " <dir> [<lmax>]" << endl;
+    cout << "Usage: " << argv[0] << " <dir> [<delta lmax>] [<lmax>]" << endl;
     exit(1);
   }
 
@@ -44,8 +44,19 @@ int main(int argc, char* argv[])
   double r0;
   multi_array<complex<double>, 4> h, dh, ddh;
   read_h1(dir, r0, r, f, fp, h, dh, ddh);
-  const int lmax = argc == 3 ? atoi(argv[2]) : h[1].size()-1;
+  const int h1lmax = h[1].size()-1;
   const int N = r.size();
+
+  int lmax, dlmax;
+  if(argc == 2) {
+    dlmax = lmax = h1lmax;
+  } else if (argc == 3) {
+    dlmax = min(atoi(argv[2]), h1lmax);
+    lmax = h1lmax;
+  } else {
+    dlmax = min(atoi(argv[2]), h1lmax);
+    lmax = min(atoi(argv[3]), h1lmax);
+  }
 
   /* Compute the source */
   multi_array<complex<double>,4> src(boost::extents[range(1,11)][lmax+1][lmax+1][N]);
@@ -63,7 +74,8 @@ int main(int argc, char* argv[])
     }
   }
 
-  cout << "Computing source: " << modes.size() << " (i,l,m) modes, l_max = " << lmax << endl;
+  cout << "Computing source: " << modes.size() << " (i,l,m) modes, l_max = " << lmax
+       << ", delta l_max = " << dlmax << endl;
 
   int status = 0;
   const int status_frequency = 4*num_threads;
@@ -74,10 +86,13 @@ int main(int argc, char* argv[])
     int l3 = mode->l;
     int m3 = mode->m;
 
-    /* Sum over l1, l2, m1, m2 = m3-m1 */
+    /* Sum over l1, l2, m1, m2 = m3-m1.
+     * The sum is done in the range l3-dlmax <= (l1,l2) <= l3+dlmax, within
+     * physical (l1,l2 >=0) and practical (l1,l2 <= lmax for the first order
+     * fields) constraints.*/
     vector<complex<double>> tmp(r.size(), 0.0);
-    for(int l1=0; l1<=lmax; ++l1) {
-      for(int l2=max(0,abs(l3-l1)); l2<=min(l3+l1, lmax); ++l2) {
+    for(int l1=max(0,l3-dlmax); l1<=min(h1lmax,l3+dlmax); ++l1) {
+      for(int l2=abs(l3-l1); l2<=min(l3+l1, h1lmax); ++l2) {
         for(int m1=-l1; m1<=l1; ++m1) {
           if(abs(m3 - m1) > l2)
             continue;
