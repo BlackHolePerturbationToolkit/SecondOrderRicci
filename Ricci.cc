@@ -27,9 +27,9 @@ const double M = 1.0;
 
 int main(int argc, char* argv[])
 {
-  if(argc != 2)
+  if(argc < 2 || argc > 3)
   {
-    cout << "Usage: " << argv[0] << " <dir>" << endl;
+    cout << "Usage: " << argv[0] << " <dir> [<lmax>]" << endl;
     exit(1);
   }
 
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
   double r0;
   multi_array<complex<double>, 4> h, dh, ddh;
   read_h1(dir, r0, r, f, fp, h, dh, ddh);
-  const int lmax = h[1].size()-1;
+  const int lmax = argc == 3 ? atoi(argv[2]) : h[1].size()-1;
   const int N = r.size();
 
   /* Compute the source */
@@ -62,6 +62,8 @@ int main(int argc, char* argv[])
       }
     }
   }
+
+  cout << "Computing source: " << modes.size() << " (i,l,m) modes, l_max = " << lmax << endl;
 
   int status = 0;
   const int status_frequency = 4*num_threads;

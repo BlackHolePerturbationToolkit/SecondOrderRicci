@@ -177,7 +177,7 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
 
   cout << "Grid size: [" << r.front() << ", " << r.back() << "] (" << N << " points)" << endl;
   cout << "Worldline: r_0 = " << r0 << " (index " << r0i << ")" << endl;
-  cout << "Modes: (" << modes.size() << " total, l_max = " << l_max << ")" << endl;
+  cout << "Modes: (" << modes.size() << " total (l,m) modes, l_max = " << l_max << ")" << endl;
 
   /* Read the first order data */
   field_type hbar(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
