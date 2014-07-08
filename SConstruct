@@ -1,11 +1,11 @@
 import sys
-import subprocess
+from subprocess import Popen, CalledProcessError, PIPE
 
 def git_version():
     try:
-        version = subprocess.check_output(['git', 'describe', '--dirty', '--always'])
+        version = Popen(['git', 'describe', '--dirty', '--always'], stdout=PIPE).communicate()[0]
     except CalledProcessError:
-        version = subprocess.check_output(['git', 'describe', '--always'])
+        version = Popen(['git', 'describe', '--always'], stdout=PIPE).communicate()[0]
     return version.decode('utf_8').rstrip('\n')
 
 env = DefaultEnvironment()
