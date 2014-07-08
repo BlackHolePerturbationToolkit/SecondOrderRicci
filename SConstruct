@@ -1,4 +1,12 @@
 import sys
+import subprocess
+
+def git_version():
+    try:
+        version = subprocess.check_output(['git', 'describe', '--dirty', '--always'])
+    except CalledProcessError:
+        version = subprocess.check_output(['git', 'describe', '--always'])
+    return version.decode('utf_8').rstrip('\n')
 
 env = DefaultEnvironment()
 
@@ -16,8 +24,7 @@ env['LIBS']     = ['gsl', 'gslcblas', 'm', 'hdf5']
 env['LIBPATH']  = ['/usr/local/lib/']
 env['LINKFLAGS']= ['-fopenmp']
 env['CPPPATH']  = ['/usr/local/include']
-env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-Wall', '-g', '-D__GIT_VERSION=\"$(GIT_VERSION)\"]']
-env['GIT_VERSION'] = "$(shell sh -c 'git describe --dirty --always 2>/dev/null || git describe --always')"
+env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-Wall', '-g', '-D__GIT_VERSION="\\"' + git_version() + '\\""']
 env['CXX']      = 'g++-4.9'
 
 

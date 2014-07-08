@@ -27,6 +27,7 @@ const double M = 1.0;
 
 int main(int argc, char* argv[])
 {
+  cout << "Version: " << __GIT_VERSION << endl;
   if(argc < 2 || argc > 4)
   {
     cout << "Usage: " << argv[0] << " <dir> [<delta lmax>] [<lmax>]" << endl;
