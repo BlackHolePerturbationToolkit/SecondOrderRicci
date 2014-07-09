@@ -12,6 +12,7 @@
 #include <complex>
 #include <iostream>
 #include <assert.h>
+#include "WignerDMatrices.hpp"
 
 extern "C"
 {
@@ -351,6 +352,9 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
   const double ellE = gsl_sf_ellint_Ecomp(M/(r0-2.0*M), GSL_PREC_DOUBLE);
   const double ellK = gsl_sf_ellint_Kcomp(M/(r0-2.0*M), GSL_PREC_DOUBLE);
 
+  /* Wigner-D matrix */
+  SphericalFunctions::WignerDMatrix WignerD(Quaternions::Quaternion(M_PI, M_PI_2, M_PI_2));
+
   const complex<double> I(0.0, 1.0);
 
   /* Loop over all l, m modes */
@@ -360,11 +364,11 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
       const double ld = l;
 
       /* The Wigner-D matrices */
-      const double w0 = 1.0;//WignerD(l, m, 0);
-      const double w1p = 1.0;//WignerD(l, m, 1);
-      const double w1m = 1.0;//WignerD(l, m, -1);
-      const double w2p = 1.0;//WignerD(l, m, 2);
-      const double w2m = 1.0;//WignerD(l, m, -2);
+      const complex<double> w0 = WignerD(l, m, 0);
+      const complex<double> w1p = l>=1 ? WignerD(l, m, 1) : 0.0;
+      const complex<double> w1m = l>=1 ? WignerD(l, m, -1) : 0.0;
+      const complex<double> w2p = l>=2 ? WignerD(l, m, 2) : 0.0;
+      const complex<double> w2m = l>=2 ? WignerD(l, m, -2) : 0.0;
       
       /* The trace-reversed puncture and its first derivative.
        * We don't include the a or 1/r factors here.

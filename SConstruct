@@ -23,14 +23,16 @@ if ARGUMENTS.get('VERBOSE') != '1':
 env['LIBS']     = ['gsl', 'gslcblas', 'm', 'hdf5']
 env['LIBPATH']  = ['/usr/local/lib/']
 env['LINKFLAGS']= ['-fopenmp']
-env['CPPPATH']  = ['/usr/local/include']
+env['CPPPATH']  = ['/usr/local/include', './Quaternions', './SphericalFunctions']
 env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-Wall', '-g', '-D__GIT_VERSION="\\"' + git_version() + '\\""']
 env['CXX']      = 'g++-4.9'
 
 
 sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'Ricci.cc', 'utils.cc',
            'R2_1.cc', 'R2_2.cc', 'R2_3.cc', 'R2_4.cc', 'R2_5.cc',
-           'R2_6.cc', 'R2_7.cc', 'R2_8.cc', 'R2_9.cc', 'R2_10.cc']
+           'R2_6.cc', 'R2_7.cc', 'R2_8.cc', 'R2_9.cc', 'R2_10.cc',
+           'Quaternions/Quaternions.cpp', 'Quaternions/QuaternionUtilities.cpp',
+           'SphericalFunctions/Combinatorics.cpp', 'SphericalFunctions/WignerDMatrices.cpp']
 executable = 'Ricci'
 
 Program(executable, sources)
