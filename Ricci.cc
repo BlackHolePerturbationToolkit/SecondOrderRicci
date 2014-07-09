@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
         for(int j=0; j<N; ++j) {
           hR[i][l][m][j]   -= hP[i][l][m][j];
           dhR[i][l][m][j]  -= dhP[i][l][m][j];
-          ddhR[i][l][m][j] - ddhP[i][l][m][j];
+          ddhR[i][l][m][j] -= ddhP[i][l][m][j];
         }
       }
     }
