@@ -8,7 +8,10 @@
 
 #include "utils.h"
 #include <math.h>
+extern "C"
+{
 #include <gsl/gsl_sf_coupling.h>
+}
 
 double Coupling(int lc, int mc, int sc, int la, int ma, int sa, int lb, int mb, int sb) {
   double sign = isOdd(mc+sc) ? -1.0 : 1.0;
