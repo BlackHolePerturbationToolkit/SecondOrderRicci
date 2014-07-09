@@ -156,17 +156,43 @@ int main(int argc, char* argv[])
     int l = mode->l;
     int m = mode->m;
 
-    stringstream dsName;
-    dsName << "src i=" << i << " l=" << l << " m=" << m;
-
     multi_array<double,2> data(boost::extents[N][2]);
+
+    /* Second order source */
+    stringstream srcds;
+    srcds << "src i=" << i << " l=" << l << " m=" << m;
     for(int j=0; j<N; ++j) {
       data[j][0] = real(src[i][l][m][j]);
       data[j][1] = imag(src[i][l][m][j]);
     }
-    
-    src_h5.write_dataset(dsName.str(), data);
+    src_h5.write_dataset(srcds.str(), data);
+
+    /* First order retarded field */
+    stringstream h1ds;
+    h1ds << "h1 i=" << i << " l=" << l << " m=" << m;
+    for(int j=0; j<N; ++j) {
+      data[j][0] = real(h[i][l][m][j]);
+      data[j][1] = imag(h[i][l][m][j]);
+    }
+    src_h5.write_dataset(h1ds.str(), data);
+
+    /* First order puncture */
+    stringstream h1Pds;
+    h1Pds << "h1P i=" << i << " l=" << l << " m=" << m;
+    for(int j=0; j<N; ++j) {
+      data[j][0] = real(hP[i][l][m][j]);
+      data[j][1] = imag(hP[i][l][m][j]);
+    }
+    src_h5.write_dataset(h1Pds.str(), data);
   }
+  /* Grid coordinates */
+  stringstream rds;
+  rds << "r";
+  multi_array<double,1> rdata(boost::extents[N]);
+  for(int j=0; j<N; ++j) {
+    rdata[j] = r[j];
+  }
+  src_h5.write_dataset(rds.str(), rdata);
   cout << "Done" << endl;
   return 0;
 }
