@@ -406,28 +406,28 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
          * Here we do include the factor of a and 1/r.
          * Trace-reversal corresponds to swapping 3 and 6 */
         hP[1][l][m][j] = a_il(1,l)*hP1bar/r[j];
-        hP[3][l][m][j] = a_il(1,l)*hP6bar/r[j];
-        hP[4][l][m][j] = a_il(1,l)*hP4bar/r[j];
-        hP[6][l][m][j] = a_il(1,l)*hP3bar/r[j];
-        hP[7][l][m][j] = a_il(1,l)*hP7bar/r[j];
-        hP[8][l][m][j] = a_il(1,l)*hP8bar/r[j];
-        hP[10][l][m][j] = a_il(1,l)*hP10bar/r[j];
+        hP[3][l][m][j] = a_il(3,l)*hP6bar/r[j];
+        hP[4][l][m][j] = a_il(4,l)*hP4bar/r[j];
+        hP[6][l][m][j] = a_il(6,l)*hP3bar/r[j];
+        hP[7][l][m][j] = a_il(7,l)*hP7bar/r[j];
+        hP[8][l][m][j] = a_il(8,l)*hP8bar/r[j];
+        hP[10][l][m][j] = a_il(10,l)*hP10bar/r[j];
 
         dhP[1][l][m][j] = a_il(1,l)*(dhP1bar - hP1bar/r[j])/r[j];
-        dhP[3][l][m][j] = a_il(1,l)*(dhP6bar - hP6bar/r[j])/r[j];
-        dhP[4][l][m][j] = a_il(1,l)*(dhP4bar - hP4bar/r[j])/r[j];
-        dhP[6][l][m][j] = a_il(1,l)*(dhP3bar - hP3bar/r[j])/r[j];
-        dhP[7][l][m][j] = a_il(1,l)*(dhP7bar - hP7bar/r[j])/r[j];
-        dhP[8][l][m][j] = a_il(1,l)*(dhP8bar - hP8bar/r[j])/r[j];
-        dhP[10][l][m][j] = a_il(1,l)*(dhP10bar - hP10bar/r[j])/r[j];
+        dhP[3][l][m][j] = a_il(3,l)*(dhP6bar - hP6bar/r[j])/r[j];
+        dhP[4][l][m][j] = a_il(4,l)*(dhP4bar - hP4bar/r[j])/r[j];
+        dhP[6][l][m][j] = a_il(6,l)*(dhP3bar - hP3bar/r[j])/r[j];
+        dhP[7][l][m][j] = a_il(7,l)*(dhP7bar - hP7bar/r[j])/r[j];
+        dhP[8][l][m][j] = a_il(8,l)*(dhP8bar - hP8bar/r[j])/r[j];
+        dhP[10][l][m][j] = a_il(19,l)*(dhP10bar - hP10bar/r[j])/r[j];
 
         ddhP[1][l][m][j] = a_il(1,l)*(ddhP1bar - 2.0*(dhP1bar - hP1bar/r[j])/r[j])/r[j];
-        ddhP[3][l][m][j] = a_il(1,l)*(ddhP6bar - 2.0*(dhP6bar - hP6bar/r[j])/r[j])/r[j];
-        ddhP[4][l][m][j] = a_il(1,l)*(ddhP4bar - 2.0*(dhP4bar - hP4bar/r[j])/r[j])/r[j];
-        ddhP[6][l][m][j] = a_il(1,l)*(ddhP3bar - 2.0*(dhP3bar - hP3bar/r[j])/r[j])/r[j];
-        ddhP[7][l][m][j] = a_il(1,l)*(ddhP7bar - 2.0*(dhP7bar - hP7bar/r[j])/r[j])/r[j];
-        ddhP[8][l][m][j] = a_il(1,l)*(ddhP8bar - 2.0*(dhP8bar - hP8bar/r[j])/r[j])/r[j];
-        ddhP[10][l][m][j] = a_il(1,l)*(ddhP10bar - 2.0*(dhP10bar - hP10bar/r[j])/r[j])/r[j];
+        ddhP[3][l][m][j] = a_il(3,l)*(ddhP6bar - 2.0*(dhP6bar - hP6bar/r[j])/r[j])/r[j];
+        ddhP[4][l][m][j] = a_il(4,l)*(ddhP4bar - 2.0*(dhP4bar - hP4bar/r[j])/r[j])/r[j];
+        ddhP[6][l][m][j] = a_il(6,l)*(ddhP3bar - 2.0*(dhP3bar - hP3bar/r[j])/r[j])/r[j];
+        ddhP[7][l][m][j] = a_il(7,l)*(ddhP7bar - 2.0*(dhP7bar - hP7bar/r[j])/r[j])/r[j];
+        ddhP[8][l][m][j] = a_il(8,l)*(ddhP8bar - 2.0*(dhP8bar - hP8bar/r[j])/r[j])/r[j];
+        ddhP[10][l][m][j] = a_il(10,l)*(ddhP10bar - 2.0*(dhP10bar - hP10bar/r[j])/r[j])/r[j];
 
         /* Negative m modes */
         const double sign = isOdd(m) ? -1.0 : 1.0;
