@@ -48,6 +48,10 @@ int main(int argc, char* argv[])
   const int h1lmax = h[1].size()-1;
   const int N = r.size();
 
+  /* Compute first-order punctures */
+  multi_array<complex<double>, 4> hP, dhP, ddhP;
+  compute_h1P(r0, r, h1lmax, hP, dhP, ddhP);
+
   int lmax, dlmax;
   if(argc == 2) {
     dlmax = lmax = h1lmax;

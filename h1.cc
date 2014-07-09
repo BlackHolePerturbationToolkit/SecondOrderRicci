@@ -13,6 +13,11 @@
 #include <iostream>
 #include <assert.h>
 
+extern "C"
+{
+#include <gsl/gsl_sf_ellint.h>
+}
+
 using namespace std;
 using boost::multi_array;
 typedef boost::multi_array_types::extent_range range;
@@ -324,6 +329,108 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
       ddh[2][0][0][j] = 0.0;
       ddh[3][0][0][j] = (20.053026197048002*(3.*pow(r[j],3)*(-3. + r0) - 2.*pow(r[j],2)*(-4. + pow(r0,2)) - 8.*(32. - 12.*r0 + pow(r0,2)) + 8.*r[j]*(20. - 8.*r0 + pow(r0,2)) + 16.*pow(-2. + r[j],2)*(-3. + r0)*log((-2. + r[j])/r0)))/(pow(-2. + r[j],2)*pow(r[j],5)*sqrt((-3. + r0)*r0));
       ddh[6][0][0][j] = (20.053026197048002*(4.*pow(r[j],2)*(-3. + r0) + pow(r[j],3)*(-3. + r0) + 4.*(32. - 12.*r0 + pow(r0,2)) - 2.*r[j]*(8. - 4.*r0 + pow(r0,2)) + 16.*(-2. + r[j])*(-3. + r0)*log((-2. + r[j])/r0)))/((-2. + r[j])*pow(r[j],5)*sqrt((-3. + r0)*r0));
+    }
+  }
+}
+
+/* Compute the first-order puncture fields */
+void compute_h1P(const double r0, const vector<double> &r, const int l_max, field_type &hP, field_type &dhP, field_type &ddhP)
+{
+  cout << "Computing first order punctures " << endl;
+  const size_t N = r.size();  /* Number of grid points */
+  
+  hP.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+  dhP.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+  ddhP.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
+
+  fill(hP.data(), hP.data() + hP.num_elements(), 0.0);
+  fill(dhP.data(), dhP.data() + dhP.num_elements(), 0.0);
+  fill(ddhP.data(), ddhP.data() + ddhP.num_elements(), 0.0);
+
+  /* Complete elliptic integrals */
+  const double ellE = gsl_sf_ellint_Ecomp(M/(r0-2.0*M), GSL_PREC_DOUBLE);
+  const double ellK = gsl_sf_ellint_Kcomp(M/(r0-2.0*M), GSL_PREC_DOUBLE);
+
+  const complex<double> I(0.0, 1.0);
+
+  /* Loop over all l, m modes */
+  for(int l=0; l<=l_max; ++l) {
+    for(int m=0; m<=l; ++m) {
+
+      const double ld = l;
+
+      /* The Wigner-D matrices */
+      const double w0 = 1.0;//WignerD(l, m, 0);
+      const double w1p = 1.0;//WignerD(l, m, 1);
+      const double w1m = 1.0;//WignerD(l, m, -1);
+      const double w2p = 1.0;//WignerD(l, m, 2);
+      const double w2m = 1.0;//WignerD(l, m, -2);
+      
+      /* The trace-reversed puncture and its first derivative.
+       * We don't include the a or 1/r factors here.
+       */
+
+      for(size_t j=0; j<N; ++j) {
+        const double pm = r[j] <= r0 ? -1.0 : 1.0;
+        const complex<double> hP1bar = (4.*w0*r[j]*(2.*ellE*pow(-2.*M + r0,1.5)*(-1.*r0 + r[j]) - 3.141592653589793*pm*sqrt(r0)*(-2.*(1. + 2.*ld)*M + r0 + 2.*ld*r0)*(-1.*r0 + r[j]) - 4.*ellK*sqrt(-2.*M + r0)*(r0*(-2.*r0 + r[j]) + 2.*M*(r0 - 2.*(-1.*r0 + r[j])))))/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(r0,3)*sqrt(-3.*M + r0));
+        const complex<double> hP3bar = (4.*w0*pow(r[j],2)*(2.*ellE*pow(-2.*M + r0,1.5)*(-1.*r0 + r[j]) - 3.141592653589793*pm*sqrt(r0)*(-2.*(1. + 2.*ld)*M + r0 + 2.*ld*r0)*(-1.*r0 + r[j]) - 4.*ellK*sqrt(-2.*M + r0)*(r0*(-2.*r0 + r[j]) + 2.*M*(r0 - 2.*(-1.*r0 + r[j])))))/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(r0,3)*sqrt(-3.*M + r0)*(-2.*M + r[j]));
+        const complex<double> hP4bar = (2.256758334191025*sqrt(ld*(1. + ld))*(-1.*w1m + w1p)*((4.*sqrt((M*(2.*M - 1.*r0)*r0)/(3.*M - 1.*r0))*((ellK*M)/(ld*(1. + ld)) + 2.*(-1.*ellE + ellK)*(-2.*M + r0)))/(sqrt(1. + 2.*ld)*M) - 3.141592653589793*pm*sqrt((-1.*(M + 2.*ld*M))/(3.*M - 1.*r0))*(-1.*r0 + r[j]) + (2.*(2.*(-2.*M + r0)*(ellK*(5.*M - 1.*r0) + ellE*(-4.*M + r0)) + (M*(2.*ellK*M + ellE*(-2.*M + r0)))/(ld*(1. + ld)))*(-1.*r0 + r[j]))/(sqrt(1. + 2.*ld)*sqrt(M*r0*(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))))))/r0;
+        const complex<double> hP6bar = (4.*w0*((4.*ellK*M*r0)/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (3.141592653589793*(1. + 2.*ld)*M*pm*r0*(-1.*r0 + r[j]))/(sqrt(r0*(-3.*M + r0))*(-2.*M + r0)) + (2.*(ellE + 2.*ellK)*M*(-1.*r0 + r[j]))/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0))))/(sqrt(3.141592653589793 + 6.283185307179586*ld)*r[j]);
+        const complex<double> hP7bar = (0.3761263890318375*sqrt((-1. + ld)*ld*(1. + ld)*(2. + ld))*(w2m + w2p)*((4.*r0*((2.4*ellK*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) - 8.*ellE*(-2.*M + r0)*(-5.*M + 2.*r0) + 2.*ellK*(51.*pow(M,2) - 40.*M*r0 + 8.*pow(r0,2))))/(sqrt(1. + 2.*ld)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (9.42477796076938*pow(M,2)*pm*sqrt((-1.*(r0 + 2.*ld*r0))/(3.*M - 1.*r0))*(-1.*r0 + r[j]))/(2.*M - 1.*r0) + (2.*((2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 2.*(-2.*ellK*(39.*pow(M,2) - 26.*M*r0 + 4.*pow(r0,2)) + ellE*(67.*pow(M,2) - 48.*M*r0 + 8.*pow(r0,2))))*(-1.*r0 + r[j]))/(sqrt(1. + 2.*ld)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))))/(M*r[j]);
+        const complex<double> hP8bar = 2.256758334191025*I*sqrt(ld*(1. + ld))*r0*(w1m + w1p)*((4.*sqrt((M*r0*(-2.*M + r0))/(-3.*M + r0))*(ellE*(4.*M - 2.*r0) - (1.*ellK*((1. + 6.*ld + 6.*pow(ld,2))*M - 2.*ld*(1. + ld)*r0))/(ld*(1. + ld))))/(sqrt(1. + 2.*ld)*M*pow(r0,2)) + (3.141592653589793*pm*sqrt(((1. + 2.*ld)*M)/(-3.*M + r0))*(-1.*r0 + r[j]))/pow(r0,2) + (2.*((-1.*M*(2.*ellK*M + ellE*(-2.*M + r0)))/(ld*(1. + ld)) + 2.*(-1.*ellK*(-4.*M + r0)*(-3.*M + r0) + ellE*(-5.*M + r0)*(-2.*M + r0)))*(-1.*r0 + r[j]))/sqrt((1. + 2.*ld)*M*pow(r0,5)*(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))));
+        const complex<double> hP10bar =(-0.3761263890318375*I*sqrt((-1. + ld)*ld*(1. + ld)*(2. + ld))*(-1.*w2m + w2p)*((-4.*r0*((-2.4*ellK*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 16.*ellK*(-3.*M + r0)*(-2.*M + r0) - 8.*ellE*(-2.*M + r0)*(-5.*M + 2.*r0)))/(sqrt(1. + 2.*ld)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (9.42477796076938*pow(M,2)*pm*sqrt((-1.*(r0 + 2.*ld*r0))/(3.*M - 1.*r0))*(-1.*r0 + r[j]))/(2.*M - 1.*r0) - (2.*((-2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 8.*(2.*ellE*(-4.*M + r0)*(-2.*M + r0) - 1.*ellK*(-3.*M + r0)*(-7.*M + 2.*r0)))*(-1.*r0 + r[j]))/(sqrt(1. + 2.*ld)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))))/(M*r[j]);
+        
+        const complex<double> dhP1bar = (4.*w0*(-3.141592653589793*(1. + 2.*ld)*pm*sqrt(r0)*(-2.*M + r0)*(r0 + 2.*(-1.*r0 + r[j])) + 2.*ellE*pow(-2.*M + r0,1.5)*(r0 + 2.*(-1.*r0 + r[j])) + 8.*ellK*sqrt(-2.*M + r0)*(-1.*r0*(-1.*r0 + r[j]) + M*(r0 + 4.*(-1.*r0 + r[j])))))/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(r0,3)*sqrt(-3.*M + r0));
+        const complex<double> dhP3bar = (-4.*w0*r[j]*(8.*ellK*sqrt(-2.*M + r0)*(-1.*r0 + r[j])*(12.*pow(M,2) + r0*r[j] - 4.*M*(r0 + r[j])) + 3.141592653589793*(1. + 2.*ld)*pm*sqrt(r0)*(4.*pow(M,2)*(r0 + 3.*(-1.*r0 + r[j])) - 4.*M*(pow(r0,2) + 3.*r0*(-1.*r0 + r[j]) + pow(-1.*r0 + r[j],2)) + r0*(pow(r0,2) + 3.*r0*(-1.*r0 + r[j]) + 2.*pow(-1.*r0 + r[j],2))) - 2.*ellE*sqrt(-2.*M + r0)*(4.*pow(M,2)*(r0 + 3.*(-1.*r0 + r[j])) - 4.*M*(pow(r0,2) + 3.*r0*(-1.*r0 + r[j]) + pow(-1.*r0 + r[j],2)) + r0*(pow(r0,2) + 3.*r0*(-1.*r0 + r[j]) + 2.*pow(-1.*r0 + r[j],2)))))/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(r0,3)*sqrt(-3.*M + r0)*pow(-2.*M + r[j],2));
+        const complex<double> dhP4bar = (4.*sqrt(ld*(1. + ld))*(-1.7724538509055159*pm*sqrt(((1. + 2.*ld)*M)/(-3.*M + r0)) + (2.*(2.*(-2.*M + r0)*(ellK*(5.*M - 1.*r0) + ellE*(-4.*M + r0)) + (M*(2.*ellK*M + ellE*(-2.*M + r0)))/(ld*(1. + ld))))/(sqrt(3.141592653589793 + 6.283185307179586*ld)*sqrt(M*r0*(6.*pow(M,2) - 5.*M*r0 + pow(r0,2)))))*(-1.*w1m + w1p))/r0;
+        const complex<double> dhP6bar = (-4.*M*sqrt(r0*(-3.*M + r0))*(2.*ellE*(2.*M - 1.*r0)*sqrt(r0*(-3.*M + r0)) + 3.141592653589793*(1. + 2.*ld)*pm*r0*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))*w0)/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(-3.*M + r0,1.5)*pow(-2.*M + r0,1.5)*pow(r[j],2));
+        const complex<double> dhP7bar = (1.4142135623730951*sqrt(ld*(-2. - 1.*ld + 2.*pow(ld,2) + pow(ld,3)))*(w2m + w2p)*((-0.752252778063675*r0*((2.4*ellK*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) - 8.*ellE*(-2.*M + r0)*(-5.*M + 2.*r0) + 2.*ellK*(51.*pow(M,2) - 40.*M*r0 + 8.*pow(r0,2))))/(sqrt(0.5 + ld)*M*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + ((2.5066282746310002*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0)))/(2.*M - 1.*r0) + (0.3761263890318375*((2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 2.*(-2.*ellK*(39.*pow(M,2) - 26.*M*r0 + 4.*pow(r0,2)) + ellE*(67.*pow(M,2) - 48.*M*r0 + 8.*pow(r0,2)))))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)))*r[j] - (2.5066282746310002*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0))*(-1.*r0 + r[j]))/(2.*M - 1.*r0) - (0.3761263890318375*((2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 2.*(-2.*ellK*(39.*pow(M,2) - 26.*M*r0 + 4.*pow(r0,2)) + ellE*(67.*pow(M,2) - 48.*M*r0 + 8.*pow(r0,2))))*(-1.*r0 + r[j]))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))))/pow(r[j],2);
+        const complex<double> dhP8bar = 1.4142135623730951*sqrt(ld*(1. + ld))*r0*((5.0132565492620005*I*pm*sqrt(((1. + 2.*ld)*M)/(-3.*M + r0)))/pow(r0,2) + (3.1915382432114616*I*((-1.*M*(2.*ellK*M + ellE*(-2.*M + r0)))/(ld*(1. + ld)) + 2.*(-1.*ellK*(-4.*M + r0)*(-3.*M + r0) + ellE*(-5.*M + r0)*(-2.*M + r0))))/sqrt((1. + 2.*ld)*M*pow(r0,5)*(-3.*M + r0)*(-2.*M + r0)))*(w1m + w1p);
+        const complex<double> dhP10bar =(1.4142135623730951*sqrt(ld*(-2. - 1.*ld + 2.*pow(ld,2) + pow(ld,3)))*(-1.*w2m + w2p)*((-0.752252778063675*I*r0*((-2.4*ellK*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 16.*ellK*(-3.*M + r0)*(-2.*M + r0) - 8.*ellE*(-2.*M + r0)*(-5.*M + 2.*r0)))/(sqrt(0.5 + ld)*M*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + ((-2.5066282746310002*I*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0)))/(2.*M - 1.*r0) + (0.3761263890318375*I*((-2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 8.*(2.*ellE*(-4.*M + r0)*(-2.*M + r0) - 1.*ellK*(-3.*M + r0)*(-7.*M + 2.*r0))))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)))*r[j] + (2.5066282746310002*I*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0))*(-1.*r0 + r[j]))/(2.*M - 1.*r0) - (0.3761263890318375*I*((-2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 8.*(2.*ellE*(-4.*M + r0)*(-2.*M + r0) - 1.*ellK*(-3.*M + r0)*(-7.*M + 2.*r0)))*(-1.*r0 + r[j]))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))))/pow(r[j],2);
+        
+        const complex<double> ddhP1bar = (8.*(4.*ellK*(4.*M - 1.*r0)*sqrt(-2.*M + r0) + 2.*ellE*pow(-2.*M + r0,1.5) - 3.141592653589793*pm*sqrt(r0)*(-2.*M - 4.*ld*M + r0 + 2.*ld*r0))*w0)/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(r0,3)*sqrt(-3.*M + r0));
+        const complex<double> ddhP3bar = (8.*w0*(2.*M*(4.*ellK*(4.*M - 1.*r0)*sqrt(-2.*M + r0) + 2.*ellE*pow(-2.*M + r0,1.5) - 3.141592653589793*pm*sqrt(r0)*(-2.*M - 4.*ld*M + r0 + 2.*ld*r0))*(2.*M - 1.*r[j])*r[j] - 1.*(4.*ellK*(-4.*M + r0)*sqrt(-2.*M + r0) - 2.*ellE*pow(-2.*M + r0,1.5) + 3.141592653589793*pm*sqrt(r0)*(-2.*M - 4.*ld*M + r0 + 2.*ld*r0))*r[j]*pow(-2.*M + r[j],2) + 4.*pow(M,2)*(2.*ellE*pow(-2.*M + r0,1.5)*(-1.*r0 + r[j]) - 3.141592653589793*pm*sqrt(r0)*(-2.*(1. + 2.*ld)*M + r0 + 2.*ld*r0)*(-1.*r0 + r[j]) - 4.*ellK*sqrt(-2.*M + r0)*(r0*(-2.*r0 + r[j]) + 2.*M*(r0 - 2.*(-1.*r0 + r[j]))))))/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(r0,3)*sqrt(-3.*M + r0)*pow(-2.*M + r[j],3));
+        const complex<double> ddhP4bar = 0.;
+        const complex<double> ddhP6bar = (8.*M*sqrt(r0*(-3.*M + r0))*(2.*ellE*(2.*M - 1.*r0)*sqrt(r0*(-3.*M + r0)) + 3.141592653589793*(1. + 2.*ld)*pm*r0*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))*w0)/(sqrt(3.141592653589793 + 6.283185307179586*ld)*pow(-3.*M + r0,1.5)*pow(-2.*M + r0,1.5)*pow(r[j],3));
+        const complex<double> ddhP7bar = (2.8284271247461903*sqrt(ld*(-2. - 1.*ld + 2.*pow(ld,2) + pow(ld,3)))*(w2m + w2p)*((0.752252778063675*r0*((2.4*ellK*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) - 8.*ellE*(-2.*M + r0)*(-5.*M + 2.*r0) + 2.*ellK*(51.*pow(M,2) - 40.*M*r0 + 8.*pow(r0,2))))/(sqrt(0.5 + ld)*M*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - 1.*((2.5066282746310002*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0)))/(2.*M - 1.*r0) + (0.3761263890318375*((2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 2.*(-2.*ellK*(39.*pow(M,2) - 26.*M*r0 + 4.*pow(r0,2)) + ellE*(67.*pow(M,2) - 48.*M*r0 + 8.*pow(r0,2)))))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)))*r[j] + (2.5066282746310002*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0))*(-1.*r0 + r[j]))/(2.*M - 1.*r0) + (0.3761263890318375*((2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 2.*(-2.*ellK*(39.*pow(M,2) - 26.*M*r0 + 4.*pow(r0,2)) + ellE*(67.*pow(M,2) - 48.*M*r0 + 8.*pow(r0,2))))*(-1.*r0 + r[j]))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))))/pow(r[j],3);
+        const complex<double> ddhP8bar = 0.;
+        const complex<double> ddhP10bar =(2.8284271247461903*sqrt(ld*(-2. - 1.*ld + 2.*pow(ld,2) + pow(ld,3)))*(-1.*w2m + w2p)*((0.752252778063675*I*r0*((-2.4*ellK*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 16.*ellK*(-3.*M + r0)*(-2.*M + r0) - 8.*ellE*(-2.*M + r0)*(-5.*M + 2.*r0)))/(sqrt(0.5 + ld)*M*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - 1.*((-2.5066282746310002*I*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0)))/(2.*M - 1.*r0) + (0.3761263890318375*I*((-2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 8.*(2.*ellE*(-4.*M + r0)*(-2.*M + r0) - 1.*ellK*(-3.*M + r0)*(-7.*M + 2.*r0))))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)))*r[j] - (2.5066282746310002*I*M*pm*sqrt(((1. + 2.*ld)*r0)/(-3.*M + r0))*(-1.*r0 + r[j]))/(2.*M - 1.*r0) + (0.3761263890318375*I*((-2.4*(ellE + 2.*ellK)*pow(M + 2.*ld*M,2))/((-1. + ld)*ld*(1. + ld)*(2. + ld)) + 8.*(2.*ellE*(-4.*M + r0)*(-2.*M + r0) - 1.*ellK*(-3.*M + r0)*(-7.*M + 2.*r0)))*(-1.*r0 + r[j]))/(sqrt(0.5 + ld)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0))))/pow(r[j],3);
+        
+        /* The non-trace-reversed field and its first and second derivatives.
+         * Here we do include the factor of a and 1/r.
+         * Trace-reversal corresponds to swapping 3 and 6 */
+        hP[1][l][m][j] = a_il(1,l)*hP1bar/r[j];
+        hP[3][l][m][j] = a_il(1,l)*hP6bar/r[j];
+        hP[4][l][m][j] = a_il(1,l)*hP4bar/r[j];
+        hP[6][l][m][j] = a_il(1,l)*hP3bar/r[j];
+        hP[7][l][m][j] = a_il(1,l)*hP7bar/r[j];
+        hP[8][l][m][j] = a_il(1,l)*hP8bar/r[j];
+        hP[10][l][m][j] = a_il(1,l)*hP10bar/r[j];
+
+        dhP[1][l][m][j] = a_il(1,l)*(dhP1bar - hP1bar/r[j])/r[j];
+        dhP[3][l][m][j] = a_il(1,l)*(dhP6bar - hP6bar/r[j])/r[j];
+        dhP[4][l][m][j] = a_il(1,l)*(dhP4bar - hP4bar/r[j])/r[j];
+        dhP[6][l][m][j] = a_il(1,l)*(dhP3bar - hP3bar/r[j])/r[j];
+        dhP[7][l][m][j] = a_il(1,l)*(dhP7bar - hP7bar/r[j])/r[j];
+        dhP[8][l][m][j] = a_il(1,l)*(dhP8bar - hP8bar/r[j])/r[j];
+        dhP[10][l][m][j] = a_il(1,l)*(dhP10bar - hP10bar/r[j])/r[j];
+
+        ddhP[1][l][m][j] = a_il(1,l)*(ddhP1bar - 2.0*(dhP1bar - hP1bar/r[j])/r[j])/r[j];
+        ddhP[3][l][m][j] = a_il(1,l)*(ddhP6bar - 2.0*(dhP6bar - hP6bar/r[j])/r[j])/r[j];
+        ddhP[4][l][m][j] = a_il(1,l)*(ddhP4bar - 2.0*(dhP4bar - hP4bar/r[j])/r[j])/r[j];
+        ddhP[6][l][m][j] = a_il(1,l)*(ddhP3bar - 2.0*(dhP3bar - hP3bar/r[j])/r[j])/r[j];
+        ddhP[7][l][m][j] = a_il(1,l)*(ddhP7bar - 2.0*(dhP7bar - hP7bar/r[j])/r[j])/r[j];
+        ddhP[8][l][m][j] = a_il(1,l)*(ddhP8bar - 2.0*(dhP8bar - hP8bar/r[j])/r[j])/r[j];
+        ddhP[10][l][m][j] = a_il(1,l)*(ddhP10bar - 2.0*(dhP10bar - hP10bar/r[j])/r[j])/r[j];
+
+        /* Negative m modes */
+        const double sign = isOdd(m) ? -1.0 : 1.0;
+        for(int i=1; i<=10; ++i) {
+          hP[i][l][-m][j] = sign*conj(hP[i][l][m][j]);
+          dhP[i][l][-m][j] = sign*conj(dhP[i][l][m][j]);
+          ddhP[i][l][-m][j] = sign*conj(ddhP[i][l][m][j]);
+        }
+      }
     }
   }
 }
