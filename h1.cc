@@ -349,8 +349,8 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
   fill(ddhP.data(), ddhP.data() + ddhP.num_elements(), 0.0);
 
   /* Complete elliptic integrals */
-  const double ellE = gsl_sf_ellint_Ecomp(M/(r0-2.0*M), GSL_PREC_DOUBLE);
-  const double ellK = gsl_sf_ellint_Kcomp(M/(r0-2.0*M), GSL_PREC_DOUBLE);
+  const double ellE = gsl_sf_ellint_Ecomp(sqrt(M/(r0-2.0*M)), GSL_PREC_DOUBLE);
+  const double ellK = gsl_sf_ellint_Kcomp(sqrt(M/(r0-2.0*M)), GSL_PREC_DOUBLE);
 
   /* Wigner-D matrix */
   SphericalFunctions::WignerDMatrix WignerD(Quaternions::Quaternion(M_PI, M_PI_2, M_PI_2));
