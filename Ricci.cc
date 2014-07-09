@@ -52,6 +52,20 @@ int main(int argc, char* argv[])
   multi_array<complex<double>, 4> hP, dhP, ddhP;
   compute_h1P(r0, r, h1lmax, hP, dhP, ddhP);
 
+  /* Compute first-order residual fields */
+  multi_array<complex<double>, 4> hR(h), dhR(dh), ddhR(ddh);
+  for(int i=1; i<=10; ++i) {
+    for(int l=0; l<=h1lmax; ++l) {
+      for(int m=0; m<=l; ++m) {
+        for(int j=0; j<N; ++j) {
+          hR[i][l][m][j]   -= hP[i][l][m][j];
+          dhR[i][l][m][j]  -= dhP[i][l][m][j];
+          ddhR[i][l][m][j] - ddhP[i][l][m][j];
+        }
+      }
+    }
+  }
+
   int lmax, dlmax;
   if(argc == 2) {
     dlmax = lmax = h1lmax;
