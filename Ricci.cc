@@ -117,34 +117,34 @@ int main(int argc, char* argv[])
             continue;
           switch(i3) {
             case 1:
-              tmp = R2_1(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_1(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 2:
-              tmp = R2_2(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_2(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 3:
-              tmp = R2_3(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_3(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 4:
-              tmp = R2_4(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_4(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 5:
-              tmp = R2_5(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_5(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 6:
-              tmp = R2_6(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_6(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 7:
-              tmp = R2_7(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_7(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 8:
-              tmp = R2_8(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_8(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 9:
-              tmp = R2_9(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_9(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 10:
-              tmp = R2_10(M, r0, r, f, fp, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_10(M, r0, r, f, fp, h, dh, ddh, h, dh, ddh, l3, m3, l1, m1, l2, m3-m1);
               break;
           }
           for(size_t j = 0; j < tmp.size(); ++j)
