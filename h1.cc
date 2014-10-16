@@ -353,7 +353,7 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
   const double ellK = gsl_sf_ellint_Kcomp(sqrt(M/(r0-2.0*M)), GSL_PREC_DOUBLE);
 
   /* Wigner-D matrix */
-  SphericalFunctions::WignerDMatrix WignerD(Quaternions::Quaternion(M_PI, M_PI_2, M_PI_2));
+  SphericalFunctions::WignerDMatrix WignerD(Quaternions::Quaternion(-M_PI_2, -M_PI_2, 0));
 
   /* Worldtube size */
   const double ra = r0 - 2.0*M;
@@ -367,14 +367,12 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
 
       const double ld = l;
 
-      /* The Wigner-D matrices - note that our convention is different from that
-       * provided by the WignerDMatrix class. The difference corresponds to a
-       * complex conjugation and a change in the sign of m and m'. */
-      const complex<double> w0 = conj(WignerD(l, -m, -0));
-      const complex<double> w1p = l>=1 ? conj(WignerD(l, -m, -1)) : 0.0;
-      const complex<double> w1m = l>=1 ? conj(WignerD(l, -m, -(-1))) : 0.0;
-      const complex<double> w2p = l>=2 ? conj(WignerD(l, -m, -2)) : 0.0;
-      const complex<double> w2m = l>=2 ? conj(WignerD(l, -m, -(-2))) : 0.0;
+      /* The Wigner-D matrices */
+      const complex<double> w0 = WignerD(l, 0, m);
+      const complex<double> w1p = l>=1 ? WignerD(l, 1, m) : 0.0;
+      const complex<double> w1m = l>=1 ? WignerD(l, -1, m) : 0.0;
+      const complex<double> w2p = l>=2 ? WignerD(l, 2, m) : 0.0;
+      const complex<double> w2m = l>=2 ? WignerD(l, -2, m) : 0.0;
       
       /* The trace-reversed puncture and its first derivative.
        * We don't include the a or 1/r factors here.
