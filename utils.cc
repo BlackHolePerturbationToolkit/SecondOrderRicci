@@ -26,9 +26,9 @@ vector<string> list_files(string dirname)
   dir = opendir(dirname.c_str());
   if (dir != NULL) {
     while ((ent = readdir(dir)) != NULL) {
-      if(ent->d_type == DT_REG) {
-        files.push_back(dirname + '/' + ent->d_name);
-      }
+      if(strcmp(ent->d_name, ".")==0 || strcmp(ent->d_name, "..")==0)
+        continue;
+      files.push_back(dirname + '/' + ent->d_name);
     }
     closedir(dir);
   } else {
