@@ -355,9 +355,8 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
   /* Wigner-D matrix */
   SphericalFunctions::WignerDMatrix WignerD(Quaternions::Quaternion(-M_PI_2, -M_PI_2, 0));
 
-  /* Worldtube size */
-  const double ra = r0 - 2.0*M;
-  const double rb = r0 + 2.0*M;
+  /* Window function size */
+  const double sigma = 1.0*M;
 
   const complex<double> I(0.0, 1.0);
 
@@ -407,9 +406,20 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
         /* The non-trace-reversed field and its first and second derivatives.
          * Here we do include the factor of a and 1/r, and the window function.
          * Trace-reversal corresponds to swapping 3 and 6. */
-        const double W = (r[j]<ra || r[j]>rb) ? 0.0 : 1.0;
-        const double dW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
-        const double ddW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
+
+        /* Step-function window */
+        // const double ra = r0 - sigma;
+        // const double rb = r0 + sigma;
+        // const double W = (r[j]<ra || r[j]>rb) ? 0.0 : 1.0;
+        // const double dW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
+        // const double ddW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
+
+        /* Gaussian window, order n */
+        const int n = 4;
+        const double W = exp(-0.5*pow((r[j]-r0)/sigma,n));
+        const double dW = - 0.5 * W * n * pow((r[j]-r0)/sigma,n-1) / sigma;
+        const double ddW = 0.25 * W * n * (2.0 + n * (-2.0 + pow((r[j]-r0)/sigma,n))) * pow((r[j]-r0)/sigma,n) * pow(r[j]-r0,-2);
+
         hP[1][l][m][j] = a_il(1,l)*W*hP1bar/r[j];
         hP[3][l][m][j] = a_il(3,l)*W*hP6bar/r[j];
         hP[4][l][m][j] = a_il(4,l)*W*hP4bar/r[j];
