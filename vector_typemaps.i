@@ -32,14 +32,13 @@ typedef unsigned int unsigned_int;
   }
 }
 %typemap(in)
-  std::vector<TYPE> ARG_NAME (std::vector<TYPE> temp),
-  std::vector<TYPE>& ARG_NAME (std::vector<TYPE> temp)
+  std::vector<TYPE> ARG_NAME (std::vector<TYPE> temp)
 {
   if(PyArray_Check($input)) {
     PyArrayObject *xa = reinterpret_cast<PyArrayObject*>($input);
     if(PyArray_TYPE(xa) != NUMPY_TYPE) {
       SWIG_exception(SWIG_TypeError, "(1) numpy array of 'TYPE_NAME' expected."	\
-                     " Make sure that the numpy array use dtype=DESCR.");
+                     " Make sure that the numpy array uses dtype=DESCR.");
     }
     const std::size_t size = PyArray_DIM(xa, 0);
     temp.resize(size);
@@ -66,9 +65,48 @@ typedef unsigned int unsigned_int;
     }
   } else {
     SWIG_exception(SWIG_TypeError, "(2) numpy array of 'TYPE_NAME' expected. " \
-                   "Make sure that the numpy array use dtype=DESCR.");
+                   "Make sure that the numpy array uses dtype=DESCR.");
   }
   $1 = temp;
+}
+%typemap(in)
+  std::vector<TYPE>& ARG_NAME (std::vector<TYPE> temp),
+  std::vector<TYPE>* ARG_NAME (std::vector<TYPE> temp)
+{
+  if(PyArray_Check($input)) {
+    PyArrayObject *xa = reinterpret_cast<PyArrayObject*>($input);
+    if(PyArray_TYPE(xa) != NUMPY_TYPE) {
+      SWIG_exception(SWIG_TypeError, "(1) numpy array of 'TYPE_NAME' expected."	\
+                     " Make sure that the numpy array uses dtype=DESCR.");
+    }
+    const std::size_t size = PyArray_DIM(xa, 0);
+    temp.resize(size);
+    TYPE* array = static_cast<TYPE*>(PyArray_DATA(xa));
+    if(PyArray_ISCONTIGUOUS(xa)) {
+      std::copy(array, array + size, temp.begin());
+    } else {
+      const npy_intp strides = PyArray_STRIDE(xa, 0)/sizeof(TYPE);
+      for (std::size_t i = 0; i < size; i++)
+        temp[i] = array[i*strides];
+    }
+  } else if(PySequence_Check($input)) {
+    Py_ssize_t size = PySequence_Size($input);
+    temp.resize(size);
+    PyObject* item;
+    for(Py_ssize_t i=0; i<size; ++i) {
+      item = PySequence_GetItem($input, i);
+      if(!SWIG_IsOK(SWIG_AsVal(TYPE)(item, &temp[i]))) {
+        Py_DECREF(item);
+        SWIG_exception(SWIG_TypeError, "expected items of sequence to be of type "\
+                       "\"TYPE\" in argument $argnum");
+      }
+      Py_DECREF(item);
+    }
+  } else {
+    SWIG_exception(SWIG_TypeError, "(2) numpy array of 'TYPE_NAME' expected. " \
+                   "Make sure that the numpy array uses dtype=DESCR.");
+  }
+  $1 = &temp;
 }
 %enddef
 
@@ -94,7 +132,7 @@ const std::vector<TYPE>&  ARG_NAME {
     PyArrayObject *xa = reinterpret_cast<PyArrayObject*>($input);
     if(PyArray_TYPE(xa) != NUMPY_TYPE) {
       SWIG_exception(SWIG_TypeError, "(1) numpy array of 'TYPE_NAME' expected."	\
-                     " Make sure that the numpy array use dtype=DESCR.");
+                     " Make sure that the numpy array uses dtype=DESCR.");
     }
     const std::size_t size = PyArray_DIM(xa, 0);
     temp.resize(size);
@@ -121,7 +159,7 @@ const std::vector<TYPE>&  ARG_NAME {
     }
   } else {
     SWIG_exception(SWIG_TypeError, "(2) numpy array of 'TYPE_NAME' expected. " \
-                   "Make sure that the numpy array use dtype=DESCR.");
+                   "Make sure that the numpy array uses dtype=DESCR.");
   }
   $1 = &temp;
 }
@@ -157,7 +195,7 @@ const std::vector<std::vector<TYPE> >& ARG_NAME, std::vector<std::vector<TYPE> >
     PyArrayObject *xa = reinterpret_cast<PyArrayObject*>($input);
     if(PyArray_TYPE(xa) != NUMPY_TYPE) {
       SWIG_exception(SWIG_TypeError, "(2) numpy array of 'TYPE_NAME' expected."	\
-                     " Make sure that the numpy array use dtype=DESCR.");
+                     " Make sure that the numpy array uses dtype=DESCR.");
     }
     const std::size_t size0 = PyArray_DIM(xa, 0);
     const std::size_t size1 = PyArray_DIM(xa, 1);
@@ -178,19 +216,25 @@ const std::vector<std::vector<TYPE> >& ARG_NAME, std::vector<std::vector<TYPE> >
     temp.resize(size0);
     PyObject* item0;
     PyObject* item1;
+    /* std::cerr << "size0=" << size0 << std::endl; */
     for(Py_ssize_t i=0; i<size0; ++i) {
+      /* std::cerr << "  i=" << i << std::endl; */
       item0 = PySequence_GetItem($input, i);
       Py_ssize_t size1 = PySequence_Size(item0);
       temp[i].resize(size1);
+      /* std::cerr << "    size1=" << size1 << std::endl; */
       for(Py_ssize_t j=0; j<size1; ++j) {
         item1 = PySequence_GetItem(item0, j);
         if(!SWIG_IsOK(SWIG_AsVal(TYPE)(item1, &temp[i][j]))) {
           Py_DECREF(item1);
+          Py_DECREF(item0);
           SWIG_exception(SWIG_TypeError, "expected items of sequence to be sequences of type " \
                          "\"TYPE\" in argument $argnum");
         }
+        /* std::cerr << "      " << j << ": " << temp[i][j] << std::endl; */
         Py_DECREF(item1);
       }
+      Py_DECREF(item0);
     }
   } else {
     SWIG_exception(SWIG_TypeError, "(1) numpy array of 'TYPE_NAME' expected.");
