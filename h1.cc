@@ -338,6 +338,11 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
 void compute_h1P(const double r0, const vector<double> &r, const int l_max, field_type &hP, field_type &dhP, field_type &ddhP)
 {
   cout << "Computing first order punctures " << endl;
+
+  if (l_max > 85) {
+    cout << "Punctures can only be computed up to l_max=85, but l_max is " << l_max << endl;
+  }
+
   const size_t N = r.size();  /* Number of grid points */
   
   hP.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);

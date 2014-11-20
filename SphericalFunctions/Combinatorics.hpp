@@ -14,7 +14,7 @@
 
 namespace SphericalFunctions {
 
-  const int ellMax = 32;
+  const int ellMax = 85; // This is the limit before causing an overflow from 171!
   const double epsilon = 1.0e-14;
 
   class FactorialSingleton {
