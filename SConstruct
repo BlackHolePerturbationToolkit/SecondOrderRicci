@@ -23,9 +23,10 @@ if ARGUMENTS.get('VERBOSE') != '1':
 env['LIBS']     = ['gsl', 'gslcblas', 'm', 'hdf5']
 env['LIBPATH']  = ['/usr/local/lib/']
 env['LINKFLAGS']= ['-fopenmp']
+env['RPATH']    = ['/opt/gcc/4.9.2/lib64']
 env['CPPPATH']  = ['/usr/local/include', './Quaternions', './SphericalFunctions']
 env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-Wall', '-g', '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
-env['CXX']      = 'g++-4.9'
+env['CXX']      = '/opt/gcc/4.9.2/bin/g++'
 
 
 sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'Ricci.cc', 'utils.cc',
