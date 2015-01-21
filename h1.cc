@@ -371,6 +371,7 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
   const complex<double> I(0.0, 1.0);
 
   /* Loop over all l, m modes */
+#pragma omp parallel for
   for(int l=0; l<=l_max; ++l) {
     for(int m=0; m<=l; ++m) {
 
