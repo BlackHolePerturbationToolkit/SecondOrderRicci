@@ -12,7 +12,7 @@
 #include <complex>
 #include <iostream>
 #include <assert.h>
-#include "WignerDMatrices.hpp"
+#include "WignerDMatrix.h"
 
 extern "C"
 {
@@ -344,8 +344,8 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
 {
   cout << "Computing first order punctures " << endl;
 
-  if (l_max > 85) {
-    cout << "Punctures can only be computed up to l_max=85, but l_max is " << l_max << endl;
+  if (l_max > 100) {
+    cout << "Punctures can only be computed up to l_max=100, but l_max is " << l_max << endl;
   }
 
   const size_t N = r.size();  /* Number of grid points */
@@ -363,7 +363,7 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
   const double ellK = gsl_sf_ellint_Kcomp(sqrt(M/(r0-2.0*M)), GSL_PREC_DOUBLE);
 
   /* Wigner-D matrix */
-  SphericalFunctions::WignerDMatrix WignerD(Quaternions::Quaternion(-M_PI_2, -M_PI_2, 0));
+  WignerDMatrix WignerD;
 
   /* Window function size */
   const double sigma = 1.0*M;

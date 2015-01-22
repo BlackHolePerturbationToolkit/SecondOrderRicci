@@ -33,8 +33,7 @@ sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'Ricci.cc', 'utils.cc',
            'R2_6.cc', 'R2_7.cc', 'R2_8.cc', 'R2_9.cc', 'R2_10.cc',
            'hh_1.cc', 'hh_2.cc', 'hh_3.cc', 'hh_4.cc', 'hh_5.cc',
            'hh_6.cc', 'hh_7.cc', 'hh_8.cc', 'hh_9.cc', 'hh_10.cc',
-           'Quaternions/Quaternions.cpp', 'Quaternions/QuaternionUtilities.cpp',
-           'SphericalFunctions/Combinatorics.cpp', 'SphericalFunctions/WignerDMatrices.cpp']
+           'WignerDMatrix.cc']
 executable = 'Ricci'
 
 Program(executable, sources)
