@@ -422,17 +422,17 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
          * Trace-reversal corresponds to swapping 3 and 6. */
 
         /* Step-function window */
-        // const double ra = r0 - sigma;
-        // const double rb = r0 + sigma;
-        // const double W = (r[j]<ra || r[j]>rb) ? 0.0 : 1.0;
-        // const double dW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
-        // const double ddW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
+        const double ra = r0 - sigma;
+        const double rb = r0 + sigma;
+        const double W = (r[j]<ra || r[j]>rb) ? 0.0 : 1.0;
+        const double dW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
+        const double ddW = (r[j]<ra || r[j]>rb) ? 0.0 : 0.0;
 
         /* Gaussian window, order n */
-        const int n = 4;
-        const double W = exp(-0.5*pow((r[j]-r0)/sigma,n));
-        const double dW = - 0.5 * W * n * pow((r[j]-r0)/sigma,n-1) / sigma;
-        const double ddW = 0.25 * W * n * (2.0 + n * (-2.0 + pow((r[j]-r0)/sigma,n))) * pow((r[j]-r0),n-2) * pow(sigma,-n);
+        // const int n = 4;
+        // const double W = exp(-0.5*pow((r[j]-r0)/sigma,n));
+        // const double dW = - 0.5 * W * n * pow((r[j]-r0)/sigma,n-1) / sigma;
+        // const double ddW = 0.25 * W * n * (2.0 + n * (-2.0 + pow((r[j]-r0)/sigma,n))) * pow((r[j]-r0),n-2) * pow(sigma,-n);
 
         hP[1][l][m][j] = a_il(1,l)*W*hP1bar/r[j];
         hP[3][l][m][j] = a_il(3,l)*W*hP6bar/r[j];
