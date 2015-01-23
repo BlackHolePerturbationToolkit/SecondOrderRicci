@@ -383,6 +383,10 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
     const double hP1bar201 = 0.15915494309189535*((-32.*sqrt(-2.*M + r0)*(-2.*ellK*(26.*pow(M,2) - 18.*M*r0 + 3.*pow(r0,2)) + ellE*(42.*pow(M,2) - 33.*M*r0 + 6.*pow(r0,2))))/((-1. + 2.*l)*(3. + 2.*l)*M*pow(r0,3)*sqrt(-3.*M + r0)) - (4.*sqrt(-2.*M + r0)*(ellK*(-3.*M + r0)*(43678.*pow(M,4) - 45091.*pow(M,3)*r0 + 14858.*pow(M,2)*pow(r0,2) - 1501.*M*pow(r0,3) - 20.*pow(r0,4)) + ellE*(104536.*pow(M,5) - 153254.*pow(M,4)*r0 + 81693.*pow(M,3)*pow(r0,2) - 18606.*pow(M,2)*pow(r0,3) + 1451.*M*pow(r0,4) + 20.*pow(r0,5))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*pow(r0,4)*pow(-3.*M + r0,2.5)));
     const double hP1bar202 = 0.15915494309189535*((2.6666666666666665*sqrt(-2.*M + r0)*(-2.*ellK*(-3.*M + r0) + ellE*(-5.*M + 2.*r0)))/(M*pow(r0,3)*sqrt(-3.*M + r0)) - (4.*sqrt(-2.*M + r0)*(ellE*(590.*pow(M,3) - 731.*pow(M,2)*r0 + 287.*M*pow(r0,2) - 36.*pow(r0,3)) + ellK*(-741.*pow(M,3) + 838.*pow(M,2)*r0 - 305.*M*pow(r0,2) + 36.*pow(r0,3))))/((-1. + 2.*l)*(3. + 2.*l)*M*pow(r0,4)*pow(-3.*M + r0,1.5)));
 
+    const double hP2bar100 = (-2.5464790894703255*(2.*M - 1.*r0)*(-2.*ellK*(3.*M - 1.*r0)*(71.*pow(M,3) - 48.*(-11. + 3.*l + 3.*pow(l,2))*pow(M,2)*r0 + 2.*(-187. + 48.*l + 48.*pow(l,2))*M*pow(r0,2) + (63. - 16.*l - 16.*pow(l,2))*pow(r0,3)) + ellE*(2.*M - 1.*r0)*(143.*pow(M,3) - 2.*(-529. + 144.*l + 144.*pow(l,2))*pow(M,2)*r0 + (-751. + 192.*l + 192.*pow(l,2))*M*pow(r0,2) - 2.*(-63. + 16.*l + 16.*pow(l,2))*pow(r0,3))))/((45. - 72.*l - 56.*pow(l,2) + 32.*pow(l,3) + 16.*pow(l,4))*pow(r0*(-3.*M + r0),2.5)*sqrt(M*(-2.*M + r0)));
+    const double hP2bar101 = (10.185916357881302*(-3.*ellK*(12.*pow(M,2) - 7.*M*r0 + pow(r0,2)) + ellE*(27.*pow(M,2) - 19.*M*r0 + 3.*pow(r0,2))))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*pow(r0,2.5)*sqrt((M*(-3.*M + r0))/(-2.*M + r0)));
+    const double hP2bar102 = (0.3183098861837907*(2.*ellE*(222.*pow(M,3) - 3.*(67. + 48.*l + 48.*pow(l,2))*pow(M,2)*r0 + 3.*(19. + 32.*l + 32.*pow(l,2))*M*pow(r0,2) - 4.*pow(1. + 2.*l,2)*pow(r0,3)) - 1.*ellK*(3.*M - 1.*r0)*(189.*pow(M,2) - 1.*(109. + 96.*l + 96.*pow(l,2))*M*r0 + 8.*pow(r0 + 2.*l*r0,2))))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*pow(r0,3.5)*sqrt(M*(-3.*M + r0)*(-2.*M + r0)));
+
     const double hP3bar000 = (2.5464790894703255*ellK*pow(-2.*M + r0,1.5))/(pow(r0,2)*sqrt(-3.*M + r0)) + (1.2732395447351628*pow(-2.*M + r0,1.5)*(ellK*(16.*M - 9.*r0)*(-3.*M + r0) + ellE*(14.*pow(M,2) - 17.*M*r0 + 9.*pow(r0,2))))/((-1. + 2.*l)*(3. + 2.*l)*pow(r0,3)*pow(-3.*M + r0,1.5));
     const double hP3bar001 = (1.2732395447351628*sqrt(-2.*M + r0)*(-2.*ellK*(-4.*M + r0) + ellE*(-2.*M + r0)))/(pow(r0,3)*sqrt(-3.*M + r0)) - (0.15915494309189535*sqrt(-2.*M + r0)*(ellK*(-7602.*pow(M,4) + 8603.*pow(M,3)*r0 - 3433.*pow(M,2)*pow(r0,2) + 545.*M*pow(r0,3) - 25.*pow(r0,4)) + ellE*(2960.*pow(M,4) - 4294.*pow(M,3)*r0 + 2367.*pow(M,2)*pow(r0,2) - 498.*M*pow(r0,3) + 25.*pow(r0,4))))/((-1. + 2.*l)*(3. + 2.*l)*pow(r0,4)*pow(-3.*M + r0,2.5));
     const double hP3bar002 = (0.3183098861837907*ellE*pow(1. + 2.*l,2)*sqrt(-2.*M + r0))/(pow(r0,3)*sqrt(-3.*M + r0)) + (0.15915494309189535*(ellE*(2.*M - 1.*r0)*(130.*pow(M,2) - 91.*M*r0 + 15.*pow(r0,2)) + ellK*(-3.*M + r0)*(214.*pow(M,2) - 157.*M*r0 + 21.*pow(r0,2))))/(pow(r0,4)*pow(-3.*M + r0,1.5)*sqrt(-2.*M + r0));
@@ -402,6 +406,14 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
     const double hP4bar300 = (-6.790610905254201*pow(-2.*M + r0,1.5)*(ellE*(17.*M - 8.*r0) + ellK*(-21.*M + 8.*r0)))/((-1. + 2.*l)*(3. + 2.*l)*pow(M,1.5)*sqrt(r0)*sqrt(-3.*M + r0)) - (1283.425461093044*sqrt(-2.*M + r0)*(ellE*(3802.*pow(M,3) - 4271.*pow(M,2)*r0 + 1541.*M*pow(r0,2) - 178.*pow(r0,3)) + 2.*ellK*(-2355.*pow(M,3) + 2429.*pow(M,2)*r0 - 815.*M*pow(r0,2) + 89.*pow(r0,3))))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*sqrt(M)*pow(r0,1.5)*pow(-3.*M + r0,1.5)) + (10.185916357881302*sqrt(-2.*M + r0)*(ellE*(1886.*pow(M,4) + 4907.*pow(M,3)*r0 - 6097.*pow(M,2)*pow(r0,2) + 1906.*M*pow(r0,3) - 160.*pow(r0,4)) - 2.*ellK*(1155.*pow(M,4) + 3158.*pow(M,3)*r0 - 3440.*pow(M,2)*pow(r0,2) + 993.*M*pow(r0,3) - 80.*pow(r0,4))))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*pow(M,1.5)*pow(r0,1.5)*pow(-3.*M + r0,1.5)) + (10.185916357881302*sqrt(-2.*M + r0)*(ellK*(1182.*pow(M,4) + 1475.*pow(M,3)*r0 - 2891.*pow(M,2)*pow(r0,2) + 1284.*M*pow(r0,3) - 176.*pow(r0,4)) - 4.*ellE*(238.*pow(M,4) + 277.*pow(M,3)*r0 - 620.*pow(M,2)*pow(r0,2) + 299.*M*pow(r0,3) - 44.*pow(r0,4))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*pow(M,1.5)*pow(r0,1.5)*pow(-3.*M + r0,1.5));
     const double hP4bar301 = (3.3953054526271007*((-210.*(ellE*(398.*pow(M,3) - 477.*pow(M,2)*r0 + 187.*M*pow(r0,2) - 24.*pow(r0,3)) + ellK*(-492.*pow(M,3) + 545.*pow(M,2)*r0 - 199.*M*pow(r0,2) + 24.*pow(r0,3))))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)) + (ellE*(344.*pow(M,3) - 438.*pow(M,2)*r0 + 181.*M*pow(r0,2) - 24.*pow(r0,3)) + ellK*(-426.*pow(M,3) + 503.*pow(M,2)*r0 - 193.*M*pow(r0,2) + 24.*pow(r0,3)))/((-1. + 2.*l)*(3. + 2.*l)) + (3.*(ellE*(1666.*pow(M,3) - 2151.*pow(M,2)*r0 + 899.*M*pow(r0,2) - 120.*pow(r0,3)) + ellK*(-2064.*pow(M,3) + 2473.*pow(M,2)*r0 - 959.*M*pow(r0,2) + 120.*pow(r0,3))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l))))/(pow(M,1.5)*pow(r0,1.5)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0));
     const double hP4bar302 = (0.16976527263135505*(ellK*(-45.*pow(M,2) + 39.*M*r0 - 8.*pow(r0,2)) + ellE*(36.*pow(M,2) - 35.*M*r0 + 8.*pow(r0,2))))/(pow(M,1.5)*pow(r0,1.5)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (89.12676813146139*(ellK*(-9222.*pow(M,4) + 15665.*pow(M,3)*r0 - 9633.*pow(M,2)*pow(r0,2) + 2536.*M*pow(r0,3) - 240.*pow(r0,4)) + 4.*ellE*(1862.*pow(M,4) - 3335.*pow(M,3)*r0 + 2170.*pow(M,2)*pow(r0,2) - 604.*M*pow(r0,3) + 60.*pow(r0,4))))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*pow(M,1.5)*pow(r0,2.5)*sqrt(-3.*M + r0)*pow(-2.*M + r0,1.5)) + (0.4244131815783876*(-2.*ellK*(8289.*pow(M,4) - 13299.*pow(M,3)*r0 + 7847.*pow(M,2)*pow(r0,2) - 2021.*M*pow(r0,3) + 192.*pow(r0,4)) + ellE*(13398.*pow(M,4) - 22723.*pow(M,3)*r0 + 14177.*pow(M,2)*pow(r0,2) - 3850.*M*pow(r0,3) + 384.*pow(r0,4))))/((-1. + 2.*l)*(3. + 2.*l)*pow(M,1.5)*pow(r0,2.5)*pow(-3.*M + r0,1.5)*sqrt(-2.*M + r0)) - (1.2732395447351628*(2.*ellE*(69216.*pow(M,5) - 139190.*pow(M,4)*r0 + 110825.*pow(M,3)*pow(r0,2) - 43615.*pow(M,2)*pow(r0,3) + 8470.*M*pow(r0,4) - 648.*pow(r0,5)) + ellK*(-171270.*pow(M,5) + 328731.*pow(M,4)*r0 - 250216.*pow(M,3)*pow(r0,2) + 94323.*pow(M,2)*pow(r0,3) - 17588.*M*pow(r0,4) + 1296.*pow(r0,5))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*pow(M,1.5)*pow(r0,2.5)*pow(-3.*M + r0,1.5)*pow(-2.*M + r0,1.5));
+
+    const double hP5bar000 = (20.371832715762604*(ellE*(2.*M - 1.*r0) + ellK*(-3.*M + r0)))/((-1. + 2.*l)*(3. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0));
+    const double hP5bar001 = (10.185916357881302*(ellK*(18.*pow(M,3) - 24.*pow(M,2)*r0 + 9.*M*pow(r0,2) - 1.*pow(r0,3)) + ellE*(-18.*pow(M,3) + 23.*pow(M,2)*r0 - 9.*M*pow(r0,2) + pow(r0,3))))/((-1. + 2.*l)*(3. + 2.*l)*r0*pow(-3.*M + r0,1.5)*pow(-2.*M + r0,1.5));
+    const double hP5bar002 = (-2.5464790894703255*(ellE - 1.*ellK)*sqrt(-3.*M + r0))/(r0*pow(-2.*M + r0,1.5));
+    
+    const double hP5bar200 = (-122.23099629457562*(ellE*(2.*M - 1.*r0) + ellK*(-3.*M + r0)))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (713.0141450516911*(ellK*(-33.*pow(M,2) + 23.*M*r0 - 4.*pow(r0,2)) + ellE*(26.*pow(M,2) - 21.*M*r0 + 4.*pow(r0,2))))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (20.371832715762604*(ellK*(-27.*pow(M,2) + 21.*M*r0 - 4.*pow(r0,2)) + ellE*(22.*pow(M,2) - 19.*M*r0 + 4.*pow(r0,2))))/((-1. + 2.*l)*(3. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0));
+    const double hP5bar201 = (50.92958178940651*(ellK*(-594.*pow(M,4) + 942.*pow(M,3)*r0 - 539.*pow(M,2)*pow(r0,2) + 133.*M*pow(r0,3) - 12.*pow(r0,4)) + ellE*(486.*pow(M,4) - 809.*pow(M,3)*r0 + 489.*pow(M,2)*pow(r0,2) - 127.*M*pow(r0,3) + 12.*pow(r0,4))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*r0*pow(-3.*M + r0,1.5)*pow(-2.*M + r0,1.5)) - (10.185916357881302*(-1.*ellK*(558.*pow(M,4) - 894.*pow(M,3)*r0 + 521.*pow(M,2)*pow(r0,2) - 131.*M*pow(r0,3) + 12.*pow(r0,4)) + ellE*(450.*pow(M,4) - 763.*pow(M,3)*r0 + 471.*pow(M,2)*pow(r0,2) - 125.*M*pow(r0,3) + 12.*pow(r0,4))))/((-1. + 2.*l)*(3. + 2.*l)*M*r0*pow(-3.*M + r0,1.5)*pow(-2.*M + r0,1.5));
+    const double hP5bar202 = (5.092958178940651*(ellE - 1.*ellK)*sqrt(-3.*M + r0))/((-1. + 2.*l)*(3. + 2.*l)*r0*pow(-2.*M + r0,1.5)) + (38.197186342054884*sqrt(-3.*M + r0)*(ellE*(9.*M - 4.*r0) + ellK*(-11.*M + 4.*r0)))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*r0*pow(-2.*M + r0,1.5)) - (0.8488263631567752*sqrt(-3.*M + r0)*(ellE*(7.*M - 4.*r0) + ellK*(-9.*M + 4.*r0)))/(M*r0*pow(-2.*M + r0,1.5));
 
     const double hP6bar000 = (2.5464790894703255*ellK*M*r0)/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (1.2732395447351628*(ellK*(-3.*M + r0)*(32.*pow(M,2) - 31.*M*r0 + 8.*pow(r0,2)) + ellE*(2.*M - 1.*r0)*(17.*pow(M,2) - 15.*M*r0 + 8.*pow(r0,2))))/((-1. + 2.*l)*(3. + 2.*l)*pow(-3.*M + r0,1.5)*sqrt(-2.*M + r0));
     const double hP6bar001 = (1.2732395447351628*(ellE + 2.*ellK)*M)/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (0.15915494309189535*(-1.*ellK*(-3.*M + r0)*(197.*pow(M,3) - 164.*pow(M,2)*r0 + 11.*M*pow(r0,2) + 8.*pow(r0,3)) + ellE*(-596.*pow(M,4) + 917.*pow(M,3)*r0 - 412.*pow(M,2)*pow(r0,2) + 35.*M*pow(r0,3) + 8.*pow(r0,4))))/((-1. + 2.*l)*(3. + 2.*l)*r0*pow(-3.*M + r0,2.5)*sqrt(-2.*M + r0));
@@ -436,6 +448,10 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
     const double hP8bar300 = (6.790610905254201*sqrt(-2.*M + r0)*(ellK*(-57.*pow(M,2) + 43.*M*r0 - 8.*pow(r0,2)) + ellE*(46.*pow(M,2) - 39.*M*r0 + 8.*pow(r0,2))))/((-1. + 2.*l)*(3. + 2.*l)*pow(M,1.5)*sqrt(r0)*sqrt(-3.*M + r0)) - (1283.425461093044*pow(-2.*M + r0,1.5)*(2.*ellE*(237.*pow(M,3) - 660.*pow(M,2)*r0 + 431.*M*pow(r0,2) - 80.*pow(r0,3)) + ellK*(-585.*pow(M,3) + 1581.*pow(M,2)*r0 - 942.*M*pow(r0,2) + 160.*pow(r0,3))))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*pow(M*r0,1.5)*pow(-3.*M + r0,1.5)) - (30.557749073643905*sqrt(-2.*M + r0)*(ellE*(634.*pow(M,4) + 45.*pow(M,3)*r0 - 661.*pow(M,2)*pow(r0,2) + 336.*M*pow(r0,3) - 48.*pow(r0,4)) - 2.*ellK*(393.*pow(M,4) + 64.*pow(M,3)*r0 - 389.*pow(M,2)*pow(r0,2) + 180.*M*pow(r0,3) - 24.*pow(r0,4))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*pow(M*r0*(-3.*M + r0),1.5)) - (30.557749073643905*sqrt(-2.*M + r0)*(ellK*(-9030.*pow(M,4) + 14347.*pow(M,3)*r0 - 9245.*pow(M,2)*pow(r0,2) + 2782.*M*pow(r0,3) - 320.*pow(r0,4)) + 2.*ellE*(3644.*pow(M,4) - 6132.*pow(M,3)*r0 + 4137.*pow(M,2)*pow(r0,2) - 1311.*M*pow(r0,3) + 160.*pow(r0,4))))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*pow(M*r0*(-3.*M + r0),1.5));
     const double hP8bar301 = (3.3953054526271007*((ellE*(398.*pow(M,3) - 477.*pow(M,2)*r0 + 187.*M*pow(r0,2) - 24.*pow(r0,3)) + ellK*(-492.*pow(M,3) + 545.*pow(M,2)*r0 - 199.*M*pow(r0,2) + 24.*pow(r0,3)))/((-1. + 2.*l)*(3. + 2.*l)) + (210.*(ellK*(426.*pow(M,3) - 503.*pow(M,2)*r0 + 193.*M*pow(r0,2) - 24.*pow(r0,3)) + ellE*(-344.*pow(M,3) + 438.*pow(M,2)*r0 - 181.*M*pow(r0,2) + 24.*pow(r0,3))))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)) + (3.*(ellE*(2044.*pow(M,3) - 2424.*pow(M,2)*r0 + 941.*M*pow(r0,2) - 120.*pow(r0,3)) + ellK*(-2526.*pow(M,3) + 2767.*pow(M,2)*r0 - 1001.*M*pow(r0,2) + 120.*pow(r0,3))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l))))/(pow(M,1.5)*pow(r0,1.5)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0));
     const double hP8bar302 = (0.16976527263135505*(ellK*(-75.*pow(M,2) + 49.*M*r0 - 8.*pow(r0,2)) + ellE*(61.*pow(M,2) - 45.*M*r0 + 8.*pow(r0,2))))/(pow(M,1.5)*pow(r0,1.5)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (0.4244131815783876*(ellK*(-9222.*pow(M,4) + 16493.*pow(M,3)*r0 - 10611.*pow(M,2)*pow(r0,2) + 2914.*M*pow(r0,3) - 288.*pow(r0,4)) + 2.*ellE*(3724.*pow(M,4) - 7006.*pow(M,3)*r0 + 4766.*pow(M,2)*pow(r0,2) - 1385.*M*pow(r0,3) + 144.*pow(r0,4))))/((-1. + 2.*l)*(3. + 2.*l)*pow(M,1.5)*(2.*M - 1.*r0)*pow(r0,2.5)*sqrt((-3.*M + r0)*(-2.*M + r0))) - (89.12676813146139*(-2.*ellK*(8289.*pow(M,4) - 12840.*pow(M,3)*r0 + 7325.*pow(M,2)*pow(r0,2) - 1826.*M*pow(r0,3) + 168.*pow(r0,4)) + ellE*(13398.*pow(M,4) - 21985.*pow(M,3)*r0 + 13265.*pow(M,2)*pow(r0,2) - 3484.*M*pow(r0,3) + 336.*pow(r0,4))))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*pow(M,1.5)*pow(r0,2.5)*pow(-3.*M + r0,1.5)*sqrt(-2.*M + r0)) - (1.2732395447351628*(ellE*(107268.*pow(M,5) - 210880.*pow(M,4)*r0 + 159925.*pow(M,3)*pow(r0,2) - 57995.*pow(M,2)*pow(r0,3) + 9920.*M*pow(r0,4) - 624.*pow(r0,5)) - 4.*ellK*(33210.*pow(M,5) - 62211.*pow(M,4)*r0 + 44956.*pow(M,3)*pow(r0,2) - 15573.*pow(M,2)*pow(r0,3) + 2558.*M*pow(r0,4) - 156.*pow(r0,5))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*pow(M,1.5)*(2.*M - 1.*r0)*(3.*M - 1.*r0)*pow(r0,2.5)*sqrt((-3.*M + r0)*(-2.*M + r0)));
+
+    const double hP9bar200 = (-122.23099629457562*(-1.*ellK*(-3.*M + r0) + ellE*(-2.*M + r0)))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (1426.0282901033822*sqrt(-2.*M + r0)*(-2.*ellK*(-3.*M + r0) + ellE*(-5.*M + 2.*r0)))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*M*sqrt(-3.*M + r0)) + (40.74366543152521*sqrt(-3.*M + r0)*(2.*ellE*(-2.*M + r0) - 1.*ellK*(-5.*M + 2.*r0)))/((-1. + 2.*l)*(3. + 2.*l)*M*sqrt(-2.*M + r0));
+    const double hP9bar201 = (-101.85916357881302*(ellE*(108.*pow(M,3) - 131.*pow(M,2)*r0 + 50.*M*pow(r0,2) - 6.*pow(r0,3)) + ellK*(-135.*pow(M,3) + 150.*pow(M,2)*r0 - 53.*M*pow(r0,2) + 6.*pow(r0,3))))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*r0*pow(-3.*M + r0,1.5)*sqrt(-2.*M + r0)) + (20.371832715762604*(3.*ellE*(26.*pow(M,3) - 35.*pow(M,2)*r0 + 15.*M*pow(r0,2) - 2.*pow(r0,3)) + ellK*(-96.*pow(M,3) + 121.*pow(M,2)*r0 - 48.*M*pow(r0,2) + 6.*pow(r0,3))))/((-1. + 2.*l)*(3. + 2.*l)*M*r0*sqrt(-3.*M + r0)*pow(-2.*M + r0,1.5));
+    const double hP9bar202 = (-5.092958178940651*(ellE - 1.*ellK)*sqrt(-3.*M + r0))/((-1. + 2.*l)*(3. + 2.*l)*r0*pow(-2.*M + r0,1.5)) - (1.6976527263135504*sqrt(-3.*M + r0)*(ellE*(5.*M - 2.*r0) + 2.*ellK*(-3.*M + r0)))/(M*r0*pow(-2.*M + r0,1.5)) + (76.39437268410977*sqrt(-3.*M + r0)*(ellE*(4.*M - 2.*r0) + ellK*(-5.*M + 2.*r0)))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*r0*pow(-2.*M + r0,1.5));
 
     const double hP10bar200 = (-10.185916357881302*ellK*M*r0)/((-1. + 2.*l)*(3. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (10695.212175775367*ellE*M*r0)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (13262.063097961456*ellK*M*r0)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (9625.69095819783*ellE*pow(r0,2))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (10695.212175775367*ellK*pow(r0,2))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (2139.0424351550732*ellE*pow(r0,3))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (2139.0424351550732*ellK*pow(r0,3))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (16.976527263135505*ellE*r0*sqrt(-2.*M + r0))/sqrt(-3.*M + r0) - (20.371832715762604*ellK*r0*sqrt(-2.*M + r0))/sqrt(-3.*M + r0) - (32085.6365273261*ellE*r0*sqrt(-2.*M + r0))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*sqrt(-3.*M + r0)) + (38502.76383279132*ellK*r0*sqrt(-2.*M + r0))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*sqrt(-3.*M + r0)) - (6.790610905254201*ellE*pow(r0,2)*sqrt(-2.*M + r0))/(M*sqrt(-3.*M + r0)) + (6.790610905254201*ellK*pow(r0,2)*sqrt(-2.*M + r0))/(M*sqrt(-3.*M + r0)) + (12834.25461093044*ellE*pow(r0,2)*sqrt(-2.*M + r0))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*M*sqrt(-3.*M + r0)) - (12834.25461093044*ellK*pow(r0,2)*sqrt(-2.*M + r0))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*M*sqrt(-3.*M + r0)) - (631.5268141886407*ellE*pow(M,3))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (825.0592249883855*ellK*pow(M,3))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (519.4817342519464*ellE*pow(M,3))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (1466.7719555349074*ellK*pow(M,3))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (100657.22544858303*ellE*pow(M,3))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (103132.40312354818*ellK*pow(M,3))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (1.1858851260499726e6*ellE*pow(M,3))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (635295.6032410568*ellK*pow(M,3))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (692.6423123359285*ellE*pow(M,2)*r0)/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (809.7803504515635*ellK*pow(M,2)*r0)/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (1207.0310884089342*ellE*pow(M,2)*r0)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (1909.8593171027442*ellK*pow(M,2)*r0)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (87456.27784876886*ellE*pow(M,2)*r0)/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (84293.55081964671*ellK*pow(M,2)*r0)/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (465883.44237677497*ellE*pow(M,2)*r0)/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (1.9270633298312058e6*ellK*pow(M,2)*r0)/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (239.3690344102106*ellE*M*pow(r0,2))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (254.64790894703256*ellK*M*pow(r0,2))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (718.1071032306318*ellE*M*pow(r0,2))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (840.3380995252074*ellK*M*pow(r0,2))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (19388.891787227058*ellE*M*pow(r0,2))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (17876.283208081684*ellK*M*pow(r0,2))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (995296.4450776557*ellE*M*pow(r0,2))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (1.2705912064821136e6*ellK*M*pow(r0,2))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (25.464790894703256*ellE*pow(r0,3))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (25.464790894703256*ellK*pow(r0,3))/((-1. + 2.*l)*(3. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (122.23099629457562*ellE*pow(r0,3))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (122.23099629457562*ellK*pow(r0,3))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (412.52961249419275*ellE*pow(r0,3))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (412.52961249419275*ellK*pow(r0,3))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) - (232941.72118838748*ellE*pow(r0,3))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2))) + (232941.72118838748*ellK*pow(r0,3))/((-7. + 2.*l)*(-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*(9. + 2.*l)*(3.*M - 1.*r0)*sqrt(6.*pow(M,2) - 5.*M*r0 + pow(r0,2)));
     const double hP10bar201 = (27.162443621016806*ellE*M)/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (35.65070725258456*ellK*M)/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (5.092958178940651*ellE*M)/((-1. + 2.*l)*(3. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (10.185916357881302*ellK*M)/((-1. + 2.*l)*(3. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (8770.0739841358*ellE*M)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (10802.164297533121*ellK*M)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (51337.01844372176*ellE*M)/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (67379.83670738482*ellK*M)/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (20.371832715762604*ellE*r0)/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (22.069485442076154*ellK*r0)/(sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (6417.12730546522*ellE*r0)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (6951.887914253989*ellK*r0)/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (38502.76383279132*ellE*r0)/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (41711.32748552393*ellK*r0)/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (3.3953054526271007*ellE*pow(r0,2))/(M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (3.3953054526271007*ellK*pow(r0,2))/(M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (1069.5212175775366*ellE*pow(r0,2))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (1069.5212175775366*ellK*pow(r0,2))/((-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) - (6417.12730546522*ellE*pow(r0,2))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0)) + (6417.12730546522*ellK*pow(r0,2))/((-5. + 2.*l)*(-3. + 2.*l)*(-1. + 2.*l)*(3. + 2.*l)*(5. + 2.*l)*(7. + 2.*l)*M*sqrt(-3.*M + r0)*sqrt(-2.*M + r0));
@@ -477,6 +493,10 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
            +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP1bar200
               + dr*(hP1bar201 + dr*hP1bar202)));
 
+        const complex<double> hP2bar  = 2.*sqrt(M_PI/(2.*ld+1.))*
+          (w1p-w1m)*sqrt(ld*(ld+1.))*(
+            (r[j]-2.*M)*(hP2bar100 + dr*(hP2bar101 + dr*hP2bar102)));
+
         const complex<double> hP3bar  = 2.*r[j]*r[j]/(r[j]-2.*M)*sqrt(M_PI/(2.*ld+1.))*
           (w0*(hP3bar000 + adr*hP3bar010
               + dr*(hP3bar001 + dr*hP3bar002 + adr*hP3bar011))
@@ -488,6 +508,11 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
               + dr*(hP4bar101 + dr*hP4bar102 + adr*hP4bar111))
            +(w3p-w3m)*sqrt((ld-2.)*(ld-1.)*ld*(ld+1.)*(ld+2.)*(ld+3.))*(hP4bar300
               + dr*(hP4bar301 + dr*hP4bar302)));
+
+        const complex<double> hP5bar  = 2.*sqrt(M_PI/(2.*ld+1.))*(1.-2.*M/r[j])*
+          (w0*(ld*(ld+1.))*(hP5bar000 + dr*(hP5bar001 + dr*hP5bar002))
+           +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP5bar200
+              + dr*(hP5bar201 + dr*hP5bar202)));
 
         const complex<double> hP6bar  = 2./r[j]*sqrt(M_PI/(2.*ld+1.))*
           (w0*(hP6bar000 + adr*hP6bar010
@@ -510,6 +535,10 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
            +(w3p+w3m)*sqrt((ld-2.)*(ld-1.)*ld*(ld+1.)*(ld+2.)*(ld+3.))*(hP8bar300
               + dr*(hP8bar301 + dr*hP8bar302)));
 
+        const complex<double> hP9bar  = 2.*I*sqrt(M_PI/(2.*ld+1.))*(1.-2.*M/r[j])*
+          ((w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP9bar200
+              + dr*(hP9bar201 + dr*hP9bar202)));
+
         const complex<double> hP10bar  = 2.*I/r[j]*sqrt(M_PI/(2.*ld+1.))*
           ((w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP10bar200
               + adr*hP10bar210 + dr*(hP10bar201 + dr*hP10bar202 + adr*hP10bar211))
@@ -527,6 +556,11 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
             +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP1bar201
               + 2.0*dr*hP1bar202)));
 
+        const complex<double> dhP2bar  = 2.*sqrt(M_PI/(2.*ld+1.))*
+          (w1p-w1m)*sqrt(ld*(ld+1.))*(
+            (r[j]-2.*M)*(hP2bar101 + 2.*dr*hP2bar102)
+            + (hP2bar100 + dr*(hP2bar101 + dr*hP2bar102)));
+
         const complex<double> dhP3bar  = 2.*sqrt(M_PI/(2.*ld+1.))*(
           r[j]*(r[j]-4.*M)/pow(r[j]-2.*M,2)*(w0*(hP3bar000 + adr*hP3bar010
               + dr*(hP3bar001 + dr*hP3bar002 + adr*hP3bar011))
@@ -542,6 +576,15 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
               + 2.0*dr*hP4bar102 + 2.0*adr*hP4bar111)
           +(w3p-w3m)*sqrt((ld-2.)*(ld-1.)*ld*(ld+1.)*(ld+2.)*(ld+3.))*(
               hP4bar301 + 2.0*dr*hP4bar302));
+
+        const complex<double> dhP5bar  = 2.*sqrt(M_PI/(2.*ld+1.))*(
+          2.*M/pow(r[j],2)*(w0*(ld*(ld+1.))*(
+              hP5bar000 + dr*(hP5bar001 + dr*hP5bar002))
+           +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP5bar200
+              + dr*(hP5bar201 + dr*hP5bar202)))
+          +(1.-2.*M/r[j])*(w0*(ld*(ld+1.))*(hP5bar001 + 2.*dr*hP5bar002)
+           +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+              hP5bar201 + 2.*dr*hP5bar202)));
 
         const complex<double> dhP6bar  = 2.*sqrt(M_PI/(2.*ld+1.))*(
           -1./pow(r[j],2)*(w0*(hP6bar000 + adr*hP6bar010
@@ -575,6 +618,12 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
           +(w3p+w3m)*sqrt((ld-2.)*(ld-1.)*ld*(ld+1.)*(ld+2.)*(ld+3.))*(
               hP8bar301 + 2.0*dr*hP8bar302));
 
+        const complex<double> dhP9bar  = 2.*I*sqrt(M_PI/(2.*ld+1.))*(
+          2.*M/pow(r[j],2)*((w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+            hP9bar200 + dr*(hP9bar201 + dr*hP9bar202)))
+          +(1.-2.*M/r[j])*((w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+              hP9bar201 + 2.*dr*hP9bar202)));
+
         const complex<double> dhP10bar  = 2.*I*sqrt(M_PI/(2.*ld+1.))*(
           -1./pow(r[j],2)*(
            (w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP10bar200
@@ -597,6 +646,11 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
           +r[j]*(w0*(2.0*hP1bar002 + 2.0*sdr*hP1bar011)
             +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(2.0*hP1bar202)));
 
+        const complex<double> ddhP2bar  = 2.*sqrt(M_PI/(2.*ld+1.))*
+          (w1p-w1m)*sqrt(ld*(ld+1.))*(
+            2.*(hP2bar101 + 2.*dr*hP2bar102)
+            +(r[j]-2.*M)*(2.*hP2bar102));
+
         const complex<double> ddhP3bar  = 2.*sqrt(M_PI/(2.*ld+1.))*(
           2.0*r[j]*(r[j]-4.*M)/pow(r[j]-2.*M,2)*(w0*(sdr*hP3bar010 + hP3bar001
               + 2.0*dr*hP3bar002 + 2.0*adr*hP3bar011)
@@ -613,6 +667,19 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
           +(w1p-w1m)*sqrt(ld*(ld+1.))*(2.0*hP4bar102 + 2.0*sdr*hP4bar111)
           +(w3p-w3m)*sqrt((ld-2.)*(ld-1.)*ld*(ld+1.)*(ld+2.)*(ld+3.))*(
             2.0*hP4bar302));
+
+        const complex<double> ddhP5bar  = 2.*sqrt(M_PI/(2.*ld+1.))*(
+          -4.*M/pow(r[j],3)*(w0*(ld*(ld+1.))*(
+              hP5bar000 + dr*(hP5bar001 + dr*hP5bar002))
+           +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(hP5bar200
+              + dr*(hP5bar201 + dr*hP5bar202)))
+          +4.*M/pow(r[j],2)*(w0*(ld*(ld+1.))*(
+              hP5bar001 + 2.*dr*hP5bar002)
+           +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+              hP5bar201 + 2.*dr*hP5bar202))
+          +(1.-2.*M/r[j])*(w0*(ld*(ld+1.))*(2.*hP5bar002)
+           +(w2p+w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+              2.*hP5bar202)));
 
         const complex<double> ddhP6bar  = 2.*sqrt(M_PI/(2.*ld+1.))*(
           -2./pow(r[j],2)*(w0*(sdr*hP6bar010 + hP6bar001
@@ -653,6 +720,14 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
           +(w3p+w3m)*sqrt((ld-2.)*(ld-1.)*ld*(ld+1.)*(ld+2.)*(ld+3.))*(
             2.0*hP8bar302));
 
+        const complex<double> ddhP9bar  = 2.*I*sqrt(M_PI/(2.*ld+1.))*(
+          -4.*M/pow(r[j],3)*((w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+            hP9bar200 + dr*(hP9bar201 + dr*hP9bar202)))
+          +4.*M/pow(r[j],2)*((w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+            hP9bar201 + 2.*dr*hP9bar202))
+          +(1.-2.*M/r[j])*((w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(
+            2.*hP9bar202)));
+
         const complex<double> ddhP10bar  = 2.*I*sqrt(M_PI/(2.*ld+1.))*(
           -2./pow(r[j],2)*(
            (w2p-w2m)*sqrt((ld-1.)*ld*(ld+1.)*(ld+2.))*(sdr*hP10bar210
@@ -691,27 +766,36 @@ void compute_h1P(const double r0, const vector<double> &r, const int l_max, fiel
         // const double ddW = 0.25 * W * n * (2.0 + n * (-2.0 + pow((r[j]-r0)/sigma,n))) * pow((r[j]-r0),n-2) * pow(sigma,-n);
 
         hP[1][l][m][j] = a_il(1,l)*W*hP1bar/r[j];
+        hP[2][l][m][j] = a_il(2,l)*W*hP2bar/r[j];
         hP[3][l][m][j] = a_il(3,l)*W*hP6bar/r[j];
         hP[4][l][m][j] = a_il(4,l)*W*hP4bar/r[j];
+        hP[5][l][m][j] = a_il(5,l)*W*hP5bar/r[j];
         hP[6][l][m][j] = a_il(6,l)*W*hP3bar/r[j];
         hP[7][l][m][j] = a_il(7,l)*W*hP7bar/r[j];
         hP[8][l][m][j] = a_il(8,l)*W*hP8bar/r[j];
+        hP[9][l][m][j] = a_il(9,l)*W*hP9bar/r[j];
         hP[10][l][m][j] = a_il(10,l)*W*hP10bar/r[j];
 
         dhP[1][l][m][j] = a_il(1,l)*(W*(dhP1bar - hP1bar/r[j])/r[j] + dW*hP1bar/r[j]);
+        dhP[2][l][m][j] = a_il(2,l)*(W*(dhP2bar - hP2bar/r[j])/r[j] + dW*hP2bar/r[j]);
         dhP[3][l][m][j] = a_il(3,l)*(W*(dhP6bar - hP6bar/r[j])/r[j] + dW*hP6bar/r[j]);
         dhP[4][l][m][j] = a_il(4,l)*(W*(dhP4bar - hP4bar/r[j])/r[j] + dW*hP4bar/r[j]);
+        dhP[5][l][m][j] = a_il(5,l)*(W*(dhP5bar - hP5bar/r[j])/r[j] + dW*hP5bar/r[j]);
         dhP[6][l][m][j] = a_il(6,l)*(W*(dhP3bar - hP3bar/r[j])/r[j] + dW*hP3bar/r[j]);
         dhP[7][l][m][j] = a_il(7,l)*(W*(dhP7bar - hP7bar/r[j])/r[j] + dW*hP7bar/r[j]);
         dhP[8][l][m][j] = a_il(8,l)*(W*(dhP8bar - hP8bar/r[j])/r[j] + dW*hP8bar/r[j]);
+        dhP[9][l][m][j] = a_il(9,l)*(W*(dhP9bar - hP9bar/r[j])/r[j] + dW*hP9bar/r[j]);
         dhP[10][l][m][j] = a_il(10,l)*(W*(dhP10bar - hP10bar/r[j])/r[j] + dW*hP10bar/r[j]);
 
         ddhP[1][l][m][j] = a_il(1,l)*(W*(ddhP1bar - 2.0*(dhP1bar - hP1bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP1bar - hP1bar/r[j])/r[j] + ddW*hP1bar/r[j]);
+        ddhP[2][l][m][j] = a_il(2,l)*(W*(ddhP2bar - 2.0*(dhP2bar - hP2bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP2bar - hP2bar/r[j])/r[j] + ddW*hP2bar/r[j]);
         ddhP[3][l][m][j] = a_il(3,l)*(W*(ddhP6bar - 2.0*(dhP6bar - hP6bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP6bar - hP6bar/r[j])/r[j] + ddW*hP6bar/r[j]);
         ddhP[4][l][m][j] = a_il(4,l)*(W*(ddhP4bar - 2.0*(dhP4bar - hP4bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP4bar - hP4bar/r[j])/r[j] + ddW*hP4bar/r[j]);
+        ddhP[5][l][m][j] = a_il(5,l)*(W*(ddhP5bar - 2.0*(dhP5bar - hP5bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP5bar - hP5bar/r[j])/r[j] + ddW*hP5bar/r[j]);
         ddhP[6][l][m][j] = a_il(6,l)*(W*(ddhP3bar - 2.0*(dhP3bar - hP3bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP3bar - hP3bar/r[j])/r[j] + ddW*hP3bar/r[j]);
         ddhP[7][l][m][j] = a_il(7,l)*(W*(ddhP7bar - 2.0*(dhP7bar - hP7bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP7bar - hP7bar/r[j])/r[j] + ddW*hP7bar/r[j]);
         ddhP[8][l][m][j] = a_il(8,l)*(W*(ddhP8bar - 2.0*(dhP8bar - hP8bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP8bar - hP8bar/r[j])/r[j] + ddW*hP8bar/r[j]);
+        ddhP[9][l][m][j] = a_il(9,l)*(W*(ddhP9bar - 2.0*(dhP9bar - hP9bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP9bar - hP9bar/r[j])/r[j] + ddW*hP9bar/r[j]);
         ddhP[10][l][m][j] = a_il(10,l)*(W*(ddhP10bar - 2.0*(dhP10bar - hP10bar/r[j])/r[j])/r[j] + 2.0*dW*(dhP10bar - hP10bar/r[j])/r[j] + ddW*hP10bar/r[j]);
 
         /* Negative m modes */
