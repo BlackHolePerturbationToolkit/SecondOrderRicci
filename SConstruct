@@ -15,9 +15,11 @@ if ARGUMENTS.get('VERBOSE') != '1':
   if sys.stdout.isatty():
     env['CXXCOMSTR'] = "\033[92mCompiling\033[0m $TARGET"
     env['LINKCOMSTR'] = "\033[94mLinking\033[0m $TARGET"
+    env['HDF5COMSTR'] = "\033[95mGenerating\033[0m $TARGET"
   else:
     env['CXXCOMSTR'] = "Compiling $TARGET"
     env['LINKCOMSTR'] = "Linking $TARGET"
+    env['HDF5COMSTR'] = "Generating $TARGET"
 
 # Build options
 env['LIBS']     = ['gsl', 'gslcblas', 'm', 'hdf5']
@@ -35,6 +37,13 @@ sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'Ricci.cc', 'utils.cc',
            'hh_6.cc', 'hh_7.cc', 'hh_8.cc', 'hh_9.cc', 'hh_10.cc',
            'WignerDMatrix.cc']
 executable = 'Ricci'
+
+# Generate header files containing binary data for Wigner-D
+for mp in ['0', '1', '2', '3', '4']:
+  env.Command('WignerD'+mp+'.h', 'WignerD.h5',
+    Action("h5dump -d \"/m'=" + mp + "\" -b -o WignerD" + mp + ".bin WignerD.h5 >/dev/null && "
+           "xxd -i WignerD" + mp +".bin WignerD" + mp +".h && rm WignerD" + mp + ".bin",
+           "$HDF5COMSTR"))
 
 Program(executable, sources)
 Decider('MD5-timestamp')

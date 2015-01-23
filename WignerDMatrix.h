@@ -31,11 +31,11 @@ public:
   std::complex<double> operator()(int l, int m, int mp) const;
 
 private:
-  std::array<double, 5151> D0;
-  std::array<double, 5150> D1;
-  std::array<double, 5148> D2;
-  std::array<double, 5145> D3;
-  std::array<double, 5141> D4;
+  const double * const D0;
+  const double * const D1;
+  const double * const D2;
+  const double * const D3;
+  const double * const D4;
 };
 
 #endif // WIGNERDMATRIX_H
