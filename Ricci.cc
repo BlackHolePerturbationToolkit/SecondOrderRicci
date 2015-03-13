@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
      * fields) constraints.*/
     vector<complex<double>> tmp(r.size(), 0.0);
     for(int l1=max(0,l3-dlmax); l1<=min(h1lmax,l3+dlmax); ++l1) {
-      for(int l2=abs(l3-l1); l2<=min(l3+l1, h1lmax); ++l2) {
+      for(int l2=max(abs(l3-l1),l3-dlmax); l2<=min(min(l3+l1, h1lmax),l3+dlmax); ++l2) {
         for(int m1=-l1; m1<=l1; ++m1) {
           if(abs(m3 - m1) > l2)
             continue;
