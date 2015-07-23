@@ -311,72 +311,34 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
   /* Include analytic expressions for the l=0 mode */
   if (!have_l_0) {
     cout << "Computing l=0=m mode from analytic expressions" << endl;
-
-    /* Lorenz-gauge expressions, not including the a or 1/r factors */
     for(size_t j=0; j<N; ++j) {
       if(r[j]<=r0) {
-        hbar[1][0][0][j] = (-4*sqrt(M_PI)*pow(2*M - r[j],3)*(2*M + r[j])*sqrt(-(r0/(3*M - r0)))* (M + (3*M - r0)*log(1 - (2*M)/r0)))/(3.*M*pow(r[j],3)*r0);
-        hbar[2][0][0][j] = 0.0;
-        hbar[3][0][0][j] = (8*sqrt(M_PI)*(1 - (2*M)/r[j])*(4*pow(M,2) + 2*M*r[j] + pow(r[j],2))*sqrt(r0/(-3*M + r0))* (M + (3*M - r0)*log(1 - (2*M)/r0)))/(3.*M*r[j]*r0);
-        hbar[6][0][0][j] = (-4*sqrt(M_PI)*(16*pow(M,3) + pow(r[j],3))*sqrt(-(r0/(3*M - r0)))* (M + (3*M - r0)*log(1 - (2*M)/r0)))/(3.*M*pow(r[j],2)*r0);
-        dhbar[1][0][0][j] = (4*sqrt(M_PI)*(48*pow(M,4) - 32*pow(M,3)*r[j] + pow(r[j],4))*sqrt(-(r0/(3*M - r0)))* (M + (3*M - r0)*log(1 - (2*M)/r0)))/(3.*M*pow(r[j],4)*r0);
-        dhbar[2][0][0][j] = 0.0;
-        dhbar[3][0][0][j] = (8*sqrt(M_PI)*(16*pow(M,3) + pow(r[j],3))*sqrt(-(r0/(3*M - r0)))* (M + (3*M - r0)*log(1 - (2*M)/r0)))/(3.*M*pow(r[j],3)*r0);
-        dhbar[6][0][0][j] = (4*sqrt(M_PI)*(32*pow(M,3) - pow(r[j],3))*sqrt(-(r0/(3*M - r0)))* (M + (3*M - r0)*log(1 - (2*M)/r0)))/(3.*M*pow(r[j],3)*r0);
-        ddhbar[1][0][0][j] = (-128*pow(M,2)*sqrt(M_PI)*(2*M - r[j])*sqrt(-(r0/(3*M - r0)))* (M + (3*M - r0)*log(1 - (2*M)/r0)))/(pow(r[j],5)*r0);
-        ddhbar[2][0][0][j] = 0.0;
-        ddhbar[3][0][0][j] = (-128*pow(M,2)*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))*(M + (3*M - r0)*log(1 - (2*M)/r0)))/ (pow(r[j],4)*r0);
-        ddhbar[6][0][0][j] = (-128*pow(M,2)*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))*(M + (3*M - r0)*log(1 - (2*M)/r0)))/ (pow(r[j],4)*r0);
+        h[1][0][0][j] = (-1.6710855164206668*(4. + (3. - 1.*r0)*log(1. - 2./r0))*pow(2. - 1.*r[j],3)*(2. + r[j]))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+        h[2][0][0][j] = 0.0;
+        h[3][0][0][j] = (-1.6710855164206668*(64. - 2.*pow(r[j],3) + (3. - 1.*r0)*log(1. - 2./r0)*(16. + pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+        h[6][0][0][j] = (-3.3421710328413337*(32. - 1.*pow(r[j],3) + (3. - 1.*r0)*log(1. - 2./r0)*(8. - 1.*pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+        dh[1][0][0][j] = (-6.684342065682667*(-4. + (-3. + r0)*log((-2. + r0)/r0))*pow(-2. + r[j],2)*(4. + r[j]))/(sqrt((-3. + r0)*r0)*pow(r[j],5));
+        dh[2][0][0][j] = 0.0;
+        dh[3][0][0][j] = (-80.21210478819201*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+        dh[6][0][0][j] = (-80.21210478819201*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+        ddh[1][0][0][j] = (13.368684131365335*(-2. + r[j])*(-20. + 2.*r[j] + pow(r[j],2))*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(pow(r[j],6)*sqrt((-3. + r0)*r0));
+        ddh[2][0][0][j] = 0.0;
+        ddh[3][0][0][j] = (320.84841915276803*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(pow(r[j],5)*sqrt((-3. + r0)*r0));
+        ddh[6][0][0][j] = (320.84841915276803*(-4. + (-3. + r0)*log((-2. + r0)/r0)))/(pow(r[j],5)*sqrt((-3. + r0)*r0));
       } else {
-        hbar[1][0][0][j] = (-4*sqrt(M_PI)*sqrt(r0/(-3*M + r0))*(pow(2*M - r[j],3)*(2*M + r[j])*(3*M - r0)* log(1 - (2*M)/r[j]) + M*(16*pow(M,4) + pow(r[j],3)*(3*r[j] - 4*r0) + 8*pow(M,3)*(r[j] - 3*r0) + 2*M*r[j]*(3*r[j] - r0)*r0 + 2*pow(M,2)*(-9*pow(r[j],2) + 8*r[j]*r0 + pow(r0,2)) - 16*pow(M,2)*(M - r[j])*(3*M - r0)*log(r0/r[j]))))/(3.*M*pow(r[j],3)*r0);
-        hbar[2][0][0][j] = 0.0;
-        hbar[3][0][0][j] = (-8*sqrt(M_PI)*sqrt(r0/(-3*M + r0))*((8*pow(M,3) - pow(r[j],3))*(3*M - r0)* log(1 - (2*M)/r[j]) + M*(8*pow(M,3) + 12*pow(M,2)*(r[j] - r0) - pow(r[j],2)*r0 + M*(3*pow(r[j],2) - 4*r[j]*r0 + pow(r0,2)) + 8*pow(M,2)*(-3*M + r0)*log(r0/r[j])))) /(3.*M*pow(r[j],2)*r0);
-        hbar[6][0][0][j] = (-4*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))* ((16*pow(M,3) + pow(r[j],3))*(3*M - r0)*log(1 - (2*M)/r[j]) + M*(16*pow(M,3) + pow(r[j],2)*(3*r[j] - 2*r0) + 24*pow(M,2)*(r[j] - r0) + 2*M*(3*pow(r[j],2) - 4*r[j]*r0 + pow(r0,2)) + 16*pow(M,2)*(-3*M + r0)*log(r0/r[j]) )))/(3.*M*pow(r[j],2)*r0);
-        dhbar[1][0][0][j] = (4*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))*(pow(-2*M + r[j],2)* (12*pow(M,2) + 4*M*r[j] + pow(r[j],2))*(3*M - r0)*log(1 - (2*M)/r[j]) + M*(48*pow(M,4) + 8*pow(M,3)*(5*r[j] - 9*r0) - pow(r[j],3)*(3*r[j] + 2*r0) + 2*M*r[j]*(3*pow(r[j],2) + 5*r[j]*r0 - 2*pow(r0,2)) + 6*pow(M,2)*(-5*pow(r[j],2) + 4*r[j]*r0 + pow(r0,2)) - 16*pow(M,2)*(3*M - 2*r[j])*(3*M - r0)*log(r0/r[j]))))/(3.*M*pow(r[j],4)*r0);
-        dhbar[2][0][0][j] = 0.0;
-        dhbar[3][0][0][j] = (8*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))*((16*pow(M,3) + pow(r[j],3))*(3*M - r0)* log(1 - (2*M)/r[j]) + 2*M*(8*pow(M,3) + 12*pow(M,2)*(r[j] - r0) - pow(r[j],2)*r0 + M*(3*pow(r[j],2) - 4*r[j]*r0 + pow(r0,2)) + 8*pow(M,2)*(-3*M + r0)*log(r0/r[j])))) /(3.*M*pow(r[j],3)*r0);
-        dhbar[6][0][0][j] = (4*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))*((64*pow(M,4) - 32*pow(M,3)*r[j] - 2*M*pow(r[j],3) + pow(r[j],4))*(3*M - r0)*log(1 - (2*M)/r[j]) + M*(64*pow(M,4) + 32*pow(M,3)*(2*r[j] - 3*r0) + pow(r[j],3)*(3*r[j] - 2*r0) + 4*M*r[j]*(2*r[j] - r0)*r0 + 8*pow(M,2)*(-3*pow(r[j],2) + 2*r[j]*r0 + pow(r0,2)) - 32*pow(M,2)*(2*M - r[j])*(3*M - r0)*log(r0/r[j]))))/(3.*M*(2*M - r[j])*pow(r[j],3)*r0);
-        ddhbar[1][0][0][j] = (-16*M*sqrt(M_PI)*sqrt(r0/(-3*M + r0))* (16*pow(M,3) + 16*pow(M,2)*r[j] - 6*M*pow(r[j],2) - 24*pow(M,2)*r0 + 4*M*r[j]*r0 + 2*pow(r[j],2)*r0 + 2*M*pow(r0,2) - r[j]*pow(r0,2) + 8*M*(2*M - r[j])*(3*M - r0)*log(1 - (2*M)/r[j]) - 8*M*(2*M - r[j])*(3*M - r0)*log(r0/r[j])))/ (pow(r[j],5)*r0);
-        ddhbar[2][0][0][j] = 0.0;
-        ddhbar[3][0][0][j] = (-16*M*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))* (16*pow(M,3) + 16*pow(M,2)*r[j] - 6*M*pow(r[j],2) - 24*pow(M,2)*r0 + 4*M*r[j]*r0 + 2*pow(r[j],2)*r0 + 2*M*pow(r0,2) - r[j]*pow(r0,2) + 8*M*(2*M - r[j])*(3*M - r0)*log(1 - (2*M)/r[j]) - 8*M*(2*M - r[j])*(3*M - r0)*log(r0/r[j])))/ ((2*M - r[j])*pow(r[j],4)*r0);
-        ddhbar[6][0][0][j] = (-16*M*sqrt(M_PI)*sqrt(-(r0/(3*M - r0)))* (32*pow(M,4) + 16*pow(M,3)*r[j] - 28*pow(M,2)*pow(r[j],2) + 3*M*pow(r[j],3) - 48*pow(M,3)*r0 + 32*pow(M,2)*r[j]*r0 - pow(r[j],3)*r0 + 4*pow(M,2)*pow(r0,2) - 4*M*r[j]*pow(r0,2) + pow(r[j],2)*pow(r0,2) + 8*M*pow(-2*M + r[j],2)*(3*M - r0)*log(1 - (2*M)/r[j]) - 8*M*pow(-2*M + r[j],2)*(3*M - r0)*log(r0/r[j])))/(pow(r[j],4)*pow(-2*M + r[j],2)*r0);
+        h[1][0][0][j] = (-1.6710855164206668*((3. - 1.*r0)*(16.*log(r[j]/r0)*(1. - 1.*r[j]) + log(1. - 2./r[j])*pow(2. - 1.*r[j],3)*(2. + r[j])) + 2.*(32. - 2.*r0*pow(r[j],3) - 4.*(3.*r0 + 5.*r[j]) - 1.*(-1.*r0 + r[j])*(r0 + 9.*r[j]) + r[j]*(-1.*pow(r0,2) + 3.*r0*r[j] + 6.*pow(r[j],2)))))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+        h[2][0][0][j] = 0.0;
+        h[3][0][0][j] = (-1.6710855164206668*((3. - 1.*r0)*(16.*log((-2. + r[j])/r0) + log(1. - 2./r[j])*pow(r[j],3)) + 2.*(32. + pow(r0,2) - 4.*r0*r[j] + 3.*pow(r[j],2) - 1.*r0*pow(r[j],2) + 12.*(-1.*r0 + r[j]))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+        h[6][0][0][j] = (-3.3421710328413337*(32. + pow(r0,2) - 4.*r0*r[j] + 3.*pow(r[j],2) - 1.*r0*pow(r[j],2) + 12.*(-1.*r0 + r[j]) + (3. - 1.*r0)*(8.*log((-2. + r[j])/r0) - 1.*log(1. - 2./r[j])*pow(r[j],3))))/(sqrt((-3. + r0)*r0)*pow(r[j],3));
+        dh[1][0][0][j] = (-3.3421710328413337*(-4.*(-8. + r0)*(-4. + r0) + 32.*(-3. + r0)*log(1. - 2./r[j]) + 32.*(-3. + r0)*log(r[j]/r0) + r[j]*(48. + r0*(-20. + 3.*r0) - 24.*(-3. + r0)*log(1. - 2./r[j]) - 24.*(-3. + r0)*log(r[j]/r0) + (-3. + r0)*r[j]*(-8. + (3. + 2.*log(1. - 2./r[j]))*r[j]))))/(sqrt((-3. + r0)*r0)*pow(r[j],5));
+        dh[2][0][0][j] = 0.0;
+        dh[3][0][0][j] = (10.026513098524001*(-2.*(-8. + r0)*(-4. + r0) + 16.*(-3. + r0)*log((-2. + r[j])/r0) + r[j]*(8. + (-4. + r0)*r0 - 8.*(-3. + r0)*log((-2. + r[j])/r0) - 2.*(-3. + r0)*r[j])))/(sqrt((-3. + r0)*r0)*(-2. + r[j])*pow(r[j],4));
+        dh[6][0][0][j] = (10.026513098524001*((-8. + r0)*(-4. + r0) - 8.*(-3. + r0)*log((-2. + r[j])/r0) - 1.*(-3. + r0)*r[j]*(4. + r[j])))/(sqrt((-3. + r0)*r0)*pow(r[j],4));
+        ddh[1][0][0][j] = (6.684342065682667*(-320. + 72.*r[j] + 42.*pow(r[j],2) - 9.*pow(r[j],3) + 120.*r0 - 32.*r[j]*r0 - 14.*pow(r[j],2)*r0 + 3.*pow(r[j],3)*r0 - 10.*pow(r0,2) + 6.*r[j]*pow(r0,2) + 2.*(40. - 24.*r[j] + pow(r[j],3))*(-3. + r0)*log((-2. + r[j])/r[j]) - 16.*(-5. + 3.*r[j])*(-3. + r0)*log(r[j]/r0)))/(pow(r[j],6)*sqrt((-3. + r0)*r0));
+        ddh[2][0][0][j] = 0.0;
+        ddh[3][0][0][j] = (20.053026197048002*(3.*pow(r[j],3)*(-3. + r0) - 2.*pow(r[j],2)*(-4. + pow(r0,2)) - 8.*(32. - 12.*r0 + pow(r0,2)) + 8.*r[j]*(20. - 8.*r0 + pow(r0,2)) + 16.*pow(-2. + r[j],2)*(-3. + r0)*log((-2. + r[j])/r0)))/(pow(-2. + r[j],2)*pow(r[j],5)*sqrt((-3. + r0)*r0));
+        ddh[6][0][0][j] = (20.053026197048002*(4.*pow(r[j],2)*(-3. + r0) + pow(r[j],3)*(-3. + r0) + 4.*(32. - 12.*r0 + pow(r0,2)) - 2.*r[j]*(8. - 4.*r0 + pow(r0,2)) + 16.*(-2. + r[j])*(-3. + r0)*log((-2. + r[j])/r0)))/((-2. + r[j])*pow(r[j],5)*sqrt((-3. + r0)*r0));
       }
-    }
-
-    /* The non-trace-reversed field and its first and second derivatives.
-     * Here we do include the factor of a and 1/r.
-     */
-    double a = a_il(1, 0);
-    for(size_t j=0; j<N; ++j) {
-      const complex<double> hbarj = hbar[1][0][0][j];
-      const complex<double> dhbarj = dhbar[1][0][0][j];
-      const complex<double> ddhbarj = ddhbar[1][0][0][j];
-      const double rj = r[j];
-      h[1][0][0][j] = a*hbarj/rj;
-      dh[1][0][0][j] = a*(dhbarj - hbarj/rj)/rj;
-      ddh[1][0][0][j] = a*(ddhbarj - 2.0*(dhbarj - hbarj/rj)/rj)/rj;
-    }
-
-    a = a_il(3, 0);
-    for(size_t j=0; j<N; ++j) {
-      const complex<double> hbarj = hbar[6][0][0][j];
-      const complex<double> dhbarj = dhbar[6][0][0][j];
-      const complex<double> ddhbarj = ddhbar[6][0][0][j];
-      const double rj = r[j];
-      h[3][0][0][j] = a*hbarj/rj;
-      dh[3][0][0][j] = a*(dhbarj - hbarj/rj)/rj;
-      ddh[3][0][0][j] = a*(ddhbarj - 2.0*(dhbarj - hbarj/rj)/rj)/rj;
-    }
-
-    a = a_il(6, 0);
-    for(size_t j=0; j<N; ++j) {
-      const complex<double> hbarj = hbar[3][0][0][j];
-      const complex<double> dhbarj = dhbar[3][0][0][j];
-      const complex<double> ddhbarj = ddhbar[3][0][0][j];
-      const double rj = r[j];
-      h[6][0][0][j] = a*hbarj/rj;
-      dh[6][0][0][j] = a*(dhbarj - hbarj/rj)/rj;
-      ddh[6][0][0][j] = a*(ddhbarj - 2.0*(dhbarj - hbarj/rj)/rj)/rj;
     }
   }
 }
