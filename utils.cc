@@ -13,6 +13,8 @@
 #include <regex>
 #include <dirent.h>
 #include "utils.h"
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
