@@ -29,10 +29,19 @@ const double M = 1.0;
 int main(int argc, char* argv[])
 {
   cout << "Version: " << __GIT_VERSION << endl;
-  if(argc < 2 || argc > 4)
-  {
-    cout << "Usage: " << argv[0] << " <dir> [<delta lmax>] [<lmax>]" << endl;
-    exit(1);
+
+  string dirA, dirB;
+  switch(argc) {
+    case 2:
+      dirA = dirB = argv[1];
+      break;
+    case 5:
+      dirA = argv[1];
+      dirB = argv[2];
+      break;
+    default:
+      cout << "Usage: " << argv[0] << " <dirA> [<dirB>] [<delta lmax>] [<lmax>]" << endl;
+      exit(1);
   }
 
 #ifdef _OPENMP
@@ -41,41 +50,26 @@ int main(int argc, char* argv[])
 #endif
 
   /* Read in first-order fields */
-  string dir(argv[1]);
   vector<double> r, f, fp;
   double r0;
-  multi_array<complex<double>, 4> h, dh, ddh;
-  read_h1(dir, r0, r, f, fp, h, dh, ddh);
-  const int h1lmax = h[1].size()-1;
+  multi_array<complex<double>, 4> hA, dhA, ddhA, hB, dhB, ddhB;
+  read_h1(dirA, r0, r, f, fp, hA, dhA, ddhA);
+  read_h1(dirB, r0, r, f, fp, hB, dhB, ddhB);
+  const int h1lmax = min(hA[1].size()-1, hB[1].size()-1);
   const int N = r.size();
 
-  /* Compute first-order punctures */
-  multi_array<complex<double>, 4> hP, dhP, ddhP;
-  compute_h1P(r0, r, h1lmax, hP, dhP, ddhP);
-
-  /* Compute first-order residual fields */
-  multi_array<complex<double>, 4> hR(h), dhR(dh), ddhR(ddh);
-  for(int i=1; i<=10; ++i) {
-    for(int l=0; l<=h1lmax; ++l) {
-      for(int m=-l; m<=l; ++m) {
-        for(int j=0; j<N; ++j) {
-          hR[i][l][m][j]   = h[i][l][m][j] - hP[i][l][m][j];
-          dhR[i][l][m][j]  = dh[i][l][m][j] - dhP[i][l][m][j];
-          ddhR[i][l][m][j] = ddh[i][l][m][j] - ddhP[i][l][m][j];
-        }
-      }
-    }
-  }
-
   int lmax, dlmax;
-  if(argc == 2) {
-    dlmax = lmax = h1lmax;
-  } else if (argc == 3) {
-    dlmax = min(atoi(argv[2]), h1lmax);
-    lmax = h1lmax;
-  } else {
-    dlmax = min(atoi(argv[2]), h1lmax);
-    lmax = min(atoi(argv[3]), h1lmax);
+  switch(argc) {
+    case 2:
+      dlmax = lmax = h1lmax;
+      break;
+    case 5:
+      dlmax = min(atoi(argv[3]), h1lmax);
+      lmax = min(atoi(argv[4]), h1lmax);
+      break;
+    default:
+      cout << "Error, inconsistent command line arguments." << endl;
+      exit(1);
   }
 
   /* Compute the source */
@@ -118,34 +112,34 @@ int main(int argc, char* argv[])
             continue;
           switch(i3) {
             case 1:
-              tmp = R2_1(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_1(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 2:
-              tmp = R2_2(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_2(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 3:
-              tmp = R2_3(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_3(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 4:
-              tmp = R2_4(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_4(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 5:
-              tmp = R2_5(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_5(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 6:
-              tmp = R2_6(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_6(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 7:
-              tmp = R2_7(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_7(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 8:
-              tmp = R2_8(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_8(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 9:
-              tmp = R2_9(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_9(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
             case 10:
-              tmp = R2_10(M, r0, r, f, fp, hR, dhR, ddhR, hR, dhR, ddhR, l3, m3, l1, m1, l2, m3-m1);
+              tmp = R2_10(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
               break;
           }
           for(size_t j = 0; j < tmp.size(); ++j)
@@ -181,24 +175,6 @@ int main(int argc, char* argv[])
       data[j][1] = imag(src[i][l][m][j]);
     }
     src_h5.write_dataset(srcds.str(), data);
-
-    /* First order retarded field */
-    stringstream h1ds;
-    h1ds << "h1 i=" << i << " l=" << l << " m=" << m;
-    for(int j=0; j<N; ++j) {
-      data[j][0] = real(h[i][l][m][j]);
-      data[j][1] = imag(h[i][l][m][j]);
-    }
-    src_h5.write_dataset(h1ds.str(), data);
-
-    /* First order puncture */
-    stringstream h1Pds;
-    h1Pds << "h1P i=" << i << " l=" << l << " m=" << m;
-    for(int j=0; j<N; ++j) {
-      data[j][0] = real(hP[i][l][m][j]);
-      data[j][1] = imag(hP[i][l][m][j]);
-    }
-    src_h5.write_dataset(h1Pds.str(), data);
   }
   /* Grid coordinates */
   stringstream rds;
