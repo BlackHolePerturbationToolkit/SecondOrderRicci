@@ -13,8 +13,3 @@ void read_h1(const std::string dir, double &r0,
              boost::multi_array<std::complex<double>,4> &h,
              boost::multi_array<std::complex<double>,4> &dh,
              boost::multi_array<std::complex<double>,4> &ddh);
-
-void compute_h1P(const double r0, const std::vector<double> &r, const int l_max,
-             boost::multi_array<std::complex<double>,4> &hP,
-             boost::multi_array<std::complex<double>,4> &dhP,
-             boost::multi_array<std::complex<double>,4> &ddhP);
