@@ -154,7 +154,7 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     assert(rank == 1);
 
     vector<hsize_t> gridSize = dataspace.getSimpleExtentDims();
-    N = gridSize[0];
+    N = gridSize[0] + 1;
     r.resize(N);
     f.resize(N);
     fp.resize(N);
@@ -162,10 +162,6 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     H5S memspace(gridSize);
 
     H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, r.data());
-    for(size_t i=0; i<N; ++i) {
-      f[i] = 1.0 - 2.0*M/r[i];
-      fp[i] = 2.0*M/(r[i]*r[i]);
-    }
 
     /* Determine the radius of the worldline point */
     H5A r0index(dataset.getId(), "r0index");
@@ -177,7 +173,19 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     assert(r0_dims[0] == 1);
 
     H5Aread(r0index.getId(), H5T_NATIVE_INT, &r0i);
+    assert(r0i>=0);
     r0 = r[r0i];
+
+    /* The actual grid has r0 twice, once for the left solutions and once for the right */
+    for(int i=N-1; i>r0i; --i) {
+      r[i] = r[i-1];
+    }
+
+    /* Compute f and f' on the grid */
+    for(size_t i=0; i<N; ++i) {
+      f[i] = 1.0 - 2.0*M/r[i];
+      fp[i] = 2.0*M/(r[i]*r[i]);
+    }
   }
 
   cout << "Grid size: [" << r.front() << ", " << r.back() << "] (" << N << " points)" << endl;
@@ -207,16 +215,28 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     cout << "[" << l << ", " << m << "] ";
 
     H5F h5_file(file, H5F_ACC_RDONLY);
-    H5D dataset(h5_file, "inhom");
-    H5S dataspace(dataset);
+    H5D dataset_left(h5_file, "inhom_left");
+    H5D dataset_right(h5_file, "inhom_right");
+    H5S dataspace_left(dataset_left);
+    H5S dataspace_right(dataset_right);
 
     /* Check the dataset is a 2D array or the right size */
-    const int rank = dataspace.getSimpleExtentNDims();
-    assert(rank == 2);
+    const int rank_left = dataspace_left.getSimpleExtentNDims();
+    const int rank_right = dataspace_right.getSimpleExtentNDims();
+    assert(rank_left == 2);
+    assert(rank_right == 2);
 
-    vector<hsize_t> size = dataspace.getSimpleExtentDims();
-    assert(size[0] == N);
-    hsize_t num_fields = size[1];
+    vector<hsize_t> size_left = dataspace_left.getSimpleExtentDims();
+    vector<hsize_t> size_right = dataspace_right.getSimpleExtentDims();
+    size_t N_left = size_left[0];
+    size_t N_right = size_right[0];
+    hsize_t num_fields_left = size_left[1];
+    hsize_t num_fields_right = size_right[1];
+
+    assert(N_left + N_right == N);
+    assert(N_left == (size_t)r0i + 1);
+    assert(num_fields_left == num_fields_right);
+    hsize_t num_fields = num_fields_left;
 
     vector<int> fields;
     if (isEven(l+m)) {
@@ -241,9 +261,12 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     }
 
     /* Read data for a single dataset */
-    H5S memspace(size);
-    multi_array<double, 2> data(boost::extents[N][num_fields]);
-    H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, data.data());
+    H5S memspace_left(size_left);
+    H5S memspace_right(size_right);
+    multi_array<double, 2> data_left(boost::extents[N_left][num_fields_left]);
+    multi_array<double, 2> data_right(boost::extents[N_right][num_fields_right]);
+    H5Dread(dataset_left.getId(), H5T_NATIVE_DOUBLE, memspace_left.getId(), dataspace_left.getId(), H5P_DEFAULT, data_left.data());
+    H5Dread(dataset_right.getId(), H5T_NATIVE_DOUBLE, memspace_right.getId(), dataspace_right.getId(), H5P_DEFAULT, data_right.data());
 
     /* Transfer the data to the appropriate locations */
 
@@ -252,9 +275,13 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
      */
     for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
       int i = fields[it];
-      for(size_t j=0; j<N; ++j) {
-        hbar[i][l][m][j]  = complex<double>(data[j][4*it], data[j][4*it+1]);
-        dhbar[i][l][m][j] = complex<double>(data[j][4*it+2], data[j][4*it+3]);
+      for(size_t j=0; j<N_left; ++j) {
+        hbar[i][l][m][j]  = complex<double>(data_left[j][4*it], data_left[j][4*it+1]);
+        dhbar[i][l][m][j] = complex<double>(data_left[j][4*it+2], data_left[j][4*it+3]);
+      }
+      for(size_t j=0; j<N_right; ++j) {
+        hbar[i][l][m][N_left+j]  = complex<double>(data_right[j][4*it], data_right[j][4*it+1]);
+        dhbar[i][l][m][N_left+j] = complex<double>(data_right[j][4*it+2], data_right[j][4*it+3]);
       }
     }
 
