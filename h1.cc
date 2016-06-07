@@ -12,6 +12,7 @@
 #include <complex>
 #include <iostream>
 #include <assert.h>
+#include <regex>
 
 extern "C"
 {
@@ -127,7 +128,8 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
   cout << "Reading first order fields from directory: " << dir << endl;
 
   /* Determine all available modes */
-  vector<string> files = list_files(dir);
+  std::regex filepattern("h1-l([0-9]+)m([0-9]+).h5");
+  vector<string> files = list_files(dir, filepattern);
   if(files.size() == 0)
     exit(1);
 

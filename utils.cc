@@ -18,8 +18,8 @@
 
 using namespace std;
 
-/* Return a list of all files in a directory */
-vector<string> list_files(string dirname)
+/* Return a list of all files in a directory matching a pattern */
+vector<string> list_files(string dirname, regex pattern)
 {
   DIR *dir;
   struct dirent *ent;
@@ -28,7 +28,7 @@ vector<string> list_files(string dirname)
   dir = opendir(dirname.c_str());
   if (dir != NULL) {
     while ((ent = readdir(dir)) != NULL) {
-      if(strcmp(ent->d_name, ".")==0 || strcmp(ent->d_name, "..")==0)
+      if(!regex_match(ent->d_name, pattern))
         continue;
       files.push_back(dirname + '/' + ent->d_name);
     }

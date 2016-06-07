@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <regex>
 
 struct ilm_mode
 {
@@ -23,7 +24,7 @@ struct lm_mode
 };
 
 lm_mode filenameToMode(std::string filename);
-std::vector<std::string> list_files(std::string dirname);
+std::vector<std::string> list_files(std::string dirname, std::regex pattern);
 
 bool isOdd(int n);
 bool isEven(int n);
