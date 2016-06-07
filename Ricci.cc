@@ -83,6 +83,10 @@ int main(int argc, char* argv[])
       for(int i3=1; i3<=10; ++i3) {
         if(((i3<=7) && isOdd(l3+m3)) || ((i3>7) && isEven(l3+m3)))
           continue;
+        if(((i3==4)||(i3==5)||(i3==8)||(i3==9)) && l3<1)
+          continue;
+        if(((i3==7)||(i3==10)) && l3<2)
+          continue;
         modes.push_back(ilm_mode({i3, l3, m3}));
       }
     }
