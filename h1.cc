@@ -164,17 +164,10 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     H5Dread(dataset.getId(), H5T_NATIVE_DOUBLE, memspace.getId(), dataspace.getId(), H5P_DEFAULT, r.data());
 
     /* Determine the radius of the worldline point */
-    H5A r0index(dataset.getId(), "r0index");
-
-    H5S r0_dataspace(r0index);
-    assert(r0_dataspace.getSimpleExtentNDims() == 1);
-
-    vector<hsize_t> r0_dims = r0_dataspace.getSimpleExtentDims();
-    assert(r0_dims[0] == 1);
-
-    H5Aread(r0index.getId(), H5T_NATIVE_INT, &r0i);
-    assert(r0i>=0);
-    r0 = r[r0i];
+    H5D dataset_left(h5_file, "inhom_left");
+    H5S dataspace_left(dataset_left);
+    r0i = dataspace_left.getSimpleExtentDims()[0] - 1;
+    r0  = r[r0i];
 
     /* The actual grid has r0 twice, once for the left solutions and once for the right */
     for(int i=N-1; i>r0i; --i) {
