@@ -24,8 +24,10 @@ env['LIBS']     = ['gsl', 'gslcblas', 'm', 'hdf5']
 env['LIBPATH']  = ['/usr/local/lib/']
 env['LINKFLAGS']= ['-fopenmp']
 env['CPPPATH']  = ['/usr/local/include']
-env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-Wall', '-g', '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
-env['CXX']      = 'g++'
+env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-g',
+                   '-Wall', '-Wno-unused-local-typedefs',
+                   '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
+env['CXX']      = 'g++-6'
 
 
 sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'Ricci.cc', 'utils.cc',
