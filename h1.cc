@@ -236,21 +236,21 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     vector<int> fields;
     if (isEven(l+m)) {
       if (l==1) {
-        assert(num_fields == 4*6);
+        assert(num_fields == 6*6);
         fields = {1, 3, 5, 6, 2, 4};
       } else if (l==0) {
-        assert(num_fields == 4*4);
+        assert(num_fields == 6*4);
         fields = {1, 3, 6, 2};
       } else {
-        assert(num_fields == 4*7);
+        assert(num_fields == 6*7);
         fields = {1, 3, 5, 6, 7, 2, 4};
       }
     } else {
       if (l==1) {
-        assert(num_fields == 4*2);
+        assert(num_fields == 6*2);
         fields = {9, 8};
       } else {
-        assert(num_fields == 4*3);
+        assert(num_fields == 6*3);
         fields = {9, 10, 8};
       }
     }
@@ -271,27 +271,29 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
       int i = fields[it];
       for(size_t j=0; j<N_left; ++j) {
-        hbar[i][l][m][j]  = complex<double>(data_left[j][4*it], data_left[j][4*it+1]);
-        dhbar[i][l][m][j] = complex<double>(data_left[j][4*it+2], data_left[j][4*it+3]);
+        hbar[i][l][m][j]  = complex<double>(data_left[j][6*it], data_left[j][6*it+1]);
+        dhbar[i][l][m][j] = complex<double>(data_left[j][6*it+2], data_left[j][6*it+3]);
+        ddhbar[i][l][m][j] = complex<double>(data_left[j][6*it+4], data_left[j][6*it+5]);
       }
       for(size_t j=0; j<N_right; ++j) {
-        hbar[i][l][m][N_left+j]  = complex<double>(data_right[j][4*it], data_right[j][4*it+1]);
-        dhbar[i][l][m][N_left+j] = complex<double>(data_right[j][4*it+2], data_right[j][4*it+3]);
+        hbar[i][l][m][N_left+j]  = complex<double>(data_right[j][6*it], data_right[j][6*it+1]);
+        dhbar[i][l][m][N_left+j] = complex<double>(data_right[j][6*it+2], data_right[j][6*it+3]);
+        ddhbar[i][l][m][N_left+j] = complex<double>(data_right[j][6*it+4], data_right[j][6*it+5]);
       }
     }
 
     /* Second derivative of the trace-reversed field */
-    for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
-      int i = fields[it];
-      for(size_t j=0; j<N; ++j) {
-        const double rj = r[j], fj = f[j], fpj = fp[j];
-        field_type::array_view<1>::type hbarj = hbar[boost::indices[irange()][l][m][j]];
-        field_type::array_view<1>::type dhbarj = dhbar[boost::indices[irange()][l][m][j]];
-        hbarj.reindex(1);
-        dhbarj.reindex(1);
-        ddhbar[i][l][m][j] = d2hdr2(i, l, m, rj, fj, fpj, r0, hbarj, dhbarj);
-      }
-    }
+    // for(vector<int>::size_type it=0; it!=fields.size(); ++it) {
+    //   int i = fields[it];
+    //   for(size_t j=0; j<N; ++j) {
+    //     const double rj = r[j], fj = f[j], fpj = fp[j];
+    //     field_type::array_view<1>::type hbarj = hbar[boost::indices[irange()][l][m][j]];
+    //     field_type::array_view<1>::type dhbarj = dhbar[boost::indices[irange()][l][m][j]];
+    //     hbarj.reindex(1);
+    //     dhbarj.reindex(1);
+    //     ddhbar[i][l][m][j] = d2hdr2(i, l, m, rj, fj, fpj, r0, hbarj, dhbarj);
+    //   }
+    // }
 
     /* The non-trace-reversed field and its first and second derivatives.
      * Here we do include the factor of a and 1/r.
