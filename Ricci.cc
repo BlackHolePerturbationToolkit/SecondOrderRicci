@@ -64,7 +64,14 @@ int main(int argc, char* argv[])
       dlmax = lmax = h1lmax;
       break;
     case 5:
-      dlmax = min(atoi(argv[3]), h1lmax);
+      dlmax = atoi(argv[3]);
+
+      if(dlmax<0) {
+        h1lmax += dlmax;
+        dlmax = h1lmax;
+      } else {
+        dlmax = min(dlmax, h1lmax);
+      }
       lmax = min(atoi(argv[4]), h1lmax);
       break;
     default:
