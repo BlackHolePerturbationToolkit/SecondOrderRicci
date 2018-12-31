@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   multi_array<complex<double>, 4> hA, dhA, ddhA, hB, dhB, ddhB;
   read_h1(dirA, r0, r, f, fp, hA, dhA, ddhA);
   read_h1(dirB, r0, r, f, fp, hB, dhB, ddhB);
-  const int h1lmax = min(hA[1].size()-1, hB[1].size()-1);
+  int h1lmax = min(hA[1].size()-1, hB[1].size()-1);
   const int N = r.size();
 
   int lmax, dlmax;
