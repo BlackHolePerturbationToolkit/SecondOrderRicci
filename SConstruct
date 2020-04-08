@@ -29,13 +29,23 @@ env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '
                    '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
 env['CXX']      = 'g++-6'
 
-
-sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'Ricci.cc', 'utils.cc',
+# Common source files
+sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc',
            'R2_1.cc', 'R2_2.cc', 'R2_3.cc', 'R2_4.cc', 'R2_5.cc',
            'R2_6.cc', 'R2_7.cc', 'R2_8.cc', 'R2_9.cc', 'R2_10.cc',
            'hh_1.cc', 'hh_2.cc', 'hh_3.cc', 'hh_4.cc', 'hh_5.cc',
            'hh_6.cc', 'hh_7.cc', 'hh_8.cc', 'hh_9.cc', 'hh_10.cc']
-executable = 'Ricci'
 
-Program(executable, sources)
+# Main coupling code
+sources_Ricci = sources + ['Ricci.cc']
+executable_Ricci = 'Ricci'
+
+Program(executable_Ricci, sources_Ricci)
+
+# Mass perturbation coupling code
+sources_M = sources + ['Ricci_M.cc', 'h1_M.cc']
+executable_M = 'Ricci_M'
+
+Program(executable_M, sources_M)
+
 Decider('MD5-timestamp')
