@@ -25,9 +25,9 @@ env['LIBPATH']  = ['/usr/local/lib/']
 env['LINKFLAGS']= ['-fopenmp']
 env['CPPPATH']  = ['/usr/local/include']
 env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-g',
-                   '-Wall', '-Wno-unused-local-typedefs',
+                   '-Wall', '-Wno-unused-local-typedefs', '-DH5_USE_110_API',
                    '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
-env['CXX']      = 'g++-6'
+env['CXX']      = 'g++-9'
 
 # Common source files
 sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc',
