@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
   vector<double> r, f, fp;
   double r0;
   multi_array<complex<double>, 4> hA, dhA, ddhA, hB, dhB, ddhB;
-  read_h1(dirA, r0, r, f, fp, hA, dhA, ddhA);
-  read_h1(dirB, r0, r, f, fp, hB, dhB, ddhB);
+  read_h1(dirA, r0, r, f, fp, hA, dhA, ddhA, std::numeric_limits<int>::max());
+  read_h1(dirB, r0, r, f, fp, hB, dhB, ddhB, std::numeric_limits<int>::max());
   int h1lmax = min(hA[1].size()-1, hB[1].size()-1);
   const int N = r.size();
 

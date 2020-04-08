@@ -12,4 +12,5 @@ void read_h1(const std::string dir, double &r0,
              std::vector<double> &r, std::vector<double> &f, std::vector<double> &fp,
              boost::multi_array<std::complex<double>,4> &h,
              boost::multi_array<std::complex<double>,4> &dh,
-             boost::multi_array<std::complex<double>,4> &ddh);
+             boost::multi_array<std::complex<double>,4> &ddh,
+             int l_max);

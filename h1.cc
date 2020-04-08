@@ -123,7 +123,7 @@ complex<double> d2hdr2(int i, int l, int m, double r, double f, double fp, doubl
 
 /* Read HDF5 files containing first order fields */
 void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f, vector<double> &fp,
-             field_type &h, field_type &dh, field_type &ddh)
+             field_type &h, field_type &dh, field_type &ddh, int l_max)
 {
   cout << "Reading first order fields from directory: " << dir << endl;
 
@@ -135,10 +135,13 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
 
   vector<lm_mode> modes;
   for (auto file: files) {
-    modes.push_back(filenameToMode(file));
+    lm_mode mode = filenameToMode(file);
+    if(mode.l > l_max)
+      continue; 
+    modes.push_back(mode);
   }
 
-  int l_max = 0;
+  l_max = 0;
   for (auto mode: modes) {
     if (mode.l > l_max)
       l_max = mode.l;
@@ -207,6 +210,10 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
     lm_mode lm = filenameToMode(file);
     const int l = lm.l;
     const int m = lm.m;
+
+    if(l > l_max)
+      continue; 
+
     cout << "[" << l << ", " << m << "] ";
 
     H5F h5_file(file, H5F_ACC_RDONLY);
