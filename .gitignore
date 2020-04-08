@@ -1,5 +1,7 @@
 .sconsign.dblite
 *.o
 Ricci
+Ricci_M
+Ricci_S
 data/*
 src.h5

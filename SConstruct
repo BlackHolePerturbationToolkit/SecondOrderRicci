@@ -48,4 +48,10 @@ executable_M = 'Ricci_M'
 
 Program(executable_M, sources_M)
 
+# Spin perturbation coupling code
+sources_S = sources + ['Ricci_S.cc', 'h1_S.cc']
+executable_S = 'Ricci_S'
+
+Program(executable_S, sources_S)
+
 Decider('MD5-timestamp')
