@@ -45,13 +45,13 @@ void h1_S(const double &r0, const vector<double> &r, const vector<double> &f, co
 
   for(size_t j=0; j<N; ++j) {
     // i=8
-    h[8][l][m][j] = -16*pow(M_PI/3.,0.5)*pow(r[j],-1);
-    dh[8][l][m][j] = 16*pow(M_PI/3.,0.5)*pow(r[j],-2);
-    ddh[8][l][m][j] = -32*pow(M_PI/3.,0.5)*pow(r[j],-3);
+    h[8][l][m][j] = -8*pow(M_PI/3.,0.5)*pow(r[j],-2);
+    dh[8][l][m][j] = 16*pow(M_PI/3.,0.5)*pow(r[j],-3);
+    ddh[8][l][m][j] = -48*pow(M_PI/3.,0.5)*pow(r[j],-4);
 
     // i=9
-    h[9][l][m][j] = -32*pow(M_PI/3.,0.5)*pow(r[j],-2);
-    dh[9][l][m][j] = 64*pow(M_PI/3.,0.5)*pow(r[j],-3);
-    ddh[9][l][m][j] = -64*pow(3*M_PI,0.5)*pow(r[j],-4);
+    h[9][l][m][j] = -16*pow(M_PI/3.,0.5)*pow(r[j],-3);
+    dh[9][l][m][j] = 48*pow(M_PI/3.,0.5)*pow(r[j],-4);
+    ddh[9][l][m][j] = -192*pow(M_PI/3.,0.5)*pow(r[j],-5);
   }
 }
