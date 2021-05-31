@@ -21,13 +21,13 @@ if ARGUMENTS.get('VERBOSE') != '1':
 
 # Build options
 env['LIBS']     = ['gsl', 'gslcblas', 'm', 'hdf5']
-env['LIBPATH']  = ['/usr/local/lib/']
+env['LIBPATH']  = ['/usr/local/lib/', '/usr/lib/x86_64-linux-gnu/hdf5/serial/']
 env['LINKFLAGS']= ['-fopenmp']
-env['CPPPATH']  = ['/usr/local/include']
+env['CPPPATH']  = ['/usr/local/include', '/usr/include/hdf5/serial']
 env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-g',
                    '-Wall', '-Wno-unused-local-typedefs', '-DH5_USE_110_API',
                    '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
-env['CXX']      = 'g++-9'
+env['CXX']      = 'g++'
 
 # Common source files
 sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc',
