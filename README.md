@@ -1,5 +1,5 @@
 ===============================================================================
- Second Order
+ Second Order Ricci
 ===============================================================================
  Version 1.0
  Copyright 2014 Barry Wardell
@@ -38,7 +38,7 @@ Building
 --------
 
 To compile the software, run 'scons' from inside the source directory. If you have
-libraries in non-standard paths, edit the SConstruct file and change the settings
+libraries in non-standard paths, edit the src/SConscript file and change the settings
 in the "Build options" section.
 
 
