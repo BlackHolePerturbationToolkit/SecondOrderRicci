@@ -1,23 +1,10 @@
-===============================================================================
- Second Order Ricci
-===============================================================================
- Version 1.0
- Copyright 2014 Barry Wardell
+# Second Order Ricci
 
 Compute the source for the second order Lorenz gauge equation
-===============================================================================
 
 
-Getting the package
--------------------
-The latest development version will always be available from the project git
-repository:
+### Requirements
 
-git clone git@bitbucket.org:barrywardell/secondordersource.git
-
-
-Requirements
-------------
 The code requires the following libraries:
 
 * GNU Scientific Library: This provides functions for computing Wigner 3j symbols.
@@ -34,21 +21,20 @@ Boost 1.55.0
 SCons 2.3.1
 
 
-Building
---------
+### Building
 
 To compile the software, run 'scons' from inside the source directory. If you have
 libraries in non-standard paths, edit the src/SConscript file and change the settings
 in the "Build options" section.
 
 
-Installation
-------------
+### Installation
+
 No installation is required.
 
 
-Usage
------
+### Usage
+
 Make sure data for the first order field is available in a directory by itself
 (i.e. no other files present), then run:
 
@@ -57,21 +43,11 @@ Make sure data for the first order field is available in a directory by itself
 where <directory> is the path to the directory of first order data.
 
 
-Changelog
----------
+### License
 
-
-Known problems
---------------
-There is currently no bug tracker.
-
-
-License
--------
 This code is distributed under the University of Illinois/NCSA
 Open Source License. Details can be found in the LICENSE file.
 
-Authors
--------
+### Authors
 
 Barry Wardell
