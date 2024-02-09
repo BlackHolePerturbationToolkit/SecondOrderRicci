@@ -1,0 +1,2639 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[    144208,       2631]
+NotebookOptionsPosition[    138662,       2522]
+NotebookOutlinePosition[    139054,       2538]
+CellTagsIndexPosition[    139011,       2535]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Generate C++ coupling code", "Title",
+ CellChangeTimes->{{3.916462280248054*^9, 
+  3.9164622874565277`*^9}},ExpressionUUID->"c9dedb48-f863-40d7-a49e-\
+446801dddd65"],
+
+Cell["\<\
+This notebook generates the expressions for the coupling formulas which are \
+used in the C++ code.\
+\>", "Text",
+ CellChangeTimes->{{3.916462289628086*^9, 
+  3.916462318708994*^9}},ExpressionUUID->"8a8640bc-893a-421c-963d-\
+b01fa3487f64"],
+
+Cell[CellGroupData[{
+
+Cell["Load equations from PerturbationEquations package", "Section",
+ CellChangeTimes->{{3.91640184596457*^9, 3.916401847627487*^9}, {
+  3.916402474567298*^9, 3.916402475878497*^9}, {3.916462263282893*^9, 
+  3.9164622738657503`*^9}},ExpressionUUID->"ffad90a6-b3a7-4ced-ab4c-\
+9f098a8cd1a1"],
+
+Cell[BoxData[
+ RowBox[{"Block", "[", 
+  RowBox[{
+   RowBox[{"{", "Print", "}"}], ",", 
+   RowBox[{"<<", "xAct`PerturbationEquations`"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.9163772172969227`*^9, 3.916377223259474*^9}, {
+  3.916462207655954*^9, 
+  3.916462212024447*^9}},ExpressionUUID->"564f9a90-7ec7-4d7b-b041-\
+421b036b41f7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData["xAct`PerturbationEquations`$Version"], "Input",
+ CellChangeTimes->{{3.916462228959202*^9, 3.9164622347644176`*^9}},
+ CellLabel->
+  "In[100]:=",ExpressionUUID->"606398d3-7b27-485c-b0c8-fe47fdb1bd86"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"0.3.0\"\>", ",", 
+   RowBox[{"{", 
+    RowBox[{"2024", ",", "2", ",", "8"}], "}"}]}], "}"}]], "Output",
+ CellChangeTimes->{3.916462235535666*^9},
+ CellLabel->
+  "Out[100]=",ExpressionUUID->"c223f5df-58f6-4ff6-8261-45bcc1506728"]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"d2R", "=", 
+   RowBox[{"SchwarzschildQuadraticOperator", "[", 
+    RowBox[{
+    "\"\<d2R\>\"", ",", "\"\<Lorenz\>\"", ",", "\"\<BLS\>\"", ",", 
+     "\"\<BLS\>\""}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.916393546595043*^9, 3.91639358408149*^9}, {
+  3.916394145886896*^9, 3.916394148174323*^9}},
+ CellLabel->"In[2]:=",ExpressionUUID->"5aa9e0c6-6521-4366-86ef-6289f70a3a13"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"d2R", "=", 
+   RowBox[{"Map", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Collect", "[", 
+       RowBox[{
+        RowBox[{"#", "//.", "FrequencyDomainConversion"}], ",", 
+        RowBox[{"CInt", "[", "__", "]"}], ",", "Simplify"}], "]"}], "&"}], 
+     ",", "d2R"}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.9163941493737803`*^9, 3.9163942096446533`*^9}, {
+   3.9163942405487843`*^9, 3.916394240695866*^9}, {3.9163943253779087`*^9, 
+   3.9163943334432287`*^9}, {3.9163945503900347`*^9, 3.916394563415545*^9}, {
+   3.916395048474177*^9, 3.916395049478877*^9}, 3.916397171355784*^9, {
+   3.9163982300814342`*^9, 3.916398235910089*^9}, {3.916401413894022*^9, 
+   3.916401427105887*^9}, {3.9164025262299356`*^9, 3.916402554558449*^9}},
+ CellLabel->"In[3]:=",ExpressionUUID->"12564c9a-45ab-4f27-beb7-e5d7508f4e92"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Replacement rules for conversion to C++", "Section",
+ CellChangeTimes->{{3.6136849013669667`*^9, 3.613684903604743*^9}, {
+  3.9164024694354753`*^9, 3.916402472006339*^9}, {3.9164633735464287`*^9, 
+  3.9164633737529716`*^9}},ExpressionUUID->"b2d21999-9b5c-489d-ae38-\
+03225ff8180c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"hRules", "=", 
+   RowBox[{"Sequence", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{"PD", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", 
+          RowBox[{"-", "BL"}]}], "}"}], "]"}], "[", 
+       RowBox[{
+        RowBox[{"PD", "[", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", 
+           RowBox[{"-", "BL"}]}], "}"}], "]"}], "[", 
+        RowBox[{"hBS", "[", 
+         RowBox[{
+          RowBox[{"LI", "[", "i_", "]"}], ",", 
+          RowBox[{"LI", "[", "l1", "]"}], ",", 
+          RowBox[{"LI", "[", "m1", "]"}]}], "]"}], "]"}], "]"}], ":>", 
+      RowBox[{"ddh1", "[", "i", "]"}]}], ",", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"PD", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", 
+          RowBox[{"-", "BL"}]}], "}"}], "]"}], "[", 
+       RowBox[{"hBS", "[", 
+        RowBox[{
+         RowBox[{"LI", "[", "i_", "]"}], ",", 
+         RowBox[{"LI", "[", "l1", "]"}], ",", 
+         RowBox[{"LI", "[", "m1", "]"}]}], "]"}], "]"}], ":>", 
+      RowBox[{"dh1", "[", "i", "]"}]}], ",", 
+     RowBox[{
+      RowBox[{"hBS", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "i_", "]"}], ",", 
+        RowBox[{"LI", "[", "l1", "]"}], ",", 
+        RowBox[{"LI", "[", "m1", "]"}]}], "]"}], ":>", 
+      RowBox[{"h1", "[", "i", "]"}]}], ",", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"PD", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", 
+          RowBox[{"-", "BL"}]}], "}"}], "]"}], "[", 
+       RowBox[{
+        RowBox[{"PD", "[", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", 
+           RowBox[{"-", "BL"}]}], "}"}], "]"}], "[", 
+        RowBox[{"hBS", "[", 
+         RowBox[{
+          RowBox[{"LI", "[", "i_", "]"}], ",", 
+          RowBox[{"LI", "[", "l2", "]"}], ",", 
+          RowBox[{"LI", "[", "m2", "]"}]}], "]"}], "]"}], "]"}], ":>", 
+      RowBox[{"ddh2", "[", "i", "]"}]}], ",", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"PD", "[", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", 
+          RowBox[{"-", "BL"}]}], "}"}], "]"}], "[", 
+       RowBox[{"hBS", "[", 
+        RowBox[{
+         RowBox[{"LI", "[", "i_", "]"}], ",", 
+         RowBox[{"LI", "[", "l2", "]"}], ",", 
+         RowBox[{"LI", "[", "m2", "]"}]}], "]"}], "]"}], ":>", 
+      RowBox[{"dh2", "[", "i", "]"}]}], ",", 
+     RowBox[{
+      RowBox[{"hBS", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "i_", "]"}], ",", 
+        RowBox[{"LI", "[", "l2", "]"}], ",", 
+        RowBox[{"LI", "[", "m2", "]"}]}], "]"}], ":>", 
+      RowBox[{"h2", "[", "i", "]"}]}]}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.9164020504266243`*^9, 3.916402095898736*^9}},
+ CellLabel->"In[5]:=",ExpressionUUID->"aa912c4b-c5e2-40ad-97dd-a906ba22299b"],
+
+Cell[BoxData[
+ RowBox[{"CInt", 
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{"LI", 
+     RowBox[{"(", "l", ")"}]}], ",", 
+    RowBox[{"LI", 
+     RowBox[{"(", "m", ")"}]}], ",", 
+    RowBox[{"LI", 
+     RowBox[{"(", "0.", ")"}]}], ",", 
+    RowBox[{
+     RowBox[{"-", "LI"}], 
+     RowBox[{"(", "l2", ")"}]}], ",", 
+    RowBox[{
+     RowBox[{"-", "LI"}], 
+     RowBox[{"(", "m2", ")"}]}], ",", 
+    RowBox[{
+     RowBox[{"-", "LI"}], 
+     RowBox[{"(", 
+      RowBox[{"-", "3."}], ")"}]}], ",", 
+    RowBox[{
+     RowBox[{"-", "LI"}], 
+     RowBox[{"(", "l1", ")"}]}], ",", 
+    RowBox[{
+     RowBox[{"-", "LI"}], 
+     RowBox[{"(", "m1", ")"}]}], ",", 
+    RowBox[{
+     RowBox[{"-", "LI"}], 
+     RowBox[{"(", "3.", ")"}]}]}], ")"}]}]], "Input",
+ CellChangeTimes->{{3.916481583947938*^9, 
+  3.91648158395254*^9}},ExpressionUUID->"a411fed8-2471-49d8-b138-\
+11bffa5705dc"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"CouplingRules", "=", 
+   RowBox[{"Sequence", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "0", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "0", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "0", "]"}]}]}], "]"}], "->", "c0"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "0", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "1"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}]}], "]"}], "->", "c1"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "0", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "2"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "2", "]"}]}]}], "]"}], "->", "c2"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "0", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "3"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "3", "]"}]}]}], "]"}], "->", "c3"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "1", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "0", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}]}], "]"}], "->", "cv1"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", 
+         RowBox[{"-", "1"}], "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "1"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "0", "]"}]}]}], "]"}], "->", "cv2"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", 
+         RowBox[{"-", "1"}], "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "2"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}]}], "]"}], "->", "cv3"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "1", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "1"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "2", "]"}]}]}], "]"}], "->", "cv4"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "1", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "2"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "3", "]"}]}]}], "]"}], "->", "cv5"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", 
+         RowBox[{"-", "1"}], "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "3"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "2", "]"}]}]}], "]"}], "->", "cv6"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", 
+         RowBox[{"-", "2"}], "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "1"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "1"}], "]"}]}]}], "]"}], "->", "ct1"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "2", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}]}], "]"}], "->", "ct2"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "2", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "0", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "2", "]"}]}]}], "]"}], "->", "ct3"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", 
+         RowBox[{"-", "2"}], "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "2"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "0", "]"}]}]}], "]"}], "->", "ct4"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", "2", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "1"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "3", "]"}]}]}], "]"}], "->", "ct5"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"CInt", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l", "]"}], ",", 
+        RowBox[{"LI", "[", "m", "]"}], ",", 
+        RowBox[{"LI", "[", 
+         RowBox[{"-", "2"}], "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m2", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", 
+          RowBox[{"-", "3"}], "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "l1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "m1", "]"}]}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}]}], "]"}], "->", "ct6"}]}], 
+    "\[IndentingNewLine]", "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.613684927945787*^9, 3.613684934768731*^9}, {
+   3.613684975911384*^9, 3.613684995313982*^9}, {3.613685096254884*^9, 
+   3.613685133602916*^9}, {3.613685200091646*^9, 3.613685302219565*^9}, {
+   3.613685417679553*^9, 3.613685650424198*^9}, {3.6136856851180964`*^9, 
+   3.613685802998356*^9}, {3.613685949459942*^9, 3.613686007311041*^9}, {
+   3.613686054702516*^9, 3.613687059027305*^9}, {3.613691995182176*^9, 
+   3.613692199551733*^9}, 3.916401874760046*^9, {3.916462723974263*^9, 
+   3.916462889433992*^9}, {3.916462924945822*^9, 3.916462941919805*^9}, {
+   3.9164630532625303`*^9, 3.916463143764537*^9}, {3.916468180503418*^9, 
+   3.916468201142336*^9}, {3.916481222985405*^9, 3.916481235864349*^9}, {
+   3.916481590063772*^9, 3.916481602835082*^9}, {3.916483282610718*^9, 
+   3.916483298630082*^9}},
+ CellLabel->
+  "In[232]:=",ExpressionUUID->"6145d368-711c-43e9-b57e-68a96e3f2daf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"LRules", "=", 
+   RowBox[{"Sequence", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"mu", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l1", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}]}], "]"}], "->", "mu1l1"}], ",", 
+     RowBox[{
+      RowBox[{"mu", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l1", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "2", "]"}]}]}], "]"}], "->", "mu2l1"}], ",", 
+     RowBox[{
+      RowBox[{"mu", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l2", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "1", "]"}]}]}], "]"}], "->", "mu1l2"}], ",", 
+     RowBox[{
+      RowBox[{"mu", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l2", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "2", "]"}]}]}], "]"}], "->", "mu2l2"}], ",", 
+     RowBox[{
+      RowBox[{"mu", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l1", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "3", "]"}]}]}], "]"}], "->", "mu3l1"}], ",", 
+     RowBox[{
+      RowBox[{"mu", "[", 
+       RowBox[{
+        RowBox[{"LI", "[", "l2", "]"}], ",", 
+        RowBox[{"-", 
+         RowBox[{"LI", "[", "3", "]"}]}]}], "]"}], "->", "mu3l2"}]}], 
+    "\[IndentingNewLine]", "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.613688962954988*^9, 3.6136891077792463`*^9}, {
+   3.61368913864627*^9, 3.61368914131453*^9}, {3.613689201407185*^9, 
+   3.6136904142429657`*^9}, {3.613690505587577*^9, 3.6136908324646277`*^9}, 
+   3.6136909371311493`*^9, {3.613690996409836*^9, 3.613691038516199*^9}, {
+   3.613691100746006*^9, 3.613691127583048*^9}, {3.61369116462337*^9, 
+   3.613691169501315*^9}, {3.6136913064698553`*^9, 3.61369147378924*^9}, {
+   3.613691513607725*^9, 3.613691530515573*^9}, {3.613691606335552*^9, 
+   3.613691627661923*^9}, 3.613692550006534*^9, {3.613694496162328*^9, 
+   3.613694540656271*^9}, {3.613694672969104*^9, 3.613694703517295*^9}, {
+   3.613694822044135*^9, 3.613694830480237*^9}, {3.613694932431362*^9, 
+   3.613694940452344*^9}, {3.613694981950527*^9, 3.613695021534909*^9}, {
+   3.613746310668358*^9, 3.613746311032145*^9}, {3.613746668923967*^9, 
+   3.613746669243678*^9}, {3.613746710381088*^9, 3.613746710777156*^9}, {
+   3.613746761418731*^9, 3.61374676469884*^9}, {3.613749489841852*^9, 
+   3.613749494484764*^9}, {3.613749660679023*^9, 3.613749665170084*^9}, {
+   3.613751621354203*^9, 3.613751648544612*^9}, 3.916401913577956*^9, {
+   3.916463253694131*^9, 3.9164632795899973`*^9}},
+ CellLabel->
+  "In[118]:=",ExpressionUUID->"35f10741-d6ba-488f-b32e-bdc897b8317c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"gridRules", "=", 
+   RowBox[{"Sequence", "[", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"r", "[", "]"}], "\[Rule]", "r"}], ",", 
+     RowBox[{
+      RowBox[{"f", "[", 
+       RowBox[{"r", "[", "]"}], "]"}], "\[Rule]", "f"}]}], "]"}]}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.613691911555376*^9, 3.6136919188079157`*^9}, {
+  3.916401939799301*^9, 3.916401951357232*^9}, {3.916403155179961*^9, 
+  3.916403155337303*^9}},
+ CellLabel->"In[13]:=",ExpressionUUID->"e3bb891e-511c-49fd-82f6-3b3d0f6057ba"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"toC", "[", "expr_", "]"}], ":=", 
+  RowBox[{"StringReplace", "[", 
+   RowBox[{
+    RowBox[{"StringReplace", "[", 
+     RowBox[{
+      RowBox[{"ToString", "[", 
+       RowBox[{"CForm", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{"expr", "/.", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"\[Omega]1", "\[Rule]", "omega1"}], ",", 
+               RowBox[{"\[Omega]2", "->", "omega2"}]}], "}"}]}], "/.", 
+            RowBox[{"{", 
+             RowBox[{"LRules", ",", "CouplingRules"}], "}"}]}], "/.", 
+           RowBox[{"{", "gridRules", "}"}]}], "/.", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"x", ":", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"omega1", "+", "omega2"}], ")"}], "_"]}], ":>", 
+            RowBox[{"Expand", "[", "x", "]"}]}], "}"}]}], "/.", 
+         RowBox[{"{", 
+          RowBox[{"hRules", ",", 
+           RowBox[{
+            RowBox[{"p", ":", 
+             RowBox[{"Power", "[", 
+              RowBox[{
+               RowBox[{"(", 
+                RowBox[{
+                "r", "|", "f", "|", "M", "|", "omega1", "|", "omega2", "|", 
+                 "mu1l1", "|", "mu1l2", "|", "mu2l1", "|", "mu2l2"}], ")"}], 
+               ",", 
+               RowBox[{"_", "?", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{"#", "\[NotEqual]", 
+                   RowBox[{"-", "1"}]}], "&"}], ")"}]}]}], "]"}]}], 
+            "\[RuleDelayed]", "p"}], ",", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"i", ":", 
+              RowBox[{"_", "?", "NumericQ"}]}], "/;", 
+             RowBox[{
+              RowBox[{"Abs", "[", "i", "]"}], "\[NotEqual]", "1"}]}], 
+            "\[RuleDelayed]", 
+            RowBox[{"N", "[", "i", "]"}]}]}], "}"}]}], "]"}], "]"}], ",", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"\"\<Power(\>\"", "~~", 
+          RowBox[{"x", ":", 
+           RowBox[{"(", 
+            RowBox[{
+            "\"\<r\>\"", "|", "\"\<f\>\"", "|", "\"\<M\>\"", "|", 
+             "\"\<omega1\>\"", "|", "\"\<omega2\>\"", "|", "\"\<mu1l1\>\"", 
+             "|", "\"\<mu1l2\>\"", "|", "\"\<mu2l1\>\"", "|", 
+             "\"\<mu2l2\>\""}], ")"}]}], "~~", "\"\<,\>\"", "~~", 
+          RowBox[{"n", ":", "NumberString"}], "~~", "\"\<)\>\""}], 
+         "\[RuleDelayed]", 
+         RowBox[{"x", "<>", "\"\<_\>\"", "<>", "n"}]}], ",", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"h", ":", 
+           RowBox[{"(", 
+            RowBox[{
+            "\"\<h1\>\"", "|", "\"\<dh1\>\"", "|", "\"\<ddh1\>\"", "|", 
+             "\"\<h2\>\"", "|", "\"\<dh2\>\"", "|", "\"\<ddh2\>\""}], ")"}]}],
+           "~~", "\"\<(\>\"", "~~", 
+          RowBox[{"i", ":", "NumberString"}], "~~", "\"\<)\>\""}], 
+         "\[RuleDelayed]", 
+         RowBox[{"h", "<>", "\"\<_\>\"", "<>", "i"}]}], ",", 
+        RowBox[{"\"\<Complex(0,1)\>\"", "\[RuleDelayed]", "\"\<I\>\""}], ",", 
+        
+        RowBox[{
+         RowBox[{"\"\<Complex(0,\>\"", "~~", 
+          RowBox[{"n", ":", "NumberString"}], "~~", "\"\<)\>\""}], 
+         "\[RuleDelayed]", 
+         RowBox[{
+          RowBox[{"ToString", "[", 
+           RowBox[{
+            RowBox[{"N", "[", 
+             RowBox[{"ToExpression", "[", "n", "]"}], "]"}], ",", 
+            RowBox[{"FormatType", "\[Rule]", "CForm"}]}], "]"}], "<>", 
+          "\"\<*I\>\""}]}], ",", 
+        RowBox[{
+         RowBox[{"\"\<Complex(0.,\>\"", "~~", 
+          RowBox[{"n", ":", "NumberString"}], "~~", "\"\<)\>\""}], 
+         "\[RuleDelayed]", 
+         RowBox[{
+          RowBox[{"ToString", "[", 
+           RowBox[{
+            RowBox[{"N", "[", 
+             RowBox[{"ToExpression", "[", "n", "]"}], "]"}], ",", 
+            RowBox[{"FormatType", "\[Rule]", "CForm"}]}], "]"}], "<>", 
+          "\"\<*I\>\""}]}]}], "}"}]}], "]"}], ",", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\"\<Power(\>\"", "~~", 
+       RowBox[{"h", ":", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{
+           "\"\<h1\>\"", "|", "\"\<dh1\>\"", "|", "\"\<ddh1\>\"", "|", 
+            "\"\<h2\>\"", "|", "\"\<dh2\>\"", "|", "\"\<ddh2\>\""}], ")"}], 
+          "~~", "\"\<[\>\"", "~~", "NumberString", "~~", "\"\<]\>\""}], 
+         ")"}]}], "~~", "\"\<,2.)\>\""}], "\[RuleDelayed]", 
+      RowBox[{"h", "<>", "\"\<*\>\"", "<>", "h"}]}], "}"}]}], 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.613693154821546*^9, 3.613693168611233*^9}, {
+   3.613693199126761*^9, 3.613693209918892*^9}, {3.613693425432955*^9, 
+   3.613693455028325*^9}, 3.613693539099044*^9, {3.613693586454944*^9, 
+   3.613693600246399*^9}, {3.613693684173029*^9, 3.613693706637308*^9}, {
+   3.613693974238639*^9, 3.613693976685323*^9}, {3.613694105307255*^9, 
+   3.613694108710274*^9}, {3.613694477989234*^9, 3.613694480574825*^9}, {
+   3.613694604503627*^9, 3.613694637279855*^9}, {3.613696099434675*^9, 
+   3.613696113161471*^9}, {3.613696424538167*^9, 3.613696426755142*^9}, {
+   3.613696623032358*^9, 3.613696624934791*^9}, {3.613701231998822*^9, 
+   3.61370124659496*^9}, {3.613749576994309*^9, 3.613749579960432*^9}, {
+   3.613749792904394*^9, 3.613749795123389*^9}, {3.613750258391387*^9, 
+   3.613750259056513*^9}, {3.613955531483608*^9, 3.613955570436302*^9}, {
+   3.91640196458042*^9, 3.916402011293792*^9}, {3.916402113256673*^9, 
+   3.916402113891224*^9}, {3.9164021827370043`*^9, 3.916402187864068*^9}, {
+   3.916402265415333*^9, 3.916402323525247*^9}, {3.916402379055087*^9, 
+   3.916402394205975*^9}, {3.916402424365272*^9, 3.9164024395792303`*^9}, {
+   3.916403107403013*^9, 3.9164031102155437`*^9}, {3.9164032458103848`*^9, 
+   3.9164032720214376`*^9}, {3.916404531385559*^9, 3.9164045332121162`*^9}, {
+   3.91642164290541*^9, 3.916421649033855*^9}, {3.9164818926034803`*^9, 
+   3.916481892951013*^9}, {3.916482035226218*^9, 3.916482036466076*^9}, {
+   3.916482158223988*^9, 3.916482228748328*^9}},
+ CellLabel->
+  "In[216]:=",ExpressionUUID->"391a1e65-b983-44d1-9dd9-8b1f574b4e33"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Generate C++ code", "Section",
+ CellChangeTimes->{{3.91640306336442*^9, 3.916403065605439*^9}, 
+   3.916423442030012*^9, {3.916463376447558*^9, 3.916463376579733*^9}, {
+   3.916483894357291*^9, 
+   3.916483894823154*^9}},ExpressionUUID->"d3718061-a2f9-4319-bdc7-\
+486d6a41977f"],
+
+Cell[CellGroupData[{
+
+Cell["i=1", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.916462331259982*^9}},ExpressionUUID->"3a05da6c-37b2-42a1-8fb1-\
+51cc3cb3ccac"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "1", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}},
+ CellLabel->
+  "In[218]:=",ExpressionUUID->"d8a7f49b-998f-4ffc-9eaa-b68bdab2f7d1"],
+
+Cell[BoxData["\<\"(0.17677669529663687*c0*(2.*I*r*(h1_1*(2.*(M*omega1 - \
+M*omega2 + I*omega1_2*r_2)*h2_1 + (2.*M*omega1 - 2.*M*omega2 + \
+I*omega1*omega2*r_2)*h2_2) - h1_2*((6.*M*omega1 - 2.*M*omega2 + \
+I*omega1*omega2*r_2)*h2_1 + 2.*(M*omega1 - M*omega2 + \
+I*omega1*omega2*r_2)*h2_2)) + 2.*f*(2.*M*r*dh2_1*h1_2 - \
+I*omega1*r_3*dh2_1*h1_2 + 2.*M*r*dh2_2*h1_2 - ((4.*M + I*(3.*omega1 - \
+omega2)*r_2)*h1_2 + r*(2.*M*dh1_1 + (-2.*M - I*(4.*omega1 - \
+omega2)*r_2)*dh1_2 + omega1*(-2.*omega1 + omega2)*r_2*h1_3))*h2_1 - \
+2.*M*r*dh1_1*h2_2 - I*omega2*r_3*dh1_1*h2_2 + 2.*M*r*dh1_2*h2_2 - \
+4.*M*h1_2*h2_2 + omega1*omega2*r_3*h1_3*h2_2 - omega1*omega2*r_3*h1_2*h2_3 + \
+h1_1*(4.*M*h2_1 + (4.*M + I*(omega1 + omega2)*r_2)*h2_2 - r*(2.*M*dh2_1 + \
+(2.*M + I*omega1*r_2)*dh2_2 + omega1*omega2*r_2*h2_3))) + \
+2.*f_3*r*(-(r_2*dh1_3*dh2_1) + r_2*dh1_3*dh2_2 - r_2*dh1_1*dh2_3 - \
+r_2*dh1_2*dh2_3 + r*dh2_3*h1_1 + r*dh2_3*h1_2 + r*dh2_1*h1_3 - r*dh2_2*h1_3 + \
+(r*(2.*r*ddh1_3 - 3.*dh1_3) + 3.*h1_3)*h2_1 + (-(r*dh1_3) + h1_3)*h2_2 + \
+r*dh1_1*h2_3 + r*dh1_2*h2_3 - h1_1*h2_3 - h1_2*h2_3 + 2.*r*dh1_5*h2_6) + \
+2.*f_4*r*(-4.*h1_3*h2_6 + h1_6*(-(r*dh2_6) + h2_6) + r*(r*dh1_6*dh2_6 + \
+(2.*r*ddh1_6 + 4.*dh1_3 - dh1_6)*h2_6)) + f_2*(-2.*r_3*dh1_2*dh2_1 + \
+2.*r_3*dh1_1*dh2_2 - 4.*r_3*dh1_2*dh2_2 + 2.*r_2*dh2_1*h1_2 + \
+4.*r_2*dh2_2*h1_2 - 2.*I*omega1*r_3*dh2_3*h1_2 - 2.*I*omega1*r_3*dh2_1*h1_3 + \
+2.*I*omega1*r_3*dh2_2*h1_3 + 4.*r_3*ddh1_1*h2_1 - 8.*r_2*dh1_1*h2_1 + \
+2.*r_2*dh1_2*h2_1 + 8.*M*r*dh1_3*h2_1 + 2.*I*omega2*r_3*dh1_3*h2_1 - \
+2.*r*h1_2*h2_1 + 2.*I*omega1*r_2*h1_3*h2_1 - 2.*I*omega2*r_2*h1_3*h2_1 - \
+2.*(r*(r*(dh1_1 - 2.*dh1_2 + I*omega2*r*dh1_3) - h1_1 + 2.*h1_2) + (4.*M + \
+I*(omega1 - omega2)*r_2)*h1_3)*h2_2 + 2.*I*omega2*r_3*dh1_1*h2_3 + \
+2.*I*omega2*r_3*dh1_2*h2_3 + 8.*M*h1_2*h2_3 + 2.*I*omega1*r_2*h1_2*h2_3 - \
+2.*I*omega2*r_2*h1_2*h2_3 - I*r*h1_8*h2_4 - I*r*h1_9*h2_5 + \
+8.*I*omega1*r_2*h1_2*h2_6 - 4.*I*omega1*r_2*h1_4*h2_6 - 8.*M*h1_5*h2_6 - \
+4.*omega1_2*r_3*h1_6*h2_6 - 2.*omega1*omega2*r_3*h1_6*h2_6 + \
+2.*h1_1*(r*(-(r*dh2_2) - I*omega1*r_2*dh2_3 + 4.*h2_1) + (4.*M + I*(omega1 - \
+omega2)*r_2)*h2_3 + (8.*M - 2.*mu1l1_2*r)*h2_6) + I*r*h1_4*h2_8 + \
+2.*r*h1_8*h2_8 + I*r*h1_5*h2_9 + 2.*r*h1_9*h2_9)))/(f_2*r_5) + \
+(0.35355339059327373*c1*(f_2*r*(-2.*r_2*dh1_5*dh2_5 + 2.*I*r_2*dh1_9*dh2_5 - \
+2.*I*r_2*dh1_5*dh2_9 - 2.*r_2*dh1_9*dh2_9 - mu1l1_2*r*dh2_5*h1_3 - \
+I*mu1l1_2*r*dh2_9*h1_3 - I*r_2*ddh2_4*h1_8 + r_2*ddh2_8*h1_8 + \
+2.*I*r*dh2_4*h1_8 - 2.*r*dh2_8*h1_8 + I*mu1l2_2*r*dh2_3*h1_9 - \
+mu1l2_2*r*dh1_5*h2_3 + I*mu1l2_2*r*dh1_9*h2_3 - I*mu1l2_2*h1_9*h2_3 + \
+r_2*ddh1_4*h2_4 - I*r_2*ddh1_8*h2_4 - 2.*r*dh1_4*h2_4 + 2.*I*r*dh1_8*h2_4 - \
+2.*I*h1_8*h2_4 - mu1l1_2*r*dh1_3*h2_5 + mu1l1_2*h1_3*h2_5 + 2.*I*h1_9*h2_5 + \
+h1_4*(r*(r*ddh2_4 + I*r*ddh2_8 - 2.*dh2_4 - 2.*I*dh2_8) + 2.*h2_4 + \
+2.*I*h2_8) + I*r_2*ddh1_4*h2_8 + r_2*ddh1_8*h2_8 - 2.*I*r*dh1_4*h2_8 - \
+2.*r*dh1_8*h2_8 + 2.*h1_8*h2_8 - h1_5*(mu1l2_2*(r*dh2_3 - h2_3) + 2.*h2_5 + \
+2.*I*h2_9) - I*mu1l1_2*r*dh1_3*h2_9 + I*mu1l1_2*h1_3*h2_9 - 2.*h1_9*h2_9) + \
+r*(mu1l2_2*omega1*r*h1_8*h2_1 - mu1l2_2*omega2*r*h1_8*h2_1 + \
+I*mu1l2_2*omega1*r*h1_5*h2_2 - I*mu1l2_2*omega2*r*h1_5*h2_2 + \
+mu1l2_2*omega1*r*h1_9*h2_2 - mu1l2_2*omega2*r*h1_9*h2_2 + (-2.*I*M*(omega1 - \
+omega2)*h1_5 + r*(-1.*I*mu1l1_2*(omega1 - omega2)*h1_1 - \
+2.*omega1*omega2*r*(h1_4 - I*h1_8)) + 2.*M*(-omega1 + omega2)*h1_9)*h2_4 - \
+I*mu1l1_2*omega1*r*h1_2*h2_5 + I*mu1l1_2*omega2*r*h1_2*h2_5 + \
+omega1_2*r_2*h1_5*h2_5 + omega2_2*r_2*h1_5*h2_5 + 2.*M*omega1*h1_8*h2_5 - \
+2.*M*omega2*h1_8*h2_5 - I*omega1_2*r_2*h1_9*h2_5 - I*omega2_2*r_2*h1_9*h2_5 + \
+mu1l1_2*omega1*r*h1_1*h2_8 - mu1l1_2*omega2*r*h1_1*h2_8 + \
+2.*M*omega1*h1_5*h2_8 - 2.*M*omega2*h1_5*h2_8 - \
+2.*omega1*omega2*r_2*h1_8*h2_8 - 2.*I*M*omega1*h1_9*h2_8 + \
+2.*I*M*omega2*h1_9*h2_8 + mu1l1_2*omega1*r*h1_2*h2_9 - \
+mu1l1_2*omega2*r*h1_2*h2_9 + I*omega1_2*r_2*h1_5*h2_9 + \
+I*omega2_2*r_2*h1_5*h2_9 + 2.*I*M*omega1*h1_8*h2_9 - 2.*I*M*omega2*h1_8*h2_9 \
++ omega1_2*r_2*h1_9*h2_9 + omega2_2*r_2*h1_9*h2_9 + I*h1_4*(2.*M*(omega1 - \
+omega2)*h2_5 + r*(mu1l2_2*(omega1 - omega2)*h2_1 - 2.*omega1*omega2*r*h2_8) + \
+2.*I*M*(omega1 - omega2)*h2_9)) + f*(mu1l1_2*r_2*dh2_5*h1_1 + \
+I*mu1l1_2*r_2*dh2_9*h1_1 + mu1l1_2*r_2*dh2_4*h1_2 + I*mu1l1_2*r_2*dh2_8*h1_2 \
++ I*mu1l2_2*r_2*dh2_2*h1_8 + omega2*r_3*dh2_5*h1_8 + I*omega2*r_3*dh2_9*h1_8 \
++ I*mu1l2_2*r_2*dh2_1*h1_9 - omega2*r_3*dh2_4*h1_9 - 2.*I*M*r*dh2_5*h1_9 - \
+I*omega2*r_3*dh2_8*h1_9 + 2.*M*r*dh2_9*h1_9 + mu1l2_2*r_2*dh1_5*h2_1 - \
+I*mu1l2_2*r_2*dh1_9*h2_1 + 2.*mu1l1_2*mu1l2_2*r*h1_3*h2_1 - \
+3.*I*mu1l2_2*r*h1_9*h2_1 + mu1l2_2*r_2*dh1_4*h2_2 - I*mu1l2_2*r_2*dh1_8*h2_2 \
+- I*mu1l2_2*r*h1_8*h2_2 + 2.*mu1l1_2*mu1l2_2*r*h1_1*h2_3 + \
+mu1l2_2*omega1*r_2*h1_8*h2_3 + mu1l2_2*omega2*r_2*h1_8*h2_3 - \
+2.*I*M*mu1l2_2*h1_9*h2_3 - mu1l1_2*r_2*dh1_2*h2_4 + I*omega1*r_3*dh1_5*h2_4 + \
+omega1*r_3*dh1_9*h2_4 + mu1l1_2*r*h1_2*h2_4 + I*mu1l1_2*omega1*r_2*h1_3*h2_4 \
++ I*mu1l1_2*omega2*r_2*h1_3*h2_4 - 8.*I*M*h1_8*h2_4 + 2.*omega2*r_2*h1_9*h2_4 \
+- mu1l1_2*r_2*dh1_1*h2_5 - I*omega1*r_3*dh1_4*h2_5 + 2.*M*r*dh1_5*h2_5 - \
+omega1*r_3*dh1_8*h2_5 - 2.*I*M*r*dh1_9*h2_5 + 3.*mu1l1_2*r*h1_1*h2_5 + \
+2.*M*mu1l1_2*h1_3*h2_5 + 2.*omega1*r_2*h1_8*h2_5 - 8.*I*M*h1_9*h2_5 - \
+I*mu1l1_2*r_2*dh1_2*h2_8 - omega1*r_3*dh1_5*h2_8 + I*omega1*r_3*dh1_9*h2_8 + \
+I*mu1l1_2*r*h1_2*h2_8 - mu1l1_2*omega1*r_2*h1_3*h2_8 - \
+mu1l1_2*omega2*r_2*h1_3*h2_8 + 8.*M*h1_8*h2_8 + 2.*I*omega2*r_2*h1_9*h2_8 - \
+I*mu1l1_2*r_2*dh1_1*h2_9 + omega1*r_3*dh1_4*h2_9 + 2.*I*M*r*dh1_5*h2_9 - \
+I*omega1*r_3*dh1_8*h2_9 + 2.*M*r*dh1_9*h2_9 + 3.*I*mu1l1_2*r*h1_1*h2_9 + \
+2.*I*M*mu1l1_2*h1_3*h2_9 + 2.*I*omega1*r_2*h1_8*h2_9 + 8.*M*h1_9*h2_9 + \
+h1_5*(-(mu1l2_2*r_2*dh2_1) - I*omega2*r_3*dh2_4 + 2.*M*r*dh2_5 + \
+omega2*r_3*dh2_8 + 2.*I*M*r*dh2_9 + 3.*mu1l2_2*r*h2_1 + 2.*M*mu1l2_2*h2_3 + \
+2.*I*omega2*r_2*h2_4 + 8.*M*h2_5 - 2.*omega2*r_2*h2_8 + 8.*I*M*h2_9) + \
+h1_4*(8.*M*h2_4 + I*(8.*M*h2_8 + r*(-1.*I*mu1l2_2*h2_2 + r*(I*mu1l2_2*dh2_2 + \
+omega2*r*dh2_5 + I*omega2*r*dh2_9 + mu1l2_2*omega1*h2_3 + mu1l2_2*omega2*h2_3 \
++ 2.*omega1*h2_5 + 2.*I*omega1*h2_9)))))))/(f*mu1l1*mu1l2*r_5) + \
+(0.35355339059327373*c2*(f_2*r_3*dh1_7*dh2_7 - I*f_2*r_3*dh1_10*dh2_7 + \
+I*f_2*r_3*dh1_7*dh2_10 + f_2*r_3*dh1_10*dh2_10 + f_2*r_3*ddh2_7*h1_7 + \
+I*f_2*r_3*ddh2_10*h1_7 - f*mu2l2_2*r_2*dh2_5*h1_7 - f_2*r_2*dh2_7*h1_7 - \
+I*f*mu2l2_2*r_2*dh2_9*h1_7 - I*f_2*r_2*dh2_10*h1_7 - I*f_2*r_3*ddh2_7*h1_10 + \
+f_2*r_3*ddh2_10*h1_10 + I*f*mu2l2_2*r_2*dh2_5*h1_10 + I*f_2*r_2*dh2_7*h1_10 - \
+f*mu2l2_2*r_2*dh2_9*h1_10 - f_2*r_2*dh2_10*h1_10 + \
+mu1l2_2*mu2l2_2*r*h1_7*h2_1 - I*mu1l2_2*mu2l2_2*r*h1_10*h2_1 + \
+I*mu2l2_2*omega2*r_2*h1_7*h2_4 + mu2l2_2*omega2*r_2*h1_10*h2_4 + \
+2.*M*mu2l2_2*h1_7*h2_5 - 2.*I*M*mu2l2_2*h1_10*h2_5 + (-2.*I*M*mu2l1_2*h1_9 + \
+r*(-(f*mu2l1_2*r*(dh1_5 - I*dh1_9)) + mu1l1_2*mu2l1_2*h1_1 + \
+r*(I*mu2l1_2*omega1*h1_4 + mu2l1_2*omega1*h1_8 - (omega1_2 + omega1*omega2 + \
+omega2_2)*r*(h1_7 - I*h1_10)) + f_2*(r*(r*ddh1_7 - I*r*ddh1_10 - dh1_7 + \
+I*dh1_10) + h1_7 - I*h1_10)))*h2_7 - mu2l2_2*omega2*r_2*h1_7*h2_8 + \
+I*mu2l2_2*omega2*r_2*h1_10*h2_8 + 2.*I*M*mu2l2_2*h1_7*h2_9 + \
+2.*M*mu2l2_2*h1_10*h2_9 + 2.*M*mu2l1_2*h1_5*(h2_7 + I*h2_10) + \
+I*f_2*r_3*ddh1_7*h2_10 + f_2*r_3*ddh1_10*h2_10 - I*f*mu2l1_2*r_2*dh1_5*h2_10 \
+- I*f_2*r_2*dh1_7*h2_10 - f*mu2l1_2*r_2*dh1_9*h2_10 - f_2*r_2*dh1_10*h2_10 + \
+I*mu1l1_2*mu2l1_2*r*h1_1*h2_10 - mu2l1_2*omega1*r_2*h1_4*h2_10 + \
+I*f_2*r*h1_7*h2_10 - I*omega1_2*r_3*h1_7*h2_10 - \
+I*omega1*omega2*r_3*h1_7*h2_10 - I*omega2_2*r_3*h1_7*h2_10 + \
+I*mu2l1_2*omega1*r_2*h1_8*h2_10 + 2.*M*mu2l1_2*h1_9*h2_10 + f_2*r*h1_10*h2_10 \
+- omega1_2*r_3*h1_10*h2_10 - omega1*omega2*r_3*h1_10*h2_10 - \
+omega2_2*r_3*h1_10*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{3.916403070732505*^9, 3.916403122655531*^9, 
+  3.916403158515236*^9, 3.916403275895875*^9, 3.9164045367894173`*^9, 
+  3.916421653881011*^9, 3.916463288032754*^9, 3.916482306460637*^9},
+ CellLabel->
+  "Out[218]=",ExpressionUUID->"d53af5f5-18fd-4494-9a92-8ce740c0a4f2"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=2", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.916462341936597*^9}},ExpressionUUID->"b4740531-a106-414a-9da5-\
+d5229ddb724a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "2", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.916462369431058*^9, 3.916462369533573*^9}},
+ CellLabel->
+  "In[220]:=",ExpressionUUID->"444aa76b-84d6-4d24-8d9f-7574f6156c5c"],
+
+Cell[BoxData["\<\"(0.17677669529663687*c0*(2.*I*r*(-(h1_2*((2.*M*(omega1 + \
+omega2) + I*omega1*omega2*r_2)*h2_1 + 2.*M*(3.*omega1 + omega2)*h2_2)) + \
+h1_1*(2.*M*(omega1 + omega2)*h2_1 + (2.*M*(omega1 + omega2) + \
+I*omega1*(2.*omega1 - omega2)*r_2)*h2_2)) + 2.*f*r*(-2.*M*dh2_1*h1_2 + \
+I*omega1*r_2*dh2_1*h1_2 - 2.*M*dh2_2*h1_2 + (-2.*M*dh1_1 - \
+2.*I*omega2*r_2*dh1_1 + 2.*M*dh1_2 + I*omega2*r_2*dh1_2 - I*(omega1 + \
+omega2)*r*h1_2 + omega1*omega2*r_2*h1_3)*h2_1 - 2.*M*dh1_1*h2_2 - \
+I*omega2*r_2*dh1_1*h2_2 + 2.*M*dh1_2*h2_2 + 4.*I*omega1*r_2*dh1_2*h2_2 - \
+4.*I*omega1*r*h1_2*h2_2 + 2.*omega1_2*r_2*h1_3*h2_2 - \
+omega1*omega2*r_2*h1_3*h2_2 - omega1*omega2*r_2*h1_2*h2_3 + \
+I*h1_1*(2.*(omega1 + omega2)*r*h2_1 + (omega1 + omega2)*r*h2_2 + I*(-2.*(M - \
+I*omega1*r_2)*dh2_1 + (-2.*M + I*omega1*r_2)*dh2_2 + \
+omega1*omega2*r_2*h2_3))) + 2.*f_3*r*(r_2*dh1_3*dh2_1 - r_2*dh1_3*dh2_2 - \
+r_2*dh1_1*dh2_3 - r_2*dh1_2*dh2_3 + r*dh2_3*h1_1 + r*dh2_3*h1_2 - \
+r*dh2_1*h1_3 + r*dh2_2*h1_3 - I*omega1*r_2*dh2_6*h1_6 + (-(r*dh1_3) + \
+h1_3)*h2_1 + (2.*r_2*ddh1_3 - 3.*r*dh1_3 + 3.*h1_3)*h2_2 + r*dh1_1*h2_3 + \
+r*dh1_2*h2_3 - h1_1*h2_3 - h1_2*h2_3 + 2.*r*dh1_4*h2_6 - \
+4.*I*omega1*r_2*dh1_6*h2_6 - I*omega2*r_2*dh1_6*h2_6 - \
+4.*I*omega1*r*h1_3*h2_6 + I*omega1*r*h1_6*h2_6 + I*omega2*r*h1_6*h2_6) + \
+f_2*(-2.*r_3*dh1_2*dh2_1 - 2.*r_3*dh1_1*dh2_2 + 2.*r_2*dh2_1*h1_2 - \
+2.*I*omega1*r_3*dh2_3*h1_2 + 2.*I*omega1*r_3*dh2_1*h1_3 - \
+2.*I*omega1*r_3*dh2_2*h1_3 - 2.*(r*(r*(-dh1_2 + I*omega2*r*dh1_3) + h1_2) + \
+(4.*M + I*(omega1 - omega2)*r_2)*h1_3)*h2_1 + 4.*r_3*ddh1_1*h2_2 - \
+6.*r_2*dh1_1*h2_2 + 8.*M*r*dh1_3*h2_2 + 2.*I*omega2*r_3*dh1_3*h2_2 + \
+2.*I*omega1*r_2*h1_3*h2_2 - 2.*I*omega2*r_2*h1_3*h2_2 + \
+2.*I*omega2*r_3*dh1_1*h2_3 + 2.*I*omega2*r_3*dh1_2*h2_3 + 8.*M*h1_2*h2_3 + \
+2.*I*omega1*r_2*h1_2*h2_3 - 2.*I*omega2*r_2*h1_2*h2_3 - I*r*h1_9*h2_4 - \
+I*r*h1_8*h2_5 + 16.*M*h1_2*h2_6 - 4.*mu1l1_2*r*h1_2*h2_6 - 8.*M*h1_4*h2_6 - \
+4.*I*omega1*r_2*h1_5*h2_6 + 8.*I*M*omega1*r*h1_6*h2_6 + 2.*h1_1*((4.*M + \
+I*(omega1 - omega2)*r_2)*h2_3 + r*(3.*h2_2 + r*(dh2_2 - I*omega1*r*dh2_3 + \
+4.*I*omega1*h2_6))) + I*r*h1_5*h2_8 + 2.*r*h1_9*h2_8 + I*r*h1_4*h2_9 + \
+2.*r*h1_8*h2_9)))/(f_2*r_5) + \
+(0.35355339059327373*c1*(f*(mu1l1_2*r_2*dh2_4*h1_1 + I*mu1l1_2*r_2*dh2_8*h1_1 \
++ mu1l1_2*r_2*dh2_5*h1_2 + I*mu1l1_2*r_2*dh2_9*h1_2 - mu1l2_2*r_2*dh2_2*h1_5 \
++ I*omega1*r_3*dh2_5*h1_5 + I*omega2*r_3*dh2_5*h1_5 - omega1*r_3*dh2_9*h1_5 - \
+omega2*r_3*dh2_9*h1_5 + I*mu1l2_2*r_2*dh2_1*h1_8 - omega1*r_3*dh2_4*h1_8 - \
+omega2*r_3*dh2_4*h1_8 - 2.*I*M*r*dh2_5*h1_8 - I*omega1*r_3*dh2_8*h1_8 - \
+I*omega2*r_3*dh2_8*h1_8 + 2.*M*r*dh2_9*h1_8 + I*mu1l2_2*r_2*dh2_2*h1_9 + \
+omega1*r_3*dh2_5*h1_9 + omega2*r_3*dh2_5*h1_9 + I*omega1*r_3*dh2_9*h1_9 + \
+I*omega2*r_3*dh2_9*h1_9 + mu1l2_2*r_2*dh1_4*h2_1 - I*mu1l2_2*r_2*dh1_8*h2_1 - \
+I*mu1l2_2*r*h1_8*h2_1 + mu1l2_2*r_2*dh1_5*h2_2 - I*mu1l2_2*r_2*dh1_9*h2_2 + \
+2.*mu1l1_2*mu1l2_2*r*h1_3*h2_2 + 3.*mu1l2_2*r*h1_5*h2_2 - \
+3.*I*mu1l2_2*r*h1_9*h2_2 + 2.*mu1l1_2*mu1l2_2*r*h1_2*h2_3 + \
+I*mu1l2_2*omega1*r_2*h1_5*h2_3 + I*mu1l2_2*omega2*r_2*h1_5*h2_3 - \
+2.*I*M*mu1l2_2*h1_8*h2_3 + mu1l2_2*omega1*r_2*h1_9*h2_3 + \
+mu1l2_2*omega2*r_2*h1_9*h2_3 + (-(mu1l1_2*r_2*dh1_1) - I*omega1*r_3*dh1_4 - \
+I*omega2*r_3*dh1_4 + 2.*M*r*dh1_5 - omega1*r_3*dh1_8 - omega2*r_3*dh1_8 - \
+2.*I*M*r*dh1_9 + mu1l1_2*r*h1_1 + 2.*M*mu1l1_2*h1_3 + 2.*I*omega1*r_2*h1_4 + \
+2.*I*omega2*r_2*h1_4 + 8.*M*h1_5 + 2.*omega1*r_2*h1_8 + 2.*omega2*r_2*h1_8 - \
+8.*I*M*h1_9)*h2_4 - mu1l1_2*r_2*dh1_2*h2_5 + I*omega1*r_3*dh1_5*h2_5 + \
+I*omega2*r_3*dh1_5*h2_5 + omega1*r_3*dh1_9*h2_5 + omega2*r_3*dh1_9*h2_5 + \
+3.*mu1l1_2*r*h1_2*h2_5 + I*mu1l1_2*omega1*r_2*h1_3*h2_5 + \
+I*mu1l1_2*omega2*r_2*h1_3*h2_5 - 8.*I*M*h1_8*h2_5 - I*mu1l1_2*r_2*dh1_1*h2_8 \
++ omega1*r_3*dh1_4*h2_8 + omega2*r_3*dh1_4*h2_8 + 2.*I*M*r*dh1_5*h2_8 - \
+I*omega1*r_3*dh1_8*h2_8 - I*omega2*r_3*dh1_8*h2_8 + 2.*M*r*dh1_9*h2_8 + \
+I*mu1l1_2*r*h1_1*h2_8 + 2.*I*M*mu1l1_2*h1_3*h2_8 + 8.*I*M*h1_5*h2_8 + \
+2.*I*omega1*r_2*h1_8*h2_8 + 2.*I*omega2*r_2*h1_8*h2_8 + 8.*M*h1_9*h2_8 - \
+I*mu1l1_2*r_2*dh1_2*h2_9 - omega1*r_3*dh1_5*h2_9 - omega2*r_3*dh1_5*h2_9 + \
+I*omega1*r_3*dh1_9*h2_9 + I*omega2*r_3*dh1_9*h2_9 + 3.*I*mu1l1_2*r*h1_2*h2_9 \
+- mu1l1_2*omega1*r_2*h1_3*h2_9 - mu1l1_2*omega2*r_2*h1_3*h2_9 + \
+8.*M*h1_8*h2_9 + h1_4*(-(mu1l2_2*r_2*dh2_1) - I*omega1*r_3*dh2_4 - \
+I*omega2*r_3*dh2_4 + 2.*M*r*dh2_5 + omega1*r_3*dh2_8 + omega2*r_3*dh2_8 + \
+2.*I*M*r*dh2_9 + mu1l2_2*r*h2_1 + 2.*M*mu1l2_2*h2_3 + 8.*M*h2_5 - \
+2.*omega1*r_2*h2_8 - 2.*omega2*r_2*h2_8 + 8.*I*M*h2_9)) - \
+f_2*r*(mu1l2_2*(r*dh1_4 - I*r*dh1_8 - h1_4 + I*h1_8)*h2_3 + \
+mu1l1_2*h1_3*(r*dh2_4 + I*r*dh2_8 - h2_4 - I*h2_8) + r*(r*dh1_5*dh2_4 - \
+I*r*dh1_9*dh2_4 + r*dh1_4*dh2_5 - I*r*dh1_8*dh2_5 + I*r*dh1_5*dh2_8 + \
+r*dh1_9*dh2_8 + I*r*dh1_4*dh2_9 + r*dh1_8*dh2_9 + mu1l2_2*dh2_3*h1_4 - \
+r*ddh2_4*h1_5 - I*r*ddh2_8*h1_5 + 2.*dh2_4*h1_5 + 2.*I*dh2_8*h1_5 - \
+I*mu1l2_2*dh2_3*h1_8 + I*r*ddh2_4*h1_9 - r*ddh2_8*h1_9 - 2.*I*dh2_4*h1_9 + \
+2.*dh2_8*h1_9 + mu1l1_2*dh1_3*h2_4 - r*ddh1_4*h2_5 + I*r*ddh1_8*h2_5 + \
+2.*dh1_4*h2_5 - 2.*I*dh1_8*h2_5 + I*mu1l1_2*dh1_3*h2_8 - I*r*ddh1_4*h2_9 - \
+r*ddh1_8*h2_9 + 2.*I*dh1_4*h2_9 + 2.*dh1_8*h2_9)) + \
+r*(mu1l2_2*omega1*r*h1_9*h2_1 - mu1l2_2*omega2*r*h1_9*h2_1 + \
+mu1l2_2*omega1*r*h1_8*h2_2 - mu1l2_2*omega2*r*h1_8*h2_2 - \
+I*mu1l1_2*omega1*r*h1_2*h2_4 + I*mu1l1_2*omega2*r*h1_2*h2_4 + \
+2.*M*omega1*h1_8*h2_4 + 2.*M*omega2*h1_8*h2_4 - I*omega1_2*r_2*h1_9*h2_4 + \
+I*omega1*omega2*r_2*h1_9*h2_4 - I*mu1l1_2*omega1*r*h1_1*h2_5 + \
+I*mu1l1_2*omega2*r*h1_1*h2_5 + I*omega1*omega2*r_2*h1_8*h2_5 - \
+I*omega2_2*r_2*h1_8*h2_5 - 2.*M*omega1*h1_9*h2_5 - 2.*M*omega2*h1_9*h2_5 + \
+mu1l1_2*omega1*r*h1_2*h2_8 - mu1l1_2*omega2*r*h1_2*h2_8 + \
+2.*I*M*omega1*h1_8*h2_8 + 2.*I*M*omega2*h1_8*h2_8 + omega1_2*r_2*h1_9*h2_8 - \
+omega1*omega2*r_2*h1_9*h2_8 + mu1l1_2*omega1*r*h1_1*h2_9 - \
+mu1l1_2*omega2*r*h1_1*h2_9 - omega1*omega2*r_2*h1_8*h2_9 + \
+omega2_2*r_2*h1_8*h2_9 - 2.*I*M*omega1*h1_9*h2_9 - 2.*I*M*omega2*h1_9*h2_9 - \
+I*h1_5*(2.*M*(omega1 + omega2)*h2_5 + I*((omega1 - omega2)*r*(I*mu1l2_2*h2_1 \
++ omega1*r*(h2_4 + I*h2_8)) + 2.*M*(omega1 + omega2)*h2_9)) + \
+I*h1_4*(2.*M*(omega1 + omega2)*h2_4 + 2.*I*M*(omega1 + omega2)*h2_8 + (omega1 \
+- omega2)*r*(mu1l2_2*h2_2 + I*omega2*r*h2_5 - \
+omega2*r*h2_9)))))/(f*mu1l1*mu1l2*r_5) + \
+(0.35355339059327373*c2*(-(f*mu2l2_2*r_2*dh2_4*h1_7) - \
+I*f*omega1*r_3*dh2_7*h1_7 - 2.*I*f*omega2*r_3*dh2_7*h1_7 - \
+I*f*mu2l2_2*r_2*dh2_8*h1_7 + f*omega1*r_3*dh2_10*h1_7 + \
+2.*f*omega2*r_3*dh2_10*h1_7 + I*f*mu2l2_2*r_2*dh2_4*h1_10 - \
+f*omega1*r_3*dh2_7*h1_10 - 2.*f*omega2*r_3*dh2_7*h1_10 - \
+f*mu2l2_2*r_2*dh2_8*h1_10 - I*f*omega1*r_3*dh2_10*h1_10 - \
+2.*I*f*omega2*r_3*dh2_10*h1_10 + mu1l2_2*mu2l2_2*r*h1_7*h2_2 - \
+I*mu1l2_2*mu2l2_2*r*h1_10*h2_2 + 2.*M*mu2l2_2*h1_7*h2_4 - \
+2.*I*M*mu2l2_2*h1_10*h2_4 + I*mu2l2_2*omega2*r_2*h1_7*h2_5 + \
+mu2l2_2*omega2*r_2*h1_10*h2_5 + (-2.*I*M*mu2l1_2*h1_8 + \
+r*(-(f*mu2l1_2*r*dh1_4) - 2.*I*f*omega1*r_2*dh1_7 - I*f*omega2*r_2*dh1_7 + \
+I*f*mu2l1_2*r*dh1_8 - 2.*f*omega1*r_2*dh1_10 - f*omega2*r_2*dh1_10 + \
+mu1l1_2*mu2l1_2*h1_2 + I*mu2l1_2*omega1*r*h1_5 + I*(omega1 + omega2)*(2.*M + \
+f*r)*h1_7 + mu2l1_2*omega1*r*h1_9 + (omega1 + omega2)*(2.*M + \
+f*r)*h1_10))*h2_7 + 2.*I*M*mu2l2_2*h1_7*h2_8 + 2.*M*mu2l2_2*h1_10*h2_8 - \
+mu2l2_2*omega2*r_2*h1_7*h2_9 + I*mu2l2_2*omega2*r_2*h1_10*h2_9 + \
+2.*M*mu2l1_2*h1_4*(h2_7 + I*h2_10) - I*f*mu2l1_2*r_2*dh1_4*h2_10 + \
+2.*f*omega1*r_3*dh1_7*h2_10 + f*omega2*r_3*dh1_7*h2_10 - \
+f*mu2l1_2*r_2*dh1_8*h2_10 - 2.*I*f*omega1*r_3*dh1_10*h2_10 - \
+I*f*omega2*r_3*dh1_10*h2_10 + I*mu1l1_2*mu2l1_2*r*h1_2*h2_10 - \
+mu2l1_2*omega1*r_2*h1_5*h2_10 - 2.*M*omega1*r*h1_7*h2_10 - \
+2.*M*omega2*r*h1_7*h2_10 - f*omega1*r_2*h1_7*h2_10 - f*omega2*r_2*h1_7*h2_10 \
++ 2.*M*mu2l1_2*h1_8*h2_10 + I*mu2l1_2*omega1*r_2*h1_9*h2_10 + \
+2.*I*M*omega1*r*h1_10*h2_10 + 2.*I*M*omega2*r*h1_10*h2_10 + \
+I*f*omega1*r_2*h1_10*h2_10 + \
+I*f*omega2*r_2*h1_10*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{3.916403070732505*^9, 3.916403122655531*^9, 
+  3.916403158515236*^9, 3.916403275895875*^9, 3.9164045367894173`*^9, 
+  3.916421653881011*^9, 3.9164623702531652`*^9, 3.916463288097639*^9, 
+  3.916482320810114*^9},
+ CellLabel->
+  "Out[220]=",ExpressionUUID->"5032bd2b-337d-4314-84ba-dc5b93cbb29b"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=3", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.916462344796533*^9}},ExpressionUUID->"df052bb0-a9c0-49cf-a188-\
+289c8d1c8e19"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "3", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.916462395512628*^9, 3.916462395590254*^9}},
+ CellLabel->
+  "In[222]:=",ExpressionUUID->"86959d9d-2f9d-49ad-9e44-e6a014e8e327"],
+
+Cell[BoxData["\<\"(0.17677669529663687*c0*(-4.*f_2*r_4*dh1_1*dh2_1 - \
+2.*f_2*r_4*dh1_2*dh2_1 - 2.*f_3*r_4*dh1_3*dh2_1 + 2.*f_2*r_4*dh1_1*dh2_2 + \
+4.*f_2*r_4*dh1_2*dh2_2 - 2.*f_3*r_4*dh1_3*dh2_2 - 2.*f_3*r_4*dh1_1*dh2_3 + \
+2.*f_3*r_4*dh1_2*dh2_3 - 4.*f_4*r_4*dh1_3*dh2_3 - 2.*f_4*r_4*dh1_6*dh2_6 - \
+4.*f*M*r_2*dh2_1*h1_2 + 2.*f_2*r_3*dh2_1*h1_2 - 2.*I*f*omega1*r_4*dh2_1*h1_2 \
+- 4.*f*M*r_2*dh2_2*h1_2 - 4.*f_2*r_3*dh2_2*h1_2 + \
+4.*I*f*omega1*r_4*dh2_2*h1_2 - 2.*f_3*r_3*dh2_3*h1_2 - \
+2.*I*f_2*omega1*r_4*dh2_3*h1_2 + 2.*f_3*r_3*dh2_1*h1_3 - \
+2.*I*f_2*omega1*r_4*dh2_1*h1_3 + 2.*f_3*r_3*dh2_2*h1_3 - \
+2.*I*f_2*omega1*r_4*dh2_2*h1_3 + 4.*f_4*r_3*dh2_3*h1_3 - \
+4.*I*f_3*omega1*r_4*dh2_3*h1_3 + 2.*f_4*r_3*dh2_6*h1_6 - \
+2.*I*f_3*omega1*r_4*dh2_6*h1_6 + 2.*((8.*M_2 - f_2*r_2 - 2.*I*M*(omega1 - \
+omega2)*r_2 - omega1*omega2*r_4 + f*(-4.*M*r + I*(omega1 - omega2)*r_3))*h1_2 \
++ f*r_2*(2.*M*dh1_1 + 2.*I*omega2*r_2*dh1_1 - 2.*M*dh1_2 + I*omega2*r_2*dh1_2 \
++ f_2*(r*dh1_3 - h1_3) + omega1*omega2*r_2*h1_3 + f*r*(2.*dh1_1 + dh1_2 - \
+I*omega2*r*dh1_3 + I*(omega1 + omega2)*h1_3)))*h2_1 + 4.*f*M*r_2*dh1_1*h2_2 - \
+2.*f_2*r_3*dh1_1*h2_2 - 2.*I*f*omega2*r_4*dh1_1*h2_2 - 4.*f*M*r_2*dh1_2*h2_2 \
+- 4.*f_2*r_3*dh1_2*h2_2 - 4.*I*f*omega2*r_4*dh1_2*h2_2 + \
+2.*f_3*r_3*dh1_3*h2_2 - 2.*I*f_2*omega2*r_4*dh1_3*h2_2 + 16.*M_2*h1_2*h2_2 + \
+24.*f*M*r*h1_2*h2_2 + 4.*f_2*r_2*h1_2*h2_2 - 4.*I*M*omega1*r_2*h1_2*h2_2 + \
+4.*I*M*omega2*r_2*h1_2*h2_2 - 4.*I*f*omega1*r_3*h1_2*h2_2 + \
+4.*I*f*omega2*r_3*h1_2*h2_2 + 4.*omega1*omega2*r_4*h1_2*h2_2 - \
+2.*f_3*r_2*h1_3*h2_2 + 2.*I*f_2*omega1*r_3*h1_3*h2_2 + \
+2.*I*f_2*omega2*r_3*h1_3*h2_2 + 2.*f*omega1*omega2*r_4*h1_3*h2_2 - \
+4.*f_3*r_4*ddh1_1*h2_3 - 4.*f_4*r_4*ddh1_3*h2_3 + 10.*f_3*r_3*dh1_1*h2_3 + \
+2.*I*f_2*omega2*r_4*dh1_1*h2_3 - 2.*f_3*r_3*dh1_2*h2_3 - \
+8.*I*f_2*omega1*r_4*dh1_2*h2_3 - 2.*I*f_2*omega2*r_4*dh1_2*h2_3 - \
+8.*f_3*M*r_2*dh1_3*h2_3 + 12.*f_4*r_3*dh1_3*h2_3 + \
+4.*I*f_3*omega2*r_4*dh1_3*h2_3 + 2.*f_3*r_2*h1_2*h2_3 + \
+8.*I*f*M*omega1*r_2*h1_2*h2_3 + 10.*I*f_2*omega1*r_3*h1_2*h2_3 + \
+2.*I*f_2*omega2*r_3*h1_2*h2_3 - 2.*f*omega1*omega2*r_4*h1_2*h2_3 + \
+8.*f_3*M*r*h1_3*h2_3 - 12.*f_4*r_2*h1_3*h2_3 + 4.*I*f_3*omega1*r_3*h1_3*h2_3 \
+- 4.*I*f_3*omega2*r_3*h1_3*h2_3 - 4.*f_2*omega1_2*r_4*h1_3*h2_3 - \
+4.*f_2*omega1*omega2*r_4*h1_3*h2_3 + f_2*r_2*h1_5*h2_4 - I*f_2*r_2*h1_8*h2_4 \
+- f_2*r_2*h1_4*h2_5 + I*f_2*r_2*h1_9*h2_5 - 2.*h1_1*(2.*(4.*M_2 + f_2*r_2 - \
+I*M*(omega1 - omega2)*r_2 + omega1*omega2*r_4 + f*(6.*M*r - I*(omega1 - \
+omega2)*r_3))*h2_1 + (8.*M_2 - f_2*r_2 - 2.*I*M*(omega1 - omega2)*r_2 - \
+omega1*omega2*r_4 + f*(-4.*M*r + I*(omega1 - omega2)*r_3))*h2_2 - \
+f*r_2*(2.*M*dh2_1 - 2.*I*omega1*r_2*dh2_1 + 2.*M*dh2_2 + I*omega1*r_2*dh2_2 + \
+omega1*(2.*omega1 + omega2)*r_2*h2_3 + f*r*(2.*dh2_1 - dh2_2 + \
+I*omega1*r*dh2_3 - I*(omega1 + omega2)*h2_3) + f_2*(r*dh2_3 - 5.*h2_3 - \
+4.*h2_6))) - 4.*f_4*r_4*ddh1_6*h2_6 + 8.*f_3*r_3*dh1_1*h2_6 - \
+4.*f_3*r_3*dh1_5*h2_6 - 8.*f_3*M*r_2*dh1_6*h2_6 + 2.*f_4*r_3*dh1_6*h2_6 + \
+2.*I*f_3*omega2*r_4*dh1_6*h2_6 + 8.*I*f_2*omega1*r_3*h1_2*h2_6 - \
+4.*f_3*mu1l1_2*r_2*h1_3*h2_6 - 4.*I*f_2*omega1*r_3*h1_4*h2_6 + \
+8.*f_3*M*r*h1_6*h2_6 - 2.*f_4*r_2*h1_6*h2_6 + 2.*I*f_3*omega1*r_3*h1_6*h2_6 - \
+2.*I*f_3*omega2*r_3*h1_6*h2_6 - 4.*f_2*omega1_2*r_4*h1_6*h2_6 - \
+2.*f_2*omega1*omega2*r_4*h1_6*h2_6 + I*f_2*r_2*h1_4*h2_8 + \
+2.*f_2*r_2*h1_8*h2_8 - f_2*r_2*h1_9*h2_8 - I*f_2*r_2*h1_5*h2_9 + \
+f_2*r_2*h1_8*h2_9 - 2.*f_2*r_2*h1_9*h2_9))/(f_3*r_6) + \
+(0.35355339059327373*c1*(-2.*f_2*r_4*dh1_4*dh2_4 + 2.*I*f_2*r_4*dh1_8*dh2_4 + \
+2.*f_2*r_4*dh1_5*dh2_5 - 2.*I*f_2*r_4*dh1_9*dh2_5 - 2.*I*f_2*r_4*dh1_4*dh2_8 \
+- 2.*f_2*r_4*dh1_8*dh2_8 + 2.*I*f_2*r_4*dh1_5*dh2_9 + 2.*f_2*r_4*dh1_9*dh2_9 \
+- f*mu1l1_2*r_3*dh2_5*h1_1 - I*f*mu1l1_2*r_3*dh2_9*h1_1 + \
+f*mu1l1_2*r_3*dh2_4*h1_2 + I*f*mu1l1_2*r_3*dh2_8*h1_2 + \
+f_2*mu1l1_2*r_3*dh2_5*h1_3 + I*f_2*mu1l1_2*r_3*dh2_9*h1_3 + \
+I*f_2*r_4*ddh2_4*h1_8 - f_2*r_4*ddh2_8*h1_8 - I*f*mu1l2_2*r_3*dh2_2*h1_8 - \
+2.*I*f*M*r_2*dh2_4*h1_8 - 2.*I*f_2*r_3*dh2_4*h1_8 - f*omega2*r_4*dh2_5*h1_8 + \
+2.*f*M*r_2*dh2_8*h1_8 + 2.*f_2*r_3*dh2_8*h1_8 - I*f*omega2*r_4*dh2_9*h1_8 + \
+I*f*mu1l2_2*r_3*dh2_1*h1_9 + I*f_2*mu1l2_2*r_3*dh2_3*h1_9 - \
+f*omega2*r_4*dh2_4*h1_9 + 2.*I*f*M*r_2*dh2_5*h1_9 - I*f*omega2*r_4*dh2_8*h1_9 \
+- 2.*f*M*r_2*dh2_9*h1_9 - f*mu1l2_2*r_3*dh1_5*h2_1 + \
+I*f*mu1l2_2*r_3*dh1_9*h2_1 + 2.*mu1l1_2*mu1l2_2*r_2*h1_1*h2_1 + \
+mu1l2_2*omega1*r_3*h1_8*h2_1 + mu1l2_2*omega2*r_3*h1_8*h2_1 - \
+2.*I*M*mu1l2_2*r*h1_9*h2_1 - I*f*mu1l2_2*r_2*h1_9*h2_1 + \
+f*mu1l2_2*r_3*dh1_4*h2_2 - I*f*mu1l2_2*r_3*dh1_8*h2_2 - \
+2.*mu1l1_2*mu1l2_2*r_2*h1_2*h2_2 + 2.*I*M*mu1l2_2*r*h1_8*h2_2 + \
+I*f*mu1l2_2*r_2*h1_8*h2_2 - mu1l2_2*omega1*r_3*h1_9*h2_2 - \
+mu1l2_2*omega2*r_3*h1_9*h2_2 + f_2*mu1l2_2*r_3*dh1_5*h2_3 - \
+I*f_2*mu1l2_2*r_3*dh1_9*h2_3 + 2.*f_2*mu1l1_2*mu1l2_2*r_2*h1_3*h2_3 + \
+f*mu1l2_2*omega1*r_3*h1_8*h2_3 - f*mu1l2_2*omega2*r_3*h1_8*h2_3 - \
+3.*I*f_2*mu1l2_2*r_2*h1_9*h2_3 - f_2*r_4*ddh1_4*h2_4 + I*f_2*r_4*ddh1_8*h2_4 \
++ f*mu1l1_2*r_3*dh1_2*h2_4 + 2.*f*M*r_2*dh1_4*h2_4 + 2.*f_2*r_3*dh1_4*h2_4 - \
+I*f*omega1*r_4*dh1_5*h2_4 - 2.*I*f*M*r_2*dh1_8*h2_4 - 2.*I*f_2*r_3*dh1_8*h2_4 \
+- f*omega1*r_4*dh1_9*h2_4 + I*mu1l1_2*omega1*r_3*h1_1*h2_4 + \
+I*mu1l1_2*omega2*r_3*h1_1*h2_4 - 2.*M*mu1l1_2*r*h1_2*h2_4 - \
+f*mu1l1_2*r_2*h1_2*h2_4 - I*f*mu1l1_2*omega1*r_3*h1_3*h2_4 + \
+I*f*mu1l1_2*omega2*r_3*h1_3*h2_4 + 4.*I*M_2*h1_8*h2_4 + 4.*I*f*M*r*h1_8*h2_4 \
++ 2.*I*f_2*r_2*h1_8*h2_4 + 2.*I*omega1*omega2*r_4*h1_8*h2_4 + \
+2.*M*omega2*r_2*h1_9*h2_4 + 2.*f*omega2*r_3*h1_9*h2_4 - \
+f*mu1l1_2*r_3*dh1_1*h2_5 - f_2*mu1l1_2*r_3*dh1_3*h2_5 - \
+I*f*omega1*r_4*dh1_4*h2_5 - 2.*f*M*r_2*dh1_5*h2_5 - f*omega1*r_4*dh1_8*h2_5 + \
+2.*I*f*M*r_2*dh1_9*h2_5 + 2.*M*mu1l1_2*r*h1_1*h2_5 + f*mu1l1_2*r_2*h1_1*h2_5 \
+- I*mu1l1_2*omega1*r_3*h1_2*h2_5 - I*mu1l1_2*omega2*r_3*h1_2*h2_5 + \
+3.*f_2*mu1l1_2*r_2*h1_3*h2_5 + 2.*M*omega1*r_2*h1_8*h2_5 + \
+2.*f*omega1*r_3*h1_8*h2_5 - 4.*I*M_2*h1_9*h2_5 - 4.*I*f*M*r*h1_9*h2_5 - \
+2.*I*f_2*r_2*h1_9*h2_5 - I*omega1_2*r_4*h1_9*h2_5 - \
+2.*I*omega1*omega2*r_4*h1_9*h2_5 - I*omega2_2*r_4*h1_9*h2_5 - \
+I*f_2*r_4*ddh1_4*h2_8 - f_2*r_4*ddh1_8*h2_8 + I*f*mu1l1_2*r_3*dh1_2*h2_8 + \
+2.*I*f*M*r_2*dh1_4*h2_8 + 2.*I*f_2*r_3*dh1_4*h2_8 + f*omega1*r_4*dh1_5*h2_8 + \
+2.*f*M*r_2*dh1_8*h2_8 + 2.*f_2*r_3*dh1_8*h2_8 - I*f*omega1*r_4*dh1_9*h2_8 - \
+mu1l1_2*omega1*r_3*h1_1*h2_8 - mu1l1_2*omega2*r_3*h1_1*h2_8 - \
+2.*I*M*mu1l1_2*r*h1_2*h2_8 - I*f*mu1l1_2*r_2*h1_2*h2_8 + \
+f*mu1l1_2*omega1*r_3*h1_3*h2_8 - f*mu1l1_2*omega2*r_3*h1_3*h2_8 - \
+4.*M_2*h1_8*h2_8 - 4.*f*M*r*h1_8*h2_8 - 2.*f_2*r_2*h1_8*h2_8 - \
+2.*omega1*omega2*r_4*h1_8*h2_8 + 2.*I*M*omega2*r_2*h1_9*h2_8 + \
+2.*I*f*omega2*r_3*h1_9*h2_8 - I*f*mu1l1_2*r_3*dh1_1*h2_9 - \
+I*f_2*mu1l1_2*r_3*dh1_3*h2_9 + f*omega1*r_4*dh1_4*h2_9 - \
+2.*I*f*M*r_2*dh1_5*h2_9 - I*f*omega1*r_4*dh1_8*h2_9 - 2.*f*M*r_2*dh1_9*h2_9 + \
+2.*I*M*mu1l1_2*r*h1_1*h2_9 + I*f*mu1l1_2*r_2*h1_1*h2_9 + \
+mu1l1_2*omega1*r_3*h1_2*h2_9 + mu1l1_2*omega2*r_3*h1_2*h2_9 + \
+3.*I*f_2*mu1l1_2*r_2*h1_3*h2_9 + 2.*I*M*omega1*r_2*h1_8*h2_9 + \
+2.*I*f*omega1*r_3*h1_8*h2_9 + 4.*M_2*h1_9*h2_9 + 4.*f*M*r*h1_9*h2_9 + \
+2.*f_2*r_2*h1_9*h2_9 + omega1_2*r_4*h1_9*h2_9 + \
+2.*omega1*omega2*r_4*h1_9*h2_9 + omega2_2*r_4*h1_9*h2_9 + h1_5*((4.*M_2 + \
+4.*f*M*r + 2.*f_2*r_2 + (omega1_2 + 2.*omega1*omega2 + omega2_2)*r_4)*h2_5 + \
+r*(mu1l2_2*(2.*M + f*r)*h2_1 + r*(-(f*mu1l2_2*r*dh2_1) - f_2*mu1l2_2*r*dh2_3 \
+- I*f*omega2*r_2*dh2_4 - 2.*f*M*dh2_5 + f*omega2*r_2*dh2_8 - 2.*I*f*M*dh2_9 - \
+I*mu1l2_2*omega1*r*h2_2 - I*mu1l2_2*omega2*r*h2_2 + 3.*f_2*mu1l2_2*h2_3 + \
+2.*I*omega2*(M + f*r)*h2_4 - 2.*omega2*(M + f*r)*h2_8)) + I*(4.*M_2 + \
+4.*f*M*r + 2.*f_2*r_2 + (omega1_2 + 2.*omega1*omega2 + omega2_2)*r_4)*h2_9) - \
+h1_4*(2.*(2.*M_2 + 2.*f*M*r + f_2*r_2 + omega1*omega2*r_4)*h2_4 + \
+I*(2.*(2.*M_2 + 2.*f*M*r + f_2*r_2 + omega1*omega2*r_4)*h2_8 + \
+r*(-1.*I*mu1l2_2*(2.*M + f*r)*h2_2 + r*(-1.*I*f_2*r_2*ddh2_4 + f_2*r_2*ddh2_8 \
++ I*f*mu1l2_2*r*dh2_2 + 2.*I*f*M*dh2_4 + 2.*I*f_2*r*dh2_4 + \
+f*omega2*r_2*dh2_5 - 2.*f*M*dh2_8 - 2.*f_2*r*dh2_8 + I*f*omega2*r_2*dh2_9 - \
+mu1l2_2*omega1*r*h2_1 - mu1l2_2*omega2*r*h2_1 - f*mu1l2_2*omega1*r*h2_3 + \
+f*mu1l2_2*omega2*r*h2_3 - 2.*omega1*(M + f*r)*h2_5 - 2.*I*omega1*(M + \
+f*r)*h2_9))))))/(f_2*mu1l1*mu1l2*r_6) + \
+(0.35355339059327373*c2*(-(f_2*r*(r_2*dh1_7*dh2_7 - I*r_2*dh1_10*dh2_7 + \
+I*r_2*dh1_7*dh2_10 + r_2*dh1_10*dh2_10 - I*r_2*ddh2_7*h1_10 + \
+r_2*ddh2_10*h1_10 + I*r*dh2_7*h1_10 - r*dh2_10*h1_10 + (r*(r*ddh1_7 - \
+I*r*ddh1_10 - dh1_7 + I*dh1_10) - I*h1_10)*h2_7 + h1_7*(r*(r*ddh2_7 + \
+I*r*ddh2_10 - dh2_7 - I*dh2_10) + h2_7 + I*h2_10) + I*r_2*ddh1_7*h2_10 + \
+r_2*ddh1_10*h2_10 - I*r*dh1_7*h2_10 - r*dh1_10*h2_10 + h1_10*h2_10)) - \
+r_2*(-1.*I*mu2l2_2*omega2*h1_7*h2_4 - mu2l2_2*omega2*h1_10*h2_4 + \
+(-(mu2l1_2*omega1*h1_8) + (omega1_2 + omega1*omega2 + omega2_2)*r*(h1_7 - \
+I*h1_10))*h2_7 + mu2l2_2*omega2*h1_7*h2_8 - I*mu2l2_2*omega2*h1_10*h2_8 + \
+I*omega1_2*r*h1_7*h2_10 + I*omega1*omega2*r*h1_7*h2_10 + \
+I*omega2_2*r*h1_7*h2_10 - I*mu2l1_2*omega1*h1_8*h2_10 + \
+omega1_2*r*h1_10*h2_10 + omega1*omega2*r*h1_10*h2_10 + omega2_2*r*h1_10*h2_10 \
++ mu2l1_2*omega1*h1_4*(-1.*I*h2_7 + h2_10)) + \
+f*(-1.*I*mu2l2_2*r_2*dh2_5*h1_10 + 2.*I*M*r*dh2_7*h1_10 + \
+mu2l2_2*r_2*dh2_9*h1_10 - 2.*M*r*dh2_10*h1_10 - \
+I*mu1l2_2*mu2l2_2*r*h1_10*h2_3 + (r*(mu2l1_2*r*(dh1_5 - I*dh1_9) - \
+2.*M*(dh1_7 - I*dh1_10) + mu1l1_2*mu2l1_2*h1_3) - 4.*I*M*h1_10)*h2_7 + \
+I*mu2l1_2*r_2*dh1_5*h2_10 - 2.*I*M*r*dh1_7*h2_10 + mu2l1_2*r_2*dh1_9*h2_10 - \
+2.*M*r*dh1_10*h2_10 + I*mu1l1_2*mu2l1_2*r*h1_3*h2_10 + 4.*M*h1_10*h2_10 + \
+h1_7*(r*(mu2l2_2*r*(dh2_5 + I*dh2_9) - 2.*M*(dh2_7 + I*dh2_10) + \
+mu1l2_2*mu2l2_2*h2_3) + 4.*M*h2_7 + \
+4.*I*M*h2_10))))/(f*mu1l1*mu1l2*mu2l1*mu2l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{
+  3.916403070732505*^9, 3.916403122655531*^9, 3.916403158515236*^9, 
+   3.916403275895875*^9, 3.9164045367894173`*^9, 3.916421653881011*^9, {
+   3.916462393682991*^9, 3.9164623960798492`*^9}, 3.916463288134522*^9, 
+   3.9164818998794613`*^9, 3.916482040300536*^9, 3.91648223579519*^9, 
+   3.916482333961355*^9},
+ CellLabel->
+  "Out[222]=",ExpressionUUID->"c3cfd438-423d-466b-b255-751d2b0c9b17"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=4", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.916462347787941*^9}},ExpressionUUID->"30843305-d1c0-41d1-9313-\
+e2c9156c619a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "4", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.916462402667713*^9, 3.9164624030928164`*^9}},
+ CellLabel->
+  "In[224]:=",ExpressionUUID->"41cc12fc-0539-4658-9d17-61a1c74d16c0"],
+
+Cell[BoxData["\<\"(0.17677669529663687*cv1*((4.*M*mu1l1_2*h1_2 - \
+2.*I*r*(mu1l1_2*(omega1 + omega2)*r*h1_1 + 2.*M*omega1*h1_5 - \
+2.*I*M*omega1*h1_9))*h2_1 + 2.*(-2.*M*mu1l1_2*h1_1 + r_2*(I*mu1l1_2*(omega1 + \
+omega2)*h1_2 - omega1*(omega1 - omega2)*r*(h1_5 - I*h1_9)))*h2_2 - \
+2.*f_3*r*((r*(r*ddh1_4 - I*r*ddh1_8 - 3.*dh1_4 + 3.*I*dh1_8) + 2.*h1_4 - \
+2.*I*h1_8)*h2_3 + r*(-2.*dh2_3*h1_4 + 2.*I*dh2_3*h1_8 - (dh1_4 - \
+I*dh1_8)*(-(r*dh2_3) + r*dh2_6 + h2_6))) - f_2*(((8.*M + mu1l2_2*r)*h1_4 - \
+I*(8.*M + mu1l2_2*r)*h1_8 + 2.*r*(3.*mu1l1_2*h1_2 + r*(-(mu1l1_2*dh1_2) + \
+I*omega1*r*dh1_5 + omega1*r*dh1_9 + I*mu1l1_2*omega1*h1_3 + \
+I*mu1l1_2*omega2*h1_3 - I*omega1*h1_5 - omega1*h1_9)))*h2_3 - \
+4.*h1_4*(r*(r*dh2_1 - M*dh2_6 - h2_1) + M*h2_6) + I*(2.*((2.*M - \
+mu1l1_2*r)*h1_8 + r*(-1.*I*mu1l1_2*h1_2 + r*(mu1l1_2*omega2*h1_3 + \
+(-2.*omega1 + omega2)*h1_5 + mu1l1_2*omega1*h1_6 + mu1l1_2*omega2*h1_6 + \
+omega1*h1_7 + 2.*I*omega1*h1_9 - I*omega2*h1_9 - I*omega1*h1_10)))*h2_6 + \
+r*(-2.*I*r_2*dh1_4*dh2_1 - 2.*r_2*dh1_8*dh2_1 - 2.*I*mu1l1_2*r*dh2_6*h1_2 + \
+4.*r*dh2_1*h1_8 - 4.*M*dh2_6*h1_8 - 2.*I*omega1*r_2*dh2_3*h1_9 - r*dh2_4*h1_9 \
++ 2.*I*omega2*r_2*dh2_6*h1_9 + 3.*I*r*dh2_8*h1_9 - 2.*(r*(-1.*I*r*ddh1_4 - \
+r*ddh1_8 + I*dh1_4 + dh1_8) + 2.*h1_8)*h2_1 + 2.*I*mu1l1_2*r*dh1_3*h2_2 - \
+6.*I*mu1l1_2*h1_3*h2_2 + I*mu1l1_2*h1_3*h2_4 + I*r*dh1_4*h2_5 + r*dh1_8*h2_5 \
++ mu1l1_2*h1_3*h2_8 - 2.*mu1l1_2*h1_6*h2_8 - 2.*h1_7*h2_8 - 8.*I*h1_9*h2_8 + \
+2.*I*h1_10*h2_8 + h1_5*(r*(2.*omega1*r*dh2_3 - I*dh2_4 - 2.*omega2*r*dh2_6 - \
+3.*dh2_8) + 8.*h2_8) + r*dh1_4*h2_9 - I*r*dh1_8*h2_9))) + f*((2.*M*h1_5 + \
+r*(mu1l1_2*h1_1 - 2.*I*omega2*r*h1_4 - 2.*omega2*r*h1_8) - 2.*I*M*h1_9)*h2_4 \
++ h1_4*(-2.*M*h2_5 + r*(-(mu1l2_2*h2_1) + 2.*r*(-2.*I*(omega1 - omega2)*h2_2 \
++ (omega1 - omega2)*omega2*r*h2_6 + omega1*h2_8)) + 2.*I*M*h2_9) + \
+I*(2.*I*omega1*r_3*dh2_1*h1_9 + 2.*I*mu1l1_2*r_2*dh1_2*h2_1 + \
+2.*omega1*r_3*dh1_5*h2_1 - 2.*I*omega1*r_3*dh1_9*h2_1 - \
+6.*I*mu1l1_2*r*h1_2*h2_1 + 2.*mu1l1_2*omega1*r_2*h1_3*h2_1 + \
+mu1l2_2*r*h1_8*h2_1 - 2.*I*omega1*r_2*h1_9*h2_1 - 2.*I*mu1l1_2*r_2*dh1_1*h2_2 \
++ 2.*omega1*r_3*dh1_4*h2_2 - 2.*omega2*r_3*dh1_4*h2_2 - \
+2.*I*omega1*r_3*dh1_8*h2_2 + 2.*I*omega2*r_3*dh1_8*h2_2 + \
+6.*I*mu1l1_2*r*h1_1*h2_2 + 4.*I*omega1*r_2*h1_8*h2_2 - \
+4.*I*omega2*r_2*h1_8*h2_2 - mu1l2_2*r*h1_9*h2_2 + \
+2.*mu1l1_2*omega1*r_2*h1_1*h2_3 - 4.*I*M*omega1*r*h1_9*h2_3 + (2.*M*h1_8 + \
+r*(I*mu1l1_2*h1_2 + (omega1 + omega2)*r*(h1_5 - I*h1_9)))*h2_5 - \
+2.*mu1l1_2*omega2*r_2*h1_1*h2_6 - 2.*omega1*omega2*r_3*h1_8*h2_6 + \
+2.*omega2_2*r_3*h1_8*h2_6 + 4.*I*M*omega2*r*h1_9*h2_6 - mu1l1_2*r*h1_1*h2_8 - \
+2.*omega1*r_2*h1_8*h2_8 + 2.*I*M*h1_9*h2_8 + mu1l1_2*r*h1_2*h2_9 - \
+2.*I*M*h1_8*h2_9 + omega1*r_2*h1_9*h2_9 + 3.*omega2*r_2*h1_9*h2_9 + \
+h1_5*(-2.*M*h2_8 + r*(-2.*omega1*r_2*dh2_1 + 2.*omega1*r*h2_1 - \
+I*mu1l2_2*h2_2 + 4.*M*omega1*h2_3 - 4.*M*omega2*h2_6 + I*omega1*r*h2_9 + \
+3.*I*omega2*r*h2_9))))))/(f_2*mu1l1*r_5) + \
+(0.17677669529663687*cv6*mu3l2*omega1*(h1_7 - I*h1_10)*(-1.*I*h2_7 + \
+h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_3) + \
+(0.17677669529663687*cv5*mu3l1*omega2*(h1_7 - I*h1_10)*(-1.*I*h2_7 + \
+h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_3) + \
+(0.17677669529663687*cv3*(-(mu1l2_2*mu2l2_2*r*h1_4*h2_1) + \
+I*mu1l2_2*mu2l2_2*r*h1_8*h2_1 + mu1l2_2*mu2l2_2*r*h1_5*h2_2 - \
+I*mu1l2_2*mu2l2_2*r*h1_9*h2_2 + mu2l2_2*(2.*M*h1_5 + r*(mu1l1_2*h1_1 - \
+2.*I*omega2*r*h1_4 - 2.*omega2*r*h1_8) - 2.*I*M*h1_9)*h2_4 - \
+mu1l1_2*mu2l2_2*r*h1_2*h2_5 - 2.*M*mu2l2_2*h1_4*h2_5 + \
+I*mu2l2_2*omega1*r_2*h1_5*h2_5 + I*mu2l2_2*omega2*r_2*h1_5*h2_5 + \
+2.*I*M*mu2l2_2*h1_8*h2_5 + mu2l2_2*omega1*r_2*h1_9*h2_5 + \
+mu2l2_2*omega2*r_2*h1_9*h2_5 + 2.*I*mu1l1_2*omega2*r_2*h1_1*h2_7 - \
+2.*omega1*omega2*r_3*h1_4*h2_7 + 2.*omega2_2*r_3*h1_4*h2_7 + \
+4.*I*M*omega2*r*h1_5*h2_7 + 2.*I*omega1*omega2*r_3*h1_8*h2_7 - \
+2.*I*omega2_2*r_3*h1_8*h2_7 + 4.*M*omega2*r*h1_9*h2_7 + \
+I*mu1l1_2*mu2l2_2*r*h1_1*h2_8 + 2.*mu2l2_2*omega2*r_2*h1_4*h2_8 + \
+2.*I*M*mu2l2_2*h1_5*h2_8 - 2.*I*mu2l2_2*omega2*r_2*h1_8*h2_8 + \
+2.*M*mu2l2_2*h1_9*h2_8 - I*mu1l1_2*mu2l2_2*r*h1_2*h2_9 - \
+2.*I*M*mu2l2_2*h1_4*h2_9 - mu2l2_2*omega1*r_2*h1_5*h2_9 - \
+mu2l2_2*omega2*r_2*h1_5*h2_9 - 2.*M*mu2l2_2*h1_8*h2_9 + \
+I*mu2l2_2*omega1*r_2*h1_9*h2_9 + I*mu2l2_2*omega2*r_2*h1_9*h2_9 - \
+2.*mu1l1_2*omega2*r_2*h1_1*h2_10 - 2.*I*omega1*omega2*r_3*h1_4*h2_10 + \
+2.*I*omega2_2*r_3*h1_4*h2_10 - 4.*M*omega2*r*h1_5*h2_10 - \
+2.*omega1*omega2*r_3*h1_8*h2_10 + 2.*omega2_2*r_3*h1_8*h2_10 + \
+4.*I*M*omega2*r*h1_9*h2_10 + 2.*f_2*r_2*(dh1_4 - I*dh1_8)*(h2_7 + \
+I*(I*r*dh2_7 - r*dh2_10 + h2_10)) - f*(-2.*mu1l1_2*r_2*dh2_7*h1_2 - \
+2.*I*mu1l1_2*r_2*dh2_10*h1_2 + mu2l2_2*r_2*dh2_4*h1_5 + \
+2.*I*omega2*r_3*dh2_7*h1_5 + I*mu2l2_2*r_2*dh2_8*h1_5 - \
+2.*omega2*r_3*dh2_10*h1_5 + 4.*I*M*r*dh2_7*h1_8 - 4.*M*r*dh2_10*h1_8 - \
+I*mu2l2_2*r_2*dh2_4*h1_9 + 2.*omega2*r_3*dh2_7*h1_9 + mu2l2_2*r_2*dh2_8*h1_9 \
++ 2.*I*omega2*r_3*dh2_10*h1_9 - I*mu1l2_2*mu2l2_2*r*h1_8*h2_3 - \
+mu1l1_2*mu2l2_2*r*h1_3*h2_4 - mu2l2_2*r_2*dh1_4*h2_5 + \
+I*mu2l2_2*r_2*dh1_8*h2_5 - I*(2.*(2.*M + mu1l1_2*r)*h1_8 + \
+r*(2.*I*mu1l1_2*h1_2 + r*(2.*mu1l1_2*omega2*h1_3 + 2.*omega2*h1_5 - \
+2.*mu1l1_2*omega1*h1_6 - (2.*omega1 + omega2)*h1_7 - 2.*I*omega2*h1_9 + \
+2.*I*omega1*h1_10 + I*omega2*h1_10)))*h2_7 - I*mu1l1_2*mu2l2_2*r*h1_3*h2_8 - \
+I*mu2l2_2*r_2*dh1_4*h2_9 - mu2l2_2*r_2*dh1_8*h2_9 + 2.*I*mu1l1_2*r*h1_2*h2_10 \
++ 2.*mu1l1_2*omega2*r_2*h1_3*h2_10 + 2.*omega2*r_2*h1_5*h2_10 - \
+2.*mu1l1_2*omega1*r_2*h1_6*h2_10 - 2.*omega1*r_2*h1_7*h2_10 - \
+omega2*r_2*h1_7*h2_10 + 4.*M*h1_8*h2_10 + 2.*mu1l1_2*r*h1_8*h2_10 - \
+2.*I*omega2*r_2*h1_9*h2_10 + 2.*I*omega1*r_2*h1_10*h2_10 + \
+I*omega2*r_2*h1_10*h2_10 + h1_4*(r*(-4.*M*dh2_7 - 4.*I*M*dh2_10 + \
+mu1l2_2*mu2l2_2*h2_3) + 4.*M*h2_7 + \
+4.*I*M*h2_10))))/(f*mu1l1*mu1l2*mu2l2*r_5) + \
+(0.17677669529663687*cv2*(-2.*mu1l2_2*(I*(omega1 + omega2)*r_2*h1_1 + \
+2.*M*h1_2)*h2_1 + 4.*M*mu1l2_2*h1_1*h2_2 + 2.*I*mu1l2_2*omega1*r_2*h1_2*h2_2 \
++ 2.*I*mu1l2_2*omega2*r_2*h1_2*h2_2 - 4.*I*M*omega2*r*h1_1*h2_5 + \
+2.*omega1*omega2*r_3*h1_2*h2_5 - 2.*omega2_2*r_3*h1_2*h2_5 - \
+2.*f_3*r*((-2.*r*dh1_3 + h1_6)*h2_4 + h1_3*(r*(r*ddh2_4 + I*r*ddh2_8 - \
+3.*dh2_4 - 3.*I*dh2_8) + 2.*h2_4 + 2.*I*h2_8) + I*(h1_6*(I*r*dh2_4 - r*dh2_8 \
++ h2_8) + r*(r*(dh1_3 - dh1_6)*(-1.*I*dh2_4 + dh2_8) - 2.*dh1_3*h2_8))) + \
+4.*M*omega2*r*h1_1*h2_9 + 2.*I*omega1*omega2*r_3*h1_2*h2_9 - \
+2.*I*omega2_2*r_3*h1_2*h2_9 + f*(-((2.*M*h1_5 + r*(mu1l1_2*h1_1 + \
+2.*r*(-2.*I*(omega1 - omega2)*h1_2 + I*omega1*h1_4 + omega1_2*r*h1_6 - \
+omega1*omega2*r*h1_6 + omega2*h1_8)) + 2.*I*M*h1_9)*h2_4) + h1_4*(2.*M*h2_5 + \
+r*(mu1l2_2*h2_1 + 2.*omega1*r*h2_8) + 2.*I*M*h2_9) + \
+I*(2.*I*mu1l2_2*r_2*dh2_2*h1_1 + 2.*omega2*r_3*dh2_5*h1_1 + \
+2.*I*omega2*r_3*dh2_9*h1_1 - 2.*I*mu1l2_2*r_2*dh2_1*h1_2 - \
+2.*omega1*r_3*dh2_4*h1_2 + 2.*omega2*r_3*dh2_4*h1_2 - \
+2.*I*omega1*r_3*dh2_8*h1_2 + 2.*I*omega2*r_3*dh2_8*h1_2 + \
+6.*I*mu1l2_2*r*h1_2*h2_1 + 2.*mu1l2_2*omega2*r_2*h1_3*h2_1 - \
+2.*mu1l2_2*omega1*r_2*h1_6*h2_1 + mu1l2_2*r*h1_8*h2_1 - \
+6.*I*mu1l2_2*r*h1_1*h2_2 - mu1l2_2*r*h1_9*h2_2 + \
+2.*mu1l2_2*omega2*r_2*h1_1*h2_3 + (2.*M*h1_8 + r*(-2.*omega2*r_2*dh1_1 + \
+2.*omega2*r*h1_1 - I*mu1l1_2*h1_2 + 4.*M*omega2*h1_3 + omega1*r*h1_5 + \
+omega2*r*h1_5 - 4.*M*omega1*h1_6 - 3.*I*omega1*r*h1_9 - \
+I*omega2*r*h1_9))*h2_5 - mu1l1_2*r*h1_1*h2_8 + 4.*I*omega1*r_2*h1_2*h2_8 - \
+4.*I*omega2*r_2*h1_2*h2_8 - 2.*omega1_2*r_3*h1_6*h2_8 + \
+2.*omega1*omega2*r_3*h1_6*h2_8 - 2.*omega2*r_2*h1_8*h2_8 - 2.*I*M*h1_9*h2_8 - \
+2.*I*omega2*r_3*dh1_1*h2_9 + 2.*I*omega2*r_2*h1_1*h2_9 + mu1l1_2*r*h1_2*h2_9 \
++ 4.*I*M*omega2*r*h1_3*h2_9 - 4.*I*M*omega1*r*h1_6*h2_9 + 2.*I*M*h1_8*h2_9 + \
+3.*omega1*r_2*h1_9*h2_9 + omega2*r_2*h1_9*h2_9 + h1_5*(-2.*M*h2_8 + \
+I*r*(mu1l2_2*h2_2 + (omega1 + omega2)*r*h2_9)))) - f_2*(h1_3*((8.*M + \
+mu1l1_2*r)*h2_4 + I*((8.*M + mu1l1_2*r)*h2_8 + 2.*r*(-3.*I*mu1l2_2*h2_2 + \
+r*(I*mu1l2_2*dh2_2 + omega2*r*dh2_5 + I*omega2*r*dh2_9 + mu1l2_2*omega1*h2_3 \
++ mu1l2_2*omega2*h2_3 - omega2*h2_5 - I*omega2*h2_9)))) + \
+r*(2.*r_2*dh1_1*dh2_4 + 2.*I*r_2*dh1_1*dh2_8 - 2.*mu1l2_2*r*dh2_3*h1_2 - \
+r*dh2_4*h1_5 - I*r*dh2_8*h1_5 - I*r*dh2_4*h1_9 + r*dh2_8*h1_9 + \
+2.*mu1l2_2*r*dh1_6*h2_2 + 2.*mu1l2_2*h1_6*h2_2 + 6.*mu1l2_2*h1_2*h2_3 - \
+mu1l2_2*h1_4*h2_3 + 2.*I*mu1l2_2*omega1*r*h1_6*h2_3 - I*mu1l2_2*h1_8*h2_3 - \
+4.*r*dh1_1*h2_4 + 4.*M*dh1_6*h2_4 - mu1l2_2*h1_6*h2_4 + mu2l2_2*h1_6*h2_4 - \
+I*(r*(-2.*omega2*r*dh1_3 + I*dh1_4 + 2.*omega1*r*dh1_6 - 3.*dh1_8 - \
+2.*(omega1 - 2.*omega2)*h1_6) + 8.*h1_8)*h2_5 + \
+2.*I*mu1l2_2*omega1*r*h1_6*h2_6 + 2.*I*mu1l2_2*omega2*r*h1_6*h2_6 + \
+2.*I*mu1l2_2*h1_8*h2_6 + 2.*I*omega2*r*h1_6*h2_7 + 2.*I*h1_8*h2_7 + \
+2.*h1_1*(r*(-(r*ddh2_4) - I*r*ddh2_8 + dh2_4 + I*dh2_8) + 2.*h2_4 + \
+2.*I*h2_8) - 4.*I*r*dh1_1*h2_8 + 4.*I*M*dh1_6*h2_8 + I*mu1l2_2*h1_6*h2_8 + \
+I*mu2l2_2*h1_6*h2_8 - 2.*omega2*r_2*dh1_3*h2_9 + I*r*dh1_4*h2_9 + \
+2.*omega1*r_2*dh1_6*h2_9 - 3.*r*dh1_8*h2_9 - 2.*omega1*r*h1_6*h2_9 + \
+4.*omega2*r*h1_6*h2_9 + 8.*h1_8*h2_9 - 2.*omega2*r*h1_6*h2_10 - \
+2.*h1_8*h2_10))))/(f_2*mu1l2*r_5) + \
+(0.17677669529663687*cv4*(mu1l2_2*mu2l1_2*r*h1_4*h2_1 + \
+2.*I*mu1l2_2*omega1*r_2*h1_7*h2_1 - I*mu1l2_2*mu2l1_2*r*h1_8*h2_1 + \
+2.*mu1l2_2*omega1*r_2*h1_10*h2_1 - mu1l2_2*mu2l1_2*r*h1_5*h2_2 + \
+I*mu1l2_2*mu2l1_2*r*h1_9*h2_2 - (2.*M*mu2l1_2*h1_5 - 2.*I*M*mu2l1_2*h1_9 + \
+r*(mu1l1_2*mu2l1_2*h1_1 + 2.*omega1*r*(I*mu2l1_2*h1_4 + mu2l1_2*h1_8 - \
+(omega1 - omega2)*r*(h1_7 - I*h1_10))))*h2_4 + mu1l1_2*mu2l1_2*r*h1_2*h2_5 + \
+2.*M*mu2l1_2*h1_4*h2_5 + I*mu2l1_2*omega1*r_2*h1_5*h2_5 + \
+I*mu2l1_2*omega2*r_2*h1_5*h2_5 + 4.*I*M*omega1*r*h1_7*h2_5 - \
+2.*I*M*mu2l1_2*h1_8*h2_5 + mu2l1_2*omega1*r_2*h1_9*h2_5 + \
+mu2l1_2*omega2*r_2*h1_9*h2_5 + 4.*M*omega1*r*h1_10*h2_5 - \
+I*mu1l1_2*mu2l1_2*r*h1_1*h2_8 + 2.*mu2l1_2*omega1*r_2*h1_4*h2_8 - \
+2.*I*M*mu2l1_2*h1_5*h2_8 + 2.*I*omega1_2*r_3*h1_7*h2_8 - \
+2.*I*omega1*omega2*r_3*h1_7*h2_8 - 2.*I*mu2l1_2*omega1*r_2*h1_8*h2_8 - \
+2.*M*mu2l1_2*h1_9*h2_8 + 2.*omega1_2*r_3*h1_10*h2_8 - \
+2.*omega1*omega2*r_3*h1_10*h2_8 - 2.*f_2*r*(r_2*dh1_7*dh2_4 - \
+I*r_2*dh1_10*dh2_4 + I*r_2*dh1_7*dh2_8 + r_2*dh1_10*dh2_8 + I*r*dh2_4*h1_10 - \
+r*dh2_8*h1_10 + (h1_7 - I*h1_10)*h2_4 + h1_10*h2_8 + I*h1_7*(I*r*dh2_4 - \
+r*dh2_8 + h2_8)) + I*mu1l1_2*mu2l1_2*r*h1_2*h2_9 + 2.*I*M*mu2l1_2*h1_4*h2_9 - \
+mu2l1_2*omega1*r_2*h1_5*h2_9 - mu2l1_2*omega2*r_2*h1_5*h2_9 - \
+4.*M*omega1*r*h1_7*h2_9 + 2.*M*mu2l1_2*h1_8*h2_9 + \
+I*mu2l1_2*omega1*r_2*h1_9*h2_9 + I*mu2l1_2*omega2*r_2*h1_9*h2_9 + \
+4.*I*M*omega1*r*h1_10*h2_9 - f*(-(mu2l1_2*r_2*dh2_4*h1_5) - \
+I*mu2l1_2*r_2*dh2_8*h1_5 + I*mu2l1_2*r_2*dh2_4*h1_9 - mu2l1_2*r_2*dh2_8*h1_9 \
+- 2.*mu1l2_2*r_2*dh1_7*h2_2 + 2.*I*mu1l2_2*r_2*dh1_10*h2_2 - \
+2.*I*mu1l2_2*r*h1_10*h2_2 - mu1l2_2*mu2l1_2*r*h1_4*h2_3 + \
+I*mu1l2_2*mu2l1_2*r*h1_8*h2_3 - 2.*mu1l2_2*omega1*r_2*h1_10*h2_3 + \
+(r*(-4.*M*dh1_7 + 4.*I*M*dh1_10 + mu1l1_2*mu2l1_2*h1_3) + (8.*M - mu1l2_2*r + \
+mu2l2_2*r)*h1_7 - I*(8.*M - mu1l2_2*r + mu2l2_2*r)*h1_10)*h2_4 + \
+mu2l1_2*r_2*dh1_4*h2_5 + 2.*I*omega1*r_3*dh1_7*h2_5 - \
+I*mu2l1_2*r_2*dh1_8*h2_5 + 2.*omega1*r_3*dh1_10*h2_5 - \
+2.*omega1*r_2*h1_10*h2_5 + 2.*mu1l2_2*omega2*r_2*h1_10*h2_6 + \
+omega1*r_2*h1_10*h2_7 + 2.*omega2*r_2*h1_10*h2_7 - 4.*I*M*r*dh1_7*h2_8 - \
+4.*M*r*dh1_10*h2_8 + I*mu1l1_2*mu2l1_2*r*h1_3*h2_8 + 8.*M*h1_10*h2_8 + \
+mu1l2_2*r*h1_10*h2_8 + mu2l2_2*r*h1_10*h2_8 + I*mu2l1_2*r_2*dh1_4*h2_9 - \
+2.*omega1*r_3*dh1_7*h2_9 + mu2l1_2*r_2*dh1_8*h2_9 + \
+2.*I*omega1*r_3*dh1_10*h2_9 - 2.*I*omega1*r_2*h1_10*h2_9 + \
+I*omega1*r_2*h1_10*h2_10 + 2.*I*omega2*r_2*h1_10*h2_10 + I*h1_7*((8.*M + \
+mu1l2_2*r + mu2l2_2*r)*h2_8 + r*(-2.*I*mu1l2_2*h2_2 + \
+r*(-2.*mu1l2_2*omega1*h2_3 - 2.*omega1*h2_5 + 2.*mu1l2_2*omega2*h2_6 + \
+(omega1 + 2.*omega2)*h2_7 - 2.*I*omega1*h2_9 + I*omega1*h2_10 + \
+2.*I*omega2*h2_10))))))/(f*mu1l1*mu1l2*mu2l1*r_5)\"\>"], "Output",
+ CellChangeTimes->{
+  3.916403070732505*^9, 3.916403122655531*^9, 3.916403158515236*^9, 
+   3.916403275895875*^9, 3.9164045367894173`*^9, 3.916421653881011*^9, 
+   3.9164624036274757`*^9, 3.916462898956308*^9, 3.9164629478018837`*^9, 
+   3.916463288170059*^9, 3.916468165177026*^9, 3.916468259088278*^9, {
+   3.9164813373259783`*^9, 3.91648135458501*^9}, 3.916482357428787*^9},
+ CellLabel->
+  "Out[224]=",ExpressionUUID->"3c04f334-5bec-45fc-bce7-a55943e82850"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=5", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.916462351157826*^9}},ExpressionUUID->"54681652-c05a-4121-ab45-\
+8a09670014c7"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "5", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.9164629652578077`*^9, 3.916462965400653*^9}},
+ CellLabel->
+  "In[226]:=",ExpressionUUID->"b0bf545b-6cb6-4264-bdac-820d15ce7857"],
+
+Cell[BoxData["\<\"(0.17677669529663687*cv1*(-2.*(omega1*r*(h1_5 - \
+I*h1_9)*((omega1 - omega2)*r_2*h2_1 + 2.*I*M*h2_2) - \
+mu1l1_2*h1_2*(I*omega1*r_2*h2_1 + 2.*M*h2_2) + mu1l1_2*h1_1*(2.*M*h2_1 + \
+I*omega1*r_2*h2_2)) + 2.*f_3*r*(r_2*dh1_5*dh2_6 - I*r_2*dh1_9*dh2_6 + \
+mu1l1_2*r*dh2_3*h1_3 + mu1l1_2*r*dh2_6*h1_3 + mu1l1_2*r*dh2_6*h1_6 + \
+I*r_2*ddh2_6*h1_9 - 2.*I*r*dh2_6*h1_9 + (mu1l1_2*(r*dh1_3 - 2.*h1_3) + \
+2.*h1_5 - 2.*I*h1_9)*h2_3 - r*dh1_5*h2_6 + mu1l1_2*r*dh1_6*h2_6 + \
+r*dh1_7*h2_6 + I*r*dh1_9*h2_6 - I*r*dh1_10*h2_6 + mu1l1_2*h1_3*h2_6 - \
+2.*mu1l1_2*h1_6*h2_6 - h1_7*h2_6 - 2.*I*h1_9*h2_6 + I*h1_10*h2_6 + \
+h1_5*(r*(-(r*ddh2_6) + 2.*dh2_6) + 2.*h2_6)) + f_2*(-2.*r_3*dh1_4*dh2_2 + \
+2.*I*r_3*dh1_8*dh2_2 - 2.*mu1l1_2*r_2*dh2_6*h1_1 + 4.*r_2*dh2_2*h1_4 + \
+r_2*dh2_4*h1_4 - 2.*I*omega2*r_3*dh2_6*h1_4 + 3.*I*r_2*dh2_8*h1_4 - \
+2.*r_2*dh2_5*h1_5 - 4.*M*r*dh2_6*h1_5 - 4.*I*r_2*dh2_2*h1_8 - \
+I*r_2*dh2_4*h1_8 - 2.*omega2*r_3*dh2_6*h1_8 + 3.*r_2*dh2_8*h1_8 + \
+2.*I*r_2*dh2_5*h1_9 + 4.*I*M*r*dh2_6*h1_9 + 2.*mu1l1_2*r_2*dh1_3*h2_1 - \
+6.*mu1l1_2*r*h1_3*h2_1 - 4.*r*h1_5*h2_1 + 4.*I*r*h1_9*h2_1 + \
+2.*r_3*ddh1_4*h2_2 - 2.*I*r_3*ddh1_8*h2_2 - 2.*r_2*dh1_4*h2_2 + \
+2.*I*r_2*dh1_8*h2_2 + (-((8.*M + mu1l2_2*r)*h1_5) + 2.*r*(-3.*mu1l1_2*h1_1 + \
+r*(mu1l1_2*dh1_1 + I*omega1*r*dh1_4 + I*omega2*r*dh1_4 + omega1*r*dh1_8 + \
+omega2*r*dh1_8 - 2.*I*(omega1 + omega2)*h1_4 - 2.*(omega1 + omega2)*h1_8)) + \
+I*(8.*M + mu1l2_2*r)*h1_9)*h2_3 + r_2*dh1_4*h2_4 - I*r_2*dh1_8*h2_4 - \
+2.*r*h1_4*h2_4 + 2.*I*r*h1_8*h2_4 + mu1l1_2*r*h1_3*h2_5 + 2.*r*h1_5*h2_5 - \
+2.*I*r*h1_9*h2_5 - 2.*mu1l1_2*r*h1_1*h2_6 + 2.*I*omega2*r_2*h1_4*h2_6 + \
+4.*M*h1_5*h2_6 + 2.*omega2*r_2*h1_8*h2_6 - 4.*I*M*h1_9*h2_6 + \
+2.*I*mu1l1_2*r*h1_9*h2_6 + I*r_2*dh1_4*h2_8 + r_2*dh1_8*h2_8 - \
+6.*I*r*h1_4*h2_8 - 6.*r*h1_8*h2_8 - 2.*I*r_2*dh1_5*h2_9 - 2.*r_2*dh1_9*h2_9 - \
+I*mu1l1_2*r*h1_3*h2_9 - 2.*I*r*h1_5*h2_9 + 2.*I*mu1l1_2*r*h1_6*h2_9 + \
+2.*I*r*h1_7*h2_9 - 2.*r*h1_9*h2_9 + 2.*r*h1_10*h2_9) + \
+f*(2.*mu1l1_2*r_2*dh2_1*h1_1 - 2.*mu1l1_2*r_2*dh2_2*h1_2 - \
+2.*omega1*r_3*dh2_2*h1_9 + 2.*mu1l1_2*r_2*dh1_1*h2_1 + \
+2.*I*omega1*r_3*dh1_4*h2_1 - 2.*I*omega2*r_3*dh1_4*h2_1 + \
+2.*omega1*r_3*dh1_8*h2_1 - 2.*omega2*r_3*dh1_8*h2_1 - 4.*mu1l1_2*r*h1_1*h2_1 \
+- 4.*omega1*r_2*h1_8*h2_1 + 4.*omega2*r_2*h1_8*h2_1 - I*mu1l2_2*r*h1_9*h2_1 - \
+2.*mu1l1_2*r_2*dh1_2*h2_2 + 2.*I*omega1*r_3*dh1_5*h2_2 + \
+2.*omega1*r_3*dh1_9*h2_2 + 4.*mu1l1_2*r*h1_2*h2_2 + \
+2.*I*mu1l1_2*omega1*r_2*h1_3*h2_2 + I*mu1l2_2*r*h1_8*h2_2 + \
+2.*omega1*r_2*h1_9*h2_2 + 2.*I*mu1l1_2*omega1*r_2*h1_2*h2_3 + \
+2.*I*omega1_2*r_3*h1_9*h2_3 + 2.*I*omega1*omega2*r_3*h1_9*h2_3 + \
+mu1l1_2*r*h1_2*h2_4 + 2.*I*M*h1_8*h2_4 + omega1*r_2*h1_9*h2_4 - \
+mu1l1_2*r*h1_1*h2_5 - omega2*r_2*h1_8*h2_5 - 2.*I*M*h1_9*h2_5 - \
+2.*I*mu1l1_2*omega2*r_2*h1_2*h2_6 - 2.*I*omega1*omega2*r_3*h1_9*h2_6 - \
+I*mu1l1_2*r*h1_2*h2_8 - 2.*M*h1_8*h2_8 - I*omega1*r_2*h1_9*h2_8 + \
+I*mu1l1_2*r*h1_1*h2_9 + 3.*I*omega2*r_2*h1_8*h2_9 + 2.*M*h1_9*h2_9 + \
+h1_5*(2.*M*h2_5 + r*(mu1l2_2*h2_1 + omega1*r*(-2.*I*r*dh2_2 + 2.*I*h2_2 - \
+2.*omega1*r*h2_3 - 2.*omega2*r*h2_3 + I*h2_4 + 2.*omega2*r*h2_6 + h2_8)) + \
+2.*I*M*h2_9) - h1_4*(2.*M*h2_4 + 2.*I*M*h2_8 + r*(4.*I*(omega1 - \
+omega2)*r*h2_1 + mu1l2_2*h2_2 + omega2*r*(I*h2_5 + \
+3.*h2_9))))))/(f_2*mu1l1*r_5) + (0.17677669529663687*cv5*f*mu3l1*(h1_7 - \
+I*h1_10)*(r*(dh2_7 + I*dh2_10) - h2_7 - \
+I*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_4) + \
+(0.17677669529663687*cv6*f*mu3l2*(r*(dh1_7 - I*dh1_10) - h1_7 + \
+I*h1_10)*(h2_7 + I*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_4) + \
+(0.17677669529663687*cv4*(-(mu1l2_2*mu2l1_2*r*h1_5*h2_1) + \
+I*mu1l2_2*mu2l1_2*r*h1_9*h2_1 + 2.*I*mu1l2_2*omega1*r_2*h1_7*h2_2 - \
+I*mu1l2_2*mu2l1_2*r*h1_8*h2_2 + 2.*mu1l2_2*omega1*r_2*h1_10*h2_2 - \
+mu1l1_2*mu2l1_2*r*h1_2*h2_4 - I*mu2l1_2*omega1*r_2*h1_5*h2_4 + \
+2.*I*M*mu2l1_2*h1_8*h2_4 - mu2l1_2*omega1*r_2*h1_9*h2_4 + \
+mu1l1_2*mu2l1_2*r*h1_1*h2_5 + 2.*M*mu2l1_2*h1_5*h2_5 - \
+2.*omega1*omega2*r_3*h1_7*h2_5 + mu2l1_2*omega2*r_2*h1_8*h2_5 - \
+2.*I*M*mu2l1_2*h1_9*h2_5 + 2.*I*omega1*omega2*r_3*h1_10*h2_5 - \
+I*mu1l1_2*mu2l1_2*r*h1_2*h2_8 + mu2l1_2*omega1*r_2*h1_5*h2_8 - \
+2.*M*mu2l1_2*h1_8*h2_8 - I*mu2l1_2*omega1*r_2*h1_9*h2_8 + \
+I*mu1l1_2*mu2l1_2*r*h1_1*h2_9 + 2.*I*M*mu2l1_2*h1_5*h2_9 - \
+2.*I*omega1*omega2*r_3*h1_7*h2_9 + I*mu2l1_2*omega2*r_2*h1_8*h2_9 + \
+2.*M*mu2l1_2*h1_9*h2_9 - 2.*omega1*omega2*r_3*h1_10*h2_9 + \
+mu2l1_2*h1_4*(-2.*M*h2_4 - 2.*I*M*h2_8 + r*(mu1l2_2*h2_2 + I*omega2*r*h2_5 - \
+omega2*r*h2_9)) - f*(((8.*M - mu1l2_2*r + mu2l2_2*r)*h1_7 + \
+r*(2.*mu2l1_2*r*dh1_5 - 4.*M*dh1_7 - 2.*I*mu2l1_2*r*dh1_9 + 4.*I*M*dh1_10 + \
+mu1l1_2*mu2l1_2*h1_3 - 2.*mu2l1_2*h1_5 + 2.*I*mu2l1_2*h1_9) - I*(8.*M - \
+mu1l2_2*r + mu2l2_2*r)*h1_10)*h2_5 + I*r*(mu2l1_2*r*dh2_4*h1_8 + \
+I*mu2l1_2*r*dh2_8*h1_8 + 2.*I*mu1l2_2*r*dh1_7*h2_1 + 2.*mu1l2_2*r*dh1_10*h2_1 \
+- 2.*mu1l2_2*h1_10*h2_1 + I*mu1l2_2*mu2l1_2*h1_5*h2_3 + \
+mu1l2_2*mu2l1_2*h1_9*h2_3 + (-2.*mu2l1_2*h1_8 + r*(mu2l1_2*(I*dh1_4 + dh1_8) \
+- 2.*omega1*r*(dh1_7 - I*dh1_10) - 2.*I*omega1*h1_10))*h2_4 - \
+mu2l1_2*r*dh1_4*h2_8 - 2.*I*omega1*r_2*dh1_7*h2_8 + I*mu2l1_2*r*dh1_8*h2_8 - \
+2.*omega1*r_2*dh1_10*h2_8 - 2.*I*mu2l1_2*h1_8*h2_8 + 2.*omega1*r*h1_10*h2_8 + \
+mu2l1_2*h1_4*(I*r*dh2_4 - r*dh2_8 - 2.*I*h2_4 + 2.*h2_8)) + \
+(r*(2.*I*mu2l1_2*r*dh1_5 - 4.*I*M*dh1_7 + 2.*mu2l1_2*r*dh1_9 - 4.*M*dh1_10 + \
+I*mu1l1_2*mu2l1_2*h1_3 - 2.*I*mu2l1_2*h1_5 - 2.*mu2l1_2*h1_9) + (8.*M + \
+mu1l2_2*r + mu2l2_2*r)*h1_10)*h2_9 + I*h1_7*(2.*r*(-1.*I*mu1l2_2*h2_1 + \
+omega1*r*(h2_4 + I*h2_8)) + (8.*M + mu1l2_2*r + mu2l2_2*r)*h2_9)) + \
+f_2*r*(-2.*r_2*dh1_7*dh2_5 + 2.*I*r_2*dh1_10*dh2_5 - 2.*I*r_2*dh1_7*dh2_9 - \
+2.*r_2*dh1_10*dh2_9 - 2.*I*r*dh2_5*h1_10 - 2.*I*mu1l2_2*r*dh2_6*h1_10 - \
+2.*I*r*dh2_7*h1_10 + 2.*r*dh2_9*h1_10 + 2.*r*dh2_10*h1_10 - \
+2.*mu1l2_2*r*dh1_7*h2_3 + 2.*I*mu1l2_2*r*dh1_10*h2_3 - \
+2.*I*mu1l2_2*h1_10*h2_3 + 2.*(r*(r*ddh1_7 - I*r*ddh1_10 - 2.*dh1_7 + \
+2.*I*dh1_10) + h1_7 - I*h1_10)*h2_5 + 2.*I*mu1l2_2*h1_10*h2_6 + r*dh1_7*h2_7 \
+- I*r*dh1_10*h2_7 + 3.*I*h1_10*h2_7 + 2.*I*r_2*ddh1_7*h2_9 + \
+2.*r_2*ddh1_10*h2_9 - 4.*I*r*dh1_7*h2_9 - 4.*r*dh1_10*h2_9 + 2.*h1_10*h2_9 + \
+h1_7*(2.*r*dh2_5 + 2.*mu1l2_2*r*dh2_6 + 2.*r*dh2_7 + 2.*I*r*dh2_9 + \
+2.*I*r*dh2_10 + 2.*mu1l2_2*h2_3 - 2.*mu1l2_2*h2_6 - 3.*h2_7 + 2.*I*h2_9 - \
+3.*I*h2_10) + I*r*dh1_7*h2_10 + r*dh1_10*h2_10 - \
+3.*h1_10*h2_10)))/(f*mu1l1*mu1l2*mu2l1*r_5) + \
+(0.17677669529663687*cv3*(mu1l2_2*mu2l2_2*r*h1_5*h2_1 - \
+I*mu1l2_2*mu2l2_2*r*h1_9*h2_1 + I*mu1l2_2*mu2l2_2*r*h1_8*h2_2 + \
+mu1l1_2*mu2l2_2*r*h1_2*h2_4 + I*mu2l2_2*omega1*r_2*h1_5*h2_4 + \
+2.*I*M*mu2l2_2*h1_8*h2_4 + mu2l2_2*omega1*r_2*h1_9*h2_4 - \
+mu1l1_2*mu2l2_2*r*h1_1*h2_5 + 2.*M*mu2l2_2*h1_5*h2_5 - \
+mu2l2_2*omega2*r_2*h1_8*h2_5 - 2.*I*M*mu2l2_2*h1_9*h2_5 + \
+2.*I*mu1l1_2*omega2*r_2*h1_2*h2_7 - 2.*omega1*omega2*r_3*h1_5*h2_7 + \
+2.*I*omega1*omega2*r_3*h1_9*h2_7 + I*mu1l1_2*mu2l2_2*r*h1_2*h2_8 - \
+mu2l2_2*omega1*r_2*h1_5*h2_8 - 2.*M*mu2l2_2*h1_8*h2_8 + \
+I*mu2l2_2*omega1*r_2*h1_9*h2_8 - I*mu1l1_2*mu2l2_2*r*h1_1*h2_9 + \
+2.*I*M*mu2l2_2*h1_5*h2_9 - I*mu2l2_2*omega2*r_2*h1_8*h2_9 + \
+2.*M*mu2l2_2*h1_9*h2_9 - mu2l2_2*h1_4*(2.*M*h2_4 + 2.*I*M*h2_8 + \
+r*(mu1l2_2*h2_2 + I*omega2*r*h2_5 - omega2*r*h2_9)) - \
+2.*mu1l1_2*omega2*r_2*h1_2*h2_10 - 2.*I*omega1*omega2*r_3*h1_5*h2_10 - \
+2.*omega1*omega2*r_3*h1_9*h2_10 + f_2*r*(-2.*r_2*dh1_5*dh2_7 + \
+2.*I*r_2*dh1_9*dh2_7 - 2.*I*r_2*dh1_5*dh2_10 - 2.*r_2*dh1_9*dh2_10 - \
+2.*mu1l1_2*r*dh2_7*h1_3 - 2.*I*mu1l1_2*r*dh2_10*h1_3 - 2.*I*r_2*ddh2_7*h1_9 + \
+2.*r_2*ddh2_10*h1_9 + 4.*I*r*dh2_7*h1_9 - 4.*r*dh2_10*h1_9 - I*r*dh2_7*h1_10 \
++ r*dh2_10*h1_10 + 2.*r*dh1_5*h2_7 + 2.*mu1l1_2*r*dh1_6*h2_7 + \
+2.*r*dh1_7*h2_7 - 2.*I*r*dh1_9*h2_7 - 2.*I*r*dh1_10*h2_7 + \
+2.*mu1l1_2*h1_3*h2_7 - 2.*mu1l1_2*h1_6*h2_7 - 4.*I*h1_9*h2_7 + \
+3.*I*h1_10*h2_7 + 2.*h1_5*(r*(r*ddh2_7 + I*r*ddh2_10 - 2.*dh2_7 - \
+2.*I*dh2_10) + 2.*h2_7 + 2.*I*h2_10) + h1_7*(r*(dh2_7 + I*dh2_10) - 3.*h2_7 - \
+3.*I*h2_10) + 2.*I*r*dh1_5*h2_10 + 2.*I*mu1l1_2*r*dh1_6*h2_10 + \
+2.*I*r*dh1_7*h2_10 + 2.*r*dh1_9*h2_10 + 2.*r*dh1_10*h2_10 + \
+2.*I*mu1l1_2*h1_3*h2_10 - 2.*I*mu1l1_2*h1_6*h2_10 + 4.*h1_9*h2_10 - \
+3.*h1_10*h2_10) + f*(2.*mu1l1_2*r_2*dh2_7*h1_1 + 2.*I*mu1l1_2*r_2*dh2_10*h1_1 \
++ mu2l2_2*r_2*dh2_4*h1_4 + 2.*I*omega2*r_3*dh2_7*h1_4 + \
+I*mu2l2_2*r_2*dh2_8*h1_4 - 2.*omega2*r_3*dh2_10*h1_4 - \
+I*mu2l2_2*r_2*dh2_4*h1_8 + 2.*omega2*r_3*dh2_7*h1_8 + mu2l2_2*r_2*dh2_8*h1_8 \
++ 2.*I*omega2*r_3*dh2_10*h1_8 + 2.*I*mu2l2_2*r_2*dh2_5*h1_9 - \
+4.*I*M*r*dh2_7*h1_9 - 2.*mu2l2_2*r_2*dh2_9*h1_9 + 4.*M*r*dh2_10*h1_9 + \
+I*mu1l2_2*mu2l2_2*r*h1_9*h2_3 + mu2l2_2*r_2*dh1_4*h2_4 - \
+I*mu2l2_2*r_2*dh1_8*h2_4 - 2.*mu2l2_2*r*h1_4*h2_4 + 2.*I*mu2l2_2*r*h1_8*h2_4 \
++ mu1l1_2*mu2l2_2*r*h1_3*h2_5 - 2.*I*mu2l2_2*r*h1_9*h2_5 + \
+2.*I*(I*r*(mu1l1_2*h1_1 + omega2*r*(I*h1_4 + h1_8)) + (2.*M + \
+mu1l1_2*r)*h1_9)*h2_7 + I*mu2l2_2*r_2*dh1_4*h2_8 + mu2l2_2*r_2*dh1_8*h2_8 - \
+2.*I*mu2l2_2*r*h1_4*h2_8 - 2.*mu2l2_2*r*h1_8*h2_8 + \
+I*mu1l1_2*mu2l2_2*r*h1_3*h2_9 + 2.*mu2l2_2*r*h1_9*h2_9 - \
+2.*I*mu1l1_2*r*h1_1*h2_10 + 2.*omega2*r_2*h1_4*h2_10 - \
+2.*I*omega2*r_2*h1_8*h2_10 - 4.*M*h1_9*h2_10 - 2.*mu1l1_2*r*h1_9*h2_10 - \
+h1_5*(4.*M*h2_7 + r*(2.*mu2l2_2*r*dh2_5 - 4.*M*dh2_7 + 2.*I*mu2l2_2*r*dh2_9 - \
+4.*I*M*dh2_10 + mu1l2_2*mu2l2_2*h2_3 - 2.*mu2l2_2*h2_5 - 2.*I*mu2l2_2*h2_9) + \
+4.*I*M*h2_10))))/(f*mu1l1*mu1l2*mu2l2*r_5) + \
+(0.17677669529663687*cv2*(h1_1*(-4.*M*mu1l2_2*h2_1 + \
+2.*omega2*r_2*(I*mu1l2_2*h2_2 + (omega1 - omega2)*r*(h2_5 + I*h2_9))) + \
+2.*h1_2*(2.*M*mu1l2_2*h2_2 + omega2*r*(-1.*I*mu1l2_2*r*h2_1 - 2.*I*M*h2_5 + \
+2.*M*h2_9)) - f*(-2.*mu1l2_2*r_2*dh2_1*h1_1 + 2.*I*omega1*r_3*dh2_4*h1_1 - \
+2.*I*omega2*r_3*dh2_4*h1_1 - 2.*omega1*r_3*dh2_8*h1_1 + \
+2.*omega2*r_3*dh2_8*h1_1 + 2.*mu1l2_2*r_2*dh2_2*h1_2 - \
+2.*I*omega2*r_3*dh2_5*h1_2 + 2.*omega2*r_3*dh2_9*h1_2 - \
+2.*mu1l2_2*r_2*dh1_1*h2_1 + 4.*mu1l2_2*r*h1_1*h2_1 + I*mu1l2_2*r*h1_9*h2_1 + \
+2.*mu1l2_2*r_2*dh1_2*h2_2 - 4.*mu1l2_2*r*h1_2*h2_2 - \
+2.*I*mu1l2_2*omega2*r_2*h1_3*h2_2 + 2.*I*mu1l2_2*omega1*r_2*h1_6*h2_2 - \
+I*mu1l2_2*r*h1_8*h2_2 - 2.*I*mu1l2_2*omega2*r_2*h1_2*h2_3 - \
+4.*I*omega1*r_2*h1_1*h2_4 + 4.*I*omega2*r_2*h1_1*h2_4 + mu1l1_2*r*h1_2*h2_4 - \
+2.*I*M*h1_8*h2_4 - 3.*omega1*r_2*h1_9*h2_4 + 2.*I*omega2*r_3*dh1_2*h2_5 - \
+mu1l1_2*r*h1_1*h2_5 - 2.*I*omega2*r_2*h1_2*h2_5 + \
+2.*omega1*omega2*r_3*h1_3*h2_5 + 2.*omega2_2*r_3*h1_3*h2_5 - \
+2.*omega1*omega2*r_3*h1_6*h2_5 + omega2*r_2*h1_8*h2_5 + 2.*I*M*h1_9*h2_5 + \
+4.*omega1*r_2*h1_1*h2_8 - 4.*omega2*r_2*h1_1*h2_8 + I*mu1l1_2*r*h1_2*h2_8 + \
+2.*M*h1_8*h2_8 - 3.*I*omega1*r_2*h1_9*h2_8 - 2.*omega2*r_3*dh1_2*h2_9 - \
+I*mu1l1_2*r*h1_1*h2_9 + 2.*omega2*r_2*h1_2*h2_9 + \
+2.*I*omega1*omega2*r_3*h1_3*h2_9 + 2.*I*omega2_2*r_3*h1_3*h2_9 - \
+2.*I*omega1*omega2*r_3*h1_6*h2_9 + I*omega2*r_2*h1_8*h2_9 - 2.*M*h1_9*h2_9 + \
+h1_5*(-2.*M*h2_5 + r*(mu1l2_2*h2_1 + I*omega1*r*h2_4 - omega1*r*h2_8) - \
+2.*I*M*h2_9) + h1_4*(2.*M*h2_4 + 2.*I*M*h2_8 + r*(-(mu1l2_2*h2_2) + \
+omega2*r*(-1.*I*h2_5 + h2_9)))) + 2.*f_3*r*(r_2*dh1_6*dh2_5 + \
+I*r_2*dh1_6*dh2_9 - r*dh2_5*h1_6 + mu1l2_2*r*dh2_6*h1_6 + r*dh2_7*h1_6 - \
+I*r*dh2_9*h1_6 + I*r*dh2_10*h1_6 + mu1l2_2*r*dh1_3*h2_3 + \
+mu1l2_2*r*dh1_6*h2_3 + mu1l2_2*h1_6*h2_3 + (r*(-(r*ddh1_6) + 2.*dh1_6) + \
+h1_6)*h2_5 + mu1l2_2*r*dh1_6*h2_6 - 2.*mu1l2_2*h1_6*h2_6 - h1_6*h2_7 + \
+h1_3*(mu1l2_2*(r*dh2_3 - 2.*h2_3) + 2.*h2_5 + 2.*I*h2_9) - I*r_2*ddh1_6*h2_9 \
++ 2.*I*r*dh1_6*h2_9 + I*h1_6*h2_9 - I*h1_6*h2_10) - f_2*(h1_3*((8.*M + \
+mu1l1_2*r)*h2_5 + 2.*r*(3.*mu1l2_2*h2_1 + r*(-(mu1l2_2*dh2_1) - \
+I*omega1*r*dh2_4 - I*omega2*r*dh2_4 + omega1*r*dh2_8 + omega2*r*dh2_8 + \
+2.*I*(omega1 + omega2)*h2_4 - 2.*(omega1 + omega2)*h2_8)) + I*(8.*M + \
+mu1l1_2*r)*h2_9) + r*(2.*r_2*dh1_2*dh2_4 + 2.*I*r_2*dh1_2*dh2_8 - \
+2.*r_2*ddh2_4*h1_2 - 2.*I*r_2*ddh2_8*h1_2 + 2.*r*dh2_4*h1_2 + \
+2.*I*r*dh2_8*h1_2 + I*r*dh2_4*h1_8 - r*dh2_8*h1_8 - 2.*I*r*dh2_5*h1_9 + \
+2.*r*dh2_9*h1_9 + 2.*mu1l2_2*r*dh1_6*h2_1 + 2.*mu1l2_2*h1_6*h2_1 - \
+mu1l2_2*h1_5*h2_3 - I*mu1l2_2*h1_9*h2_3 - 4.*r*dh1_2*h2_4 - r*dh1_4*h2_4 + \
+2.*I*omega1*r_2*dh1_6*h2_4 + 3.*I*r*dh1_8*h2_4 - 2.*I*omega1*r*h1_6*h2_4 - \
+6.*I*h1_8*h2_4 + 2.*r*dh1_5*h2_5 + 4.*M*dh1_6*h2_5 - 2.*h1_5*h2_5 - \
+mu1l2_2*h1_6*h2_5 + mu2l2_2*h1_6*h2_5 - 2.*I*h1_9*h2_5 + \
+2.*I*mu1l2_2*h1_9*h2_6 + 2.*I*h1_9*h2_7 + h1_4*(-(r*(dh2_4 + I*dh2_8)) + \
+2.*h2_4 + 2.*I*h2_8) - 4.*I*r*dh1_2*h2_8 - I*r*dh1_4*h2_8 - \
+2.*omega1*r_2*dh1_6*h2_8 - 3.*r*dh1_8*h2_8 + 2.*omega1*r*h1_6*h2_8 + \
+6.*h1_8*h2_8 + h1_1*(2.*mu1l2_2*(-(r*dh2_3) + 3.*h2_3) + 4.*h2_5 + 4.*I*h2_9) \
++ 2.*I*r*dh1_5*h2_9 + 4.*I*M*dh1_6*h2_9 - 2.*I*h1_5*h2_9 + \
+I*mu1l2_2*h1_6*h2_9 + I*mu2l2_2*h1_6*h2_9 + 2.*h1_9*h2_9 - \
+2.*h1_9*h2_10))))/(f_2*mu1l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{3.916403070732505*^9, 3.916403122655531*^9, 
+  3.916403158515236*^9, 3.916403275895875*^9, 3.9164045367894173`*^9, 
+  3.916421653881011*^9, 3.916462966105329*^9, 3.916463288219788*^9, 
+  3.9164825315679693`*^9},
+ CellLabel->
+  "Out[226]=",ExpressionUUID->"6a2d6f87-64af-4410-b7f3-2b871bfb40fb"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=6", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.9164623538678417`*^9}},ExpressionUUID->"19c9f0dc-56b7-49e1-b5a5-\
+d2ce23afd3bc"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "6", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.916462976035761*^9, 3.9164629762175503`*^9}},
+ CellLabel->
+  "In[227]:=",ExpressionUUID->"9b552d82-0ab7-4c8e-8e13-070d20ca1ecb"],
+
+Cell[BoxData["\<\"(0.35355339059327373*c0*(2.*f_3*r_3*dh1_6*dh2_6 + \
+2.*f_2*r_2*dh2_6*h1_5 - 2.*f_3*r_2*dh2_6*h1_6 + \
+2.*I*f_2*omega1*r_3*dh2_6*h1_6 - 2.*((4.*M - 2.*f*r - 2.*I*omega1*r_2)*h1_2 + \
+2.*(M + f*r)*h1_5 + r*(mu1l1_2*h1_1 - f*(r*dh1_5 + 2.*h1_1) + \
+f_2*(-(r*(r*ddh1_6 + 2.*dh1_3 - 2.*dh1_6)) + 4.*h1_3 - 2.*h1_6) + \
+omega1*r*(I*h1_4 + omega1*r*h1_6)))*h2_1 - 2.*f*r_2*dh1_4*h2_2 + \
+4.*I*f*omega1*r_3*dh1_6*h2_2 - 4.*f*r*h1_2*h2_2 + 2.*mu1l1_2*r*h1_2*h2_2 + \
+4.*f_2*r*h1_3*h2_2 + 4.*I*f*omega1*r_2*h1_3*h2_2 + 4.*M*h1_4*h2_2 + \
+4.*f*r*h1_4*h2_2 + 2.*I*omega1*r_2*h1_5*h2_2 - 4.*I*M*omega1*r*h1_6*h2_2 - \
+4.*I*f*omega1*r_2*h1_6*h2_2 - 2.*f_3*r_3*ddh1_6*h2_3 + 4.*f_2*r_2*dh1_1*h2_3 \
+- 2.*f_2*r_2*dh1_5*h2_3 - 4.*f_2*M*r*dh1_6*h2_3 + 4.*f_3*r_2*dh1_6*h2_3 - \
+4.*f_2*r*h1_2*h2_3 + 4.*I*f*omega1*r_2*h1_2*h2_3 - 8.*f_2*M*h1_3*h2_3 + \
+4.*f_3*r*h1_3*h2_3 - 2.*f_2*mu1l1_2*r*h1_3*h2_3 - 2.*I*f*omega1*r_2*h1_4*h2_3 \
++ 4.*f_2*r*h1_5*h2_3 + 4.*f_2*M*h1_6*h2_3 - 4.*f_3*r*h1_6*h2_3 - \
+2.*f*omega1_2*r_3*h1_6*h2_3 - f*r*h1_4*h2_4 + I*f*r*h1_8*h2_4 + f*r*h1_5*h2_5 \
+- I*f*r*h1_9*h2_5 + 6.*f_3*r_2*dh1_6*h2_6 - 2.*I*f_2*omega2*r_3*dh1_6*h2_6 - \
+8.*f_2*M*h1_3*h2_6 + 12.*f_3*r*h1_3*h2_6 + 2.*I*f*omega2*r_2*h1_4*h2_6 + \
+6.*f_2*r*h1_5*h2_6 + 2.*f_3*r*h1_6*h2_6 - 2.*f_2*mu1l1_2*r*h1_6*h2_6 - \
+2.*I*f_2*omega1*r_2*h1_6*h2_6 + 2.*I*f_2*omega2*r_2*h1_6*h2_6 + \
+2.*f*omega1*omega2*r_3*h1_6*h2_6 - 2.*f_2*r*h1_7*h2_6 + 4.*h1_1*((2.*M - f*r \
+- I*omega1*r_2)*h2_2 - f_2*r*(2.*h2_3 + 3.*h2_6)) - I*f*r*h1_4*h2_8 - \
+f*r*h1_8*h2_8 + I*f*r*h1_5*h2_9 + f*r*h1_9*h2_9))/(f_2*r_5) - \
+(0.17677669529663687*c3*mu3l1*mu3l2*(h1_7 - I*h1_10)*(h2_7 + \
+I*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_4) + \
+(0.17677669529663687*c1*(-2.*r*(mu1l1_2*mu1l2_2*h1_1*h2_1 - \
+mu1l1_2*mu1l2_2*h1_2*h2_2 + omega1*omega2*r_2*(h1_5 - I*h1_9)*(h2_5 + \
+I*h2_9)) - f*(-2.*omega1*r_3*dh2_4*h1_9 - 2.*I*omega1*r_3*dh2_8*h1_9 + \
+4.*I*mu1l2_2*r*h1_9*h2_1 - 4.*I*mu1l2_2*r*h1_8*h2_2 + 4.*mu1l1_2*r*h1_2*h2_4 \
++ 2.*I*mu1l1_2*omega1*r_2*h1_6*h2_4 + 2.*I*omega1*r_2*h1_7*h2_4 - \
+4.*I*M*h1_8*h2_4 - 2.*I*mu1l1_2*r*h1_8*h2_4 + I*mu1l2_2*r*h1_8*h2_4 - \
+I*mu2l2_2*r*h1_8*h2_4 + 2.*omega1*r_2*h1_10*h2_4 - 2.*I*omega2*r_3*dh1_4*h2_5 \
+- 2.*omega2*r_3*dh1_8*h2_5 - 4.*mu1l1_2*r*h1_1*h2_5 + 4.*I*M*h1_9*h2_5 + \
+2.*I*mu1l1_2*r*h1_9*h2_5 - I*mu1l2_2*r*h1_9*h2_5 + I*mu2l2_2*r*h1_9*h2_5 + \
+2.*mu1l2_2*omega2*r_2*h1_8*h2_6 + 2.*omega2*r_2*h1_8*h2_7 + \
+4.*I*mu1l1_2*r*h1_2*h2_8 - 2.*mu1l1_2*omega1*r_2*h1_6*h2_8 - \
+2.*omega1*r_2*h1_7*h2_8 + 4.*M*h1_8*h2_8 + 2.*mu1l1_2*r*h1_8*h2_8 + \
+mu1l2_2*r*h1_8*h2_8 + mu2l2_2*r*h1_8*h2_8 + 2.*I*omega1*r_2*h1_10*h2_8 + \
+2.*omega2*r_3*dh1_4*h2_9 - 2.*I*omega2*r_3*dh1_8*h2_9 - \
+4.*I*mu1l1_2*r*h1_1*h2_9 - 4.*M*h1_9*h2_9 - 2.*mu1l1_2*r*h1_9*h2_9 - \
+mu1l2_2*r*h1_9*h2_9 - mu2l2_2*r*h1_9*h2_9 - h1_5*(2.*I*omega1*r_3*dh2_4 - \
+2.*omega1*r_3*dh2_8 + 4.*mu1l2_2*r*h2_1 + (4.*M - mu1l2_2*r + mu2l2_2*r)*h2_5 \
++ I*(4.*M + mu1l2_2*r + mu2l2_2*r)*h2_9) + h1_4*((4.*M - mu1l2_2*r + \
+mu2l2_2*r)*h2_4 + I*((4.*M + mu1l2_2*r + mu2l2_2*r)*h2_8 + \
+2.*r*(-2.*I*mu1l2_2*h2_2 + omega2*r*(mu1l2_2*h2_6 + h2_7 + I*h2_10)))) + \
+2.*I*omega2*r_2*h1_8*h2_10) + f_2*r*(2.*r_2*dh1_4*dh2_4 - \
+2.*I*r_2*dh1_8*dh2_4 + 2.*I*r_2*dh1_4*dh2_8 + 2.*r_2*dh1_8*dh2_8 + \
+2.*I*mu1l2_2*r*dh2_6*h1_9 + 2.*I*r*dh2_7*h1_9 - 2.*r*dh2_10*h1_9 - \
+2.*mu1l1_2*mu1l2_2*h1_3*h2_3 + 4.*I*mu1l2_2*h1_9*h2_3 - 2.*I*h1_8*h2_4 - \
+2.*mu1l1_2*r*dh1_6*h2_5 - 2.*r*dh1_7*h2_5 + 2.*I*r*dh1_10*h2_5 - \
+4.*mu1l1_2*h1_3*h2_5 + 2.*mu1l1_2*h1_6*h2_5 + 6.*h1_7*h2_5 + 18.*I*h1_9*h2_5 \
+- 6.*I*h1_10*h2_5 - 4.*mu1l1_2*mu1l2_2*h1_6*h2_6 - 2.*mu1l2_2*h1_7*h2_6 - \
+2.*I*mu1l2_2*h1_9*h2_6 + 2.*I*mu1l2_2*h1_10*h2_6 - 2.*mu1l1_2*h1_6*h2_7 - \
+3.*h1_7*h2_7 - 6.*I*h1_9*h2_7 + 3.*I*h1_10*h2_7 + 2.*h1_4*(h2_4 + I*h2_8) + \
+2.*h1_8*h2_8 - 2.*I*mu1l1_2*r*dh1_6*h2_9 - 2.*I*r*dh1_7*h2_9 - \
+2.*r*dh1_10*h2_9 - 4.*I*mu1l1_2*h1_3*h2_9 + 2.*I*mu1l1_2*h1_6*h2_9 + \
+6.*I*h1_7*h2_9 - 18.*h1_9*h2_9 + 6.*h1_10*h2_9 - 2.*h1_5*(mu1l2_2*r*dh2_6 + \
+r*dh2_7 + I*r*dh2_10 + 2.*mu1l2_2*h2_3 + 9.*h2_5 - mu1l2_2*h2_6 - 3.*h2_7 + \
+9.*I*h2_9 - 3.*I*h2_10) - 2.*I*mu1l1_2*h1_6*h2_10 - 3.*I*h1_7*h2_10 + \
+6.*h1_9*h2_10 - 3.*h1_10*h2_10)))/(f_2*mu1l1*mu1l2*r_5) + \
+(0.35355339059327373*c2*(2.*f_2*r*(r_2*dh1_7*dh2_7 - I*r_2*dh1_10*dh2_7 + \
+I*r_2*dh1_7*dh2_10 + r_2*dh1_10*dh2_10 - I*h1_10*h2_7 + h1_7*(h2_7 + I*h2_10) \
++ h1_10*h2_10) + r*(-1.*I*mu2l2_2*omega1*r*h1_7*h2_4 + \
+I*mu2l1_2*mu2l2_2*h1_8*h2_4 - mu2l2_2*omega1*r*h1_10*h2_4 - \
+I*mu2l1_2*mu2l2_2*h1_9*h2_5 + 2.*omega1*omega2*r_2*h1_7*h2_7 - \
+mu2l1_2*omega2*r*h1_8*h2_7 - 2.*I*omega1*omega2*r_2*h1_10*h2_7 + \
+mu2l2_2*omega1*r*h1_7*h2_8 - mu2l1_2*mu2l2_2*h1_8*h2_8 - \
+I*mu2l2_2*omega1*r*h1_10*h2_8 + mu2l1_2*mu2l2_2*h1_5*(h2_5 + I*h2_9) + \
+mu2l1_2*mu2l2_2*h1_9*h2_9 - mu2l1_2*h1_4*(mu2l2_2*h2_4 + I*(mu2l2_2*h2_8 + \
+omega2*r*(h2_7 + I*h2_10))) + 2.*I*omega1*omega2*r_2*h1_7*h2_10 - \
+I*mu2l1_2*omega2*r*h1_8*h2_10 + 2.*omega1*omega2*r_2*h1_10*h2_10) + \
+f*(-(mu2l1_2*r_2*dh2_7*h1_5) - I*mu2l1_2*r_2*dh2_10*h1_5 + \
+I*mu2l1_2*r_2*dh2_7*h1_9 - mu2l1_2*r_2*dh2_10*h1_9 - mu2l2_2*r_2*dh1_7*h2_5 + \
+I*mu2l2_2*r_2*dh1_10*h2_5 + I*mu2l2_2*r*h1_10*h2_5 + (-(mu2l1_2*r*(h1_5 - \
+I*h1_9)) - 8.*I*M*h1_10)*h2_7 - I*mu2l2_2*r_2*dh1_7*h2_9 - \
+mu2l2_2*r_2*dh1_10*h2_9 - mu2l2_2*r*h1_10*h2_9 - I*mu2l1_2*r*h1_5*h2_10 - \
+mu2l1_2*r*h1_9*h2_10 + 8.*M*h1_10*h2_10 + h1_7*(8.*M*h2_7 - mu2l2_2*r*(h2_5 + \
+I*h2_9) + 8.*I*M*h2_10))))/(f*mu1l1*mu1l2*mu2l1*mu2l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{3.916403070732505*^9, 3.916403122655531*^9, 
+  3.916403158515236*^9, 3.916403275895875*^9, 3.9164045367894173`*^9, 
+  3.916421653881011*^9, 3.9164629766332893`*^9, 3.916463288268317*^9, 
+  3.916481617874498*^9, 3.916482703855348*^9},
+ CellLabel->
+  "Out[227]=",ExpressionUUID->"74ae5abb-44e4-4be7-aef4-428fee3ef8dd"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=7", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.916462358630591*^9}},ExpressionUUID->"6fec0b75-00ff-4f7f-bc67-\
+168d95252811"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "7", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.916462983324991*^9, 3.9164629835808163`*^9}},
+ CellLabel->
+  "In[233]:=",ExpressionUUID->"eddb1456-a06d-4b7b-bd86-a3f0b1de0421"],
+
+Cell[BoxData["\<\"(0.35355339059327373*ct3*((2.*M*mu2l1_2*h1_5 - \
+2.*I*M*mu2l1_2*h1_9 + r*(mu1l1_2*mu2l1_2*h1_1 + omega1*r*(I*mu2l1_2*h1_4 - \
+omega1*r*h1_7 + mu2l1_2*h1_8 + I*omega1*r*h1_10)))*h2_1 - (2.*M*mu2l1_2*h1_4 \
+- 2.*I*M*mu2l1_2*h1_8 + r*(2.*I*M*omega1*h1_7 + mu2l1_2*(mu1l1_2*h1_2 + \
+omega1*r*(I*h1_5 + h1_9)) + 2.*M*omega1*h1_10))*h2_2 + \
+f_3*r*(r*(2.*r*dh1_7*dh2_6 - 2.*I*r*dh1_10*dh2_6 - 2.*dh2_6*h1_7 + \
+2.*I*dh2_6*h1_10 - r*ddh1_7*h2_3 + I*r*ddh1_10*h2_3 + 2.*dh1_7*h2_3 - \
+2.*I*dh1_10*h2_3) + 2.*(h1_7 - I*h1_10)*h2_6) + f*r*(-(mu2l1_2*r*dh1_5*h2_1) \
++ I*mu2l1_2*r*dh1_9*h2_1 + 2.*mu2l1_2*h1_5*h2_1 - 2.*I*mu2l1_2*h1_9*h2_1 + \
+(-2.*mu2l1_2*h1_4 + 2.*I*mu2l1_2*h1_8 + r*(mu2l1_2*dh1_4 + \
+2.*I*omega1*r*dh1_7 - I*mu2l1_2*dh1_8 + 2.*omega1*r*dh1_10 - 2.*I*omega1*h1_7 \
+- 2.*omega1*h1_10))*h2_2 - omega1_2*r_2*h1_7*h2_3 + \
+mu2l1_2*omega1*r*h1_8*h2_3 + I*omega1_2*r_2*h1_10*h2_3 + I*omega1*r*h1_7*h2_4 \
+- I*mu2l1_2*h1_8*h2_4 + omega1*r*h1_10*h2_4 - mu2l1_2*h1_5*h2_5 + \
+I*mu2l1_2*h1_9*h2_5 + 2.*omega1*omega2*r_2*h1_7*h2_6 - \
+mu2l1_2*omega2*r*h1_8*h2_6 - 2.*I*omega1*omega2*r_2*h1_10*h2_6 + \
+mu2l1_2*h1_4*(h2_4 + I*r*(omega1*h2_3 - omega2*h2_6)) + omega1*r*h1_7*h2_8 - \
+I*omega1*r*h1_10*h2_8) + f_2*((-2.*M*h1_7 + r*(mu2l1_2*r*dh1_5 - 2.*M*dh1_7 - \
+I*mu2l1_2*r*dh1_9 + 2.*I*M*dh1_10 + mu1l1_2*mu2l1_2*h1_3 - 2.*mu2l1_2*h1_5 + \
+2.*I*mu2l1_2*h1_9) + 2.*I*M*h1_10)*h2_3 + ((-4.*M + mu1l2_2*r)*h1_7 + \
+I*(mu2l1_2*r*(I*h1_5 + h1_9) + (4.*M - mu1l2_2*r)*h1_10))*h2_6 + \
+r*(-(mu2l1_2*r*dh2_6*h1_5) + I*mu2l1_2*r*dh2_6*h1_9 + r_2*ddh1_7*h2_1 - \
+I*r_2*ddh1_10*h2_1 - 2.*r*dh1_7*h2_1 + 2.*I*r*dh1_10*h2_1 + (r*dh1_7 - \
+I*r*dh1_10 - h1_7 + I*h1_10)*h2_5 - I*h1_10*h2_7 + h1_7*(h2_7 + I*h2_9) - \
+I*r*dh1_7*h2_9 - r*dh1_10*h2_9 + h1_10*h2_9))))/(f_2*mu1l1*mu2l1*r_5) - \
+(0.17677669529663687*ct5*mu3l1*(h1_7 - I*h1_10)*(2.*h2_5 - h2_7 + 2.*I*h2_9 - \
+I*h2_10))/(mu1l1*mu1l2*mu2l1*r_4) - (0.17677669529663687*ct6*mu3l2*(2.*h1_5 - \
+h1_7 - 2.*I*h1_9 + I*h1_10)*(h2_7 + I*h2_10))/(mu1l1*mu1l2*mu2l2*r_4) + \
+(0.08838834764831843*ct1*(-2.*mu1l1_2*mu1l2_2*h1_2*h2_1 - \
+2.*mu1l1_2*mu1l2_2*h1_2*h2_2 + 2.*mu1l1_2*mu1l2_2*h1_1*(h2_1 + h2_2) - \
+omega1*omega2*r_2*h1_5*h2_4 - I*omega1*omega2*r_2*h1_9*h2_4 + \
+omega1*omega2*r_2*h1_4*h2_5 + 2.*omega1*omega2*r_2*h1_5*h2_5 + \
+I*omega1*omega2*r_2*h1_8*h2_5 + 2.*I*omega1*omega2*r_2*h1_9*h2_5 - \
+I*omega1*omega2*r_2*h1_5*h2_8 + omega1*omega2*r_2*h1_9*h2_8 + \
+I*omega1*omega2*r_2*h1_4*h2_9 + 2.*I*omega1*omega2*r_2*h1_5*h2_9 - \
+omega1*omega2*r_2*h1_8*h2_9 - 2.*omega1*omega2*r_2*h1_9*h2_9 + \
+f*(omega1*r_2*dh2_4*h1_8 + I*omega1*r_2*dh2_8*h1_8 + 2.*omega1*r_2*dh2_4*h1_9 \
+- omega1*r_2*dh2_5*h1_9 + 2.*I*omega1*r_2*dh2_8*h1_9 - \
+I*omega1*r_2*dh2_9*h1_9 + I*omega2*r_2*dh1_4*h2_4 - omega2*r_2*dh1_8*h2_4 - \
+4.*I*mu1l1_2*omega1*r*h1_6*h2_4 - 4.*I*omega1*r*h1_7*h2_4 - \
+2.*I*mu1l1_2*h1_8*h2_4 - 2.*I*mu2l1_2*h1_8*h2_4 - omega1*r*h1_8*h2_4 + \
+omega2*r*h1_8*h2_4 - 6.*omega1*r*h1_9*h2_4 + 4.*omega1*r*h1_10*h2_4 - \
+2.*I*omega2*r_2*dh1_4*h2_5 - I*omega2*r_2*dh1_5*h2_5 + \
+2.*omega2*r_2*dh1_8*h2_5 + omega2*r_2*dh1_9*h2_5 - 2.*omega2*r*h1_8*h2_5 + \
+2.*I*mu1l1_2*h1_9*h2_5 + 2.*I*mu2l1_2*h1_9*h2_5 + omega1*r*h1_9*h2_5 - \
+omega2*r*h1_9*h2_5 - omega2*r_2*dh1_4*h2_8 - I*omega2*r_2*dh1_8*h2_8 + \
+4.*mu1l1_2*omega1*r*h1_6*h2_8 + 4.*omega1*r*h1_7*h2_8 + 2.*mu1l1_2*h1_8*h2_8 \
++ 2.*mu2l1_2*h1_8*h2_8 - I*omega1*r*h1_8*h2_8 + I*omega2*r*h1_8*h2_8 - \
+6.*I*omega1*r*h1_9*h2_8 + 4.*I*omega1*r*h1_10*h2_8 + 2.*omega2*r_2*dh1_4*h2_9 \
++ omega2*r_2*dh1_5*h2_9 + 2.*I*omega2*r_2*dh1_8*h2_9 + \
+I*omega2*r_2*dh1_9*h2_9 - 2.*I*omega2*r*h1_8*h2_9 - 2.*mu1l1_2*h1_9*h2_9 - \
+2.*mu2l1_2*h1_9*h2_9 + I*omega1*r*h1_9*h2_9 - I*omega2*r*h1_9*h2_9 + \
+h1_5*((-2.*mu1l1_2 + 2.*mu2l1_2 - I*(omega1 - omega2)*r)*h2_5 + \
+omega1*r*(r*(-2.*I*dh2_4 + I*dh2_5 + 2.*dh2_8 - dh2_9) + 6.*I*h2_4 - 6.*h2_8) \
++ (-2.*I*mu1l1_2 + 2.*I*mu2l1_2 + (omega1 - omega2)*r)*h2_9) + \
+h1_4*((2.*mu1l1_2 - 2.*mu2l1_2 + I*(omega1 - omega2)*r)*h2_4 + (2.*I*mu1l1_2 \
+- 2.*I*mu2l1_2 + (-omega1 + omega2)*r)*h2_8 + r*(omega1*r*(-1.*I*dh2_4 + \
+dh2_8) + 2.*I*omega2*h2_5 - 2.*omega2*h2_9))) - f_2*(2.*r_2*dh1_4*dh2_4 + \
+r_2*dh1_5*dh2_4 + 2.*I*r_2*dh1_8*dh2_4 + I*r_2*dh1_9*dh2_4 - r_2*dh1_4*dh2_5 \
+- I*r_2*dh1_8*dh2_5 + 2.*I*r_2*dh1_4*dh2_8 + I*r_2*dh1_5*dh2_8 - \
+2.*r_2*dh1_8*dh2_8 - r_2*dh1_9*dh2_8 - I*r_2*dh1_4*dh2_9 + r_2*dh1_8*dh2_9 - \
+r*dh2_4*h1_5 - I*r*dh2_8*h1_5 - 2.*I*r*dh2_4*h1_8 + I*r*dh2_5*h1_8 + \
+2.*r*dh2_8*h1_8 - r*dh2_9*h1_8 - I*r*dh2_4*h1_9 + r*dh2_8*h1_9 - \
+2.*mu1l1_2*mu1l2_2*h1_3*h2_3 + (-(r*(6.*dh1_4 + dh1_5 + I*(6.*dh1_8 + \
+dh1_9))) + 2.*h1_5 + 8.*I*h1_8 + 2.*I*h1_9)*h2_4 + r*dh1_4*h2_5 + \
+4.*mu1l1_2*r*dh1_6*h2_5 + 4.*r*dh1_7*h2_5 + I*r*dh1_8*h2_5 + \
+4.*I*r*dh1_10*h2_5 - 12.*mu1l1_2*h1_6*h2_5 - 8.*h1_7*h2_5 - 2.*I*h1_8*h2_5 - \
+8.*I*h1_10*h2_5 + 4.*mu1l1_2*h1_6*h2_7 + 2.*h1_7*h2_7 + 2.*I*h1_10*h2_7 - \
+6.*I*r*dh1_4*h2_8 - I*r*dh1_5*h2_8 + 6.*r*dh1_8*h2_8 + r*dh1_9*h2_8 + \
+2.*I*h1_5*h2_8 - 8.*h1_8*h2_8 - 2.*h1_9*h2_8 + h1_4*(-2.*r*dh2_4 + r*dh2_5 - \
+2.*I*r*dh2_8 + I*r*dh2_9 + 8.*h2_4 - 2.*h2_5 + 8.*I*h2_8 - 2.*I*h2_9) + \
+I*r*dh1_4*h2_9 + 4.*I*mu1l1_2*r*dh1_6*h2_9 + 4.*I*r*dh1_7*h2_9 - r*dh1_8*h2_9 \
+- 4.*r*dh1_10*h2_9 - 12.*I*mu1l1_2*h1_6*h2_9 - 8.*I*h1_7*h2_9 + 2.*h1_8*h2_9 \
++ 8.*h1_10*h2_9 + 4.*I*mu1l1_2*h1_6*h2_10 + 2.*I*h1_7*h2_10 - \
+2.*h1_10*h2_10)))/(f_2*mu1l1*mu1l2*r_4) + \
+(0.08838834764831843*ct2*(-(r*(2.*mu1l1_2*mu1l2_2*h1_2*h2_1 + \
+2.*mu1l1_2*mu1l2_2*h1_2*h2_2 - 2.*mu1l1_2*mu1l2_2*h1_1*(h2_1 + h2_2) + \
+omega1*omega2*r_2*h1_5*h2_4 - I*omega1*omega2*r_2*h1_9*h2_4 - \
+omega1*omega2*r_2*h1_4*h2_5 - 2.*omega1*omega2*r_2*h1_5*h2_5 + \
+I*omega1*omega2*r_2*h1_8*h2_5 + 2.*I*omega1*omega2*r_2*h1_9*h2_5 - \
+I*omega1*omega2*r_2*h1_5*h2_8 - omega1*omega2*r_2*h1_9*h2_8 + \
+I*omega1*omega2*r_2*h1_4*h2_9 + 2.*I*omega1*omega2*r_2*h1_5*h2_9 + \
+omega1*omega2*r_2*h1_8*h2_9 + 2.*omega1*omega2*r_2*h1_9*h2_9)) + \
+f*(-2.*I*omega1*r_3*dh2_4*h1_5 + I*omega1*r_3*dh2_5*h1_5 - \
+2.*omega1*r_3*dh2_8*h1_5 + omega1*r_3*dh2_9*h1_5 - omega1*r_3*dh2_4*h1_8 + \
+I*omega1*r_3*dh2_8*h1_8 - 2.*omega1*r_3*dh2_4*h1_9 + omega1*r_3*dh2_5*h1_9 + \
+2.*I*omega1*r_3*dh2_8*h1_9 - I*omega1*r_3*dh2_9*h1_9 + (I*omega2*r_3*dh1_4 + \
+omega2*r_3*dh1_8 + (8.*M + 6.*I*omega1*r_2)*h1_5 - \
+4.*I*mu1l1_2*omega1*r_2*h1_6 - 4.*I*omega1*r_2*h1_7 + (-8.*I*M + \
+4.*I*mu1l1_2*r + (omega1 - omega2)*r_2)*h1_8 - 8.*I*M*h1_9 + \
+6.*omega1*r_2*h1_9 - 4.*omega1*r_2*h1_10)*h2_4 - 2.*I*omega2*r_3*dh1_4*h2_5 - \
+I*omega2*r_3*dh1_5*h2_5 - 2.*omega2*r_3*dh1_8*h2_5 - omega2*r_3*dh1_9*h2_5 - \
+8.*M*h1_5*h2_5 - I*omega1*r_2*h1_5*h2_5 + I*omega2*r_2*h1_5*h2_5 + \
+8.*I*M*h1_8*h2_5 + 2.*omega2*r_2*h1_8*h2_5 + 8.*I*M*h1_9*h2_5 - \
+4.*I*mu1l1_2*r*h1_9*h2_5 - omega1*r_2*h1_9*h2_5 + omega2*r_2*h1_9*h2_5 + \
+omega2*r_3*dh1_4*h2_8 - I*omega2*r_3*dh1_8*h2_8 - 8.*I*M*h1_5*h2_8 + \
+6.*omega1*r_2*h1_5*h2_8 - 4.*mu1l1_2*omega1*r_2*h1_6*h2_8 - \
+4.*omega1*r_2*h1_7*h2_8 - 8.*M*h1_8*h2_8 + 4.*mu1l1_2*r*h1_8*h2_8 - \
+I*omega1*r_2*h1_8*h2_8 + I*omega2*r_2*h1_8*h2_8 - 8.*M*h1_9*h2_8 - \
+6.*I*omega1*r_2*h1_9*h2_8 + 4.*I*omega1*r_2*h1_10*h2_8 - \
+2.*omega2*r_3*dh1_4*h2_9 - omega2*r_3*dh1_5*h2_9 + 2.*I*omega2*r_3*dh1_8*h2_9 \
++ I*omega2*r_3*dh1_9*h2_9 + 8.*I*M*h1_5*h2_9 - omega1*r_2*h1_5*h2_9 + \
+omega2*r_2*h1_5*h2_9 + 8.*M*h1_8*h2_9 - 2.*I*omega2*r_2*h1_8*h2_9 + \
+8.*M*h1_9*h2_9 - 4.*mu1l1_2*r*h1_9*h2_9 + I*omega1*r_2*h1_9*h2_9 - \
+I*omega2*r_2*h1_9*h2_9 + h1_4*(-1.*I*omega1*r_3*dh2_4 - omega1*r_3*dh2_8 + \
+(8.*M + I*(omega1 - omega2)*r_2)*h2_4 + (-8.*M + 2.*I*omega2*r_2)*h2_5 - \
+8.*I*M*h2_8 + omega1*r_2*h2_8 - omega2*r_2*h2_8 + 8.*I*M*h2_9 + \
+2.*omega2*r_2*h2_9)) + f_2*r*(-2.*r_2*dh1_4*dh2_4 - r_2*dh1_5*dh2_4 + \
+2.*I*r_2*dh1_8*dh2_4 + I*r_2*dh1_9*dh2_4 + r_2*dh1_4*dh2_5 - \
+I*r_2*dh1_8*dh2_5 + 2.*I*r_2*dh1_4*dh2_8 + I*r_2*dh1_5*dh2_8 + \
+2.*r_2*dh1_8*dh2_8 + r_2*dh1_9*dh2_8 - I*r_2*dh1_4*dh2_9 - r_2*dh1_8*dh2_9 + \
+r*dh2_4*h1_5 - I*r*dh2_8*h1_5 - 2.*I*r*dh2_4*h1_8 + I*r*dh2_5*h1_8 - \
+2.*r*dh2_8*h1_8 + r*dh2_9*h1_8 - I*r*dh2_4*h1_9 - r*dh2_8*h1_9 + \
+2.*mu1l1_2*mu1l2_2*h1_3*h2_3 + (6.*r*dh1_4 + r*dh1_5 - 6.*I*r*dh1_8 - \
+I*r*dh1_9 + 2.*h1_5 + 4.*I*h1_8 - 2.*I*h1_9)*h2_4 - r*dh1_4*h2_5 - \
+4.*mu1l1_2*r*dh1_6*h2_5 - 4.*r*dh1_7*h2_5 + I*r*dh1_8*h2_5 + \
+4.*I*r*dh1_10*h2_5 - 4.*h1_5*h2_5 + 12.*mu1l1_2*h1_6*h2_5 + 8.*h1_7*h2_5 + \
+2.*I*h1_8*h2_5 + 4.*I*h1_9*h2_5 - 8.*I*h1_10*h2_5 - 4.*mu1l2_2*h1_7*h2_6 + \
+4.*I*mu1l2_2*h1_10*h2_6 - 2.*h1_7*h2_7 + 2.*I*h1_10*h2_7 - 6.*I*r*dh1_4*h2_8 \
+- I*r*dh1_5*h2_8 - 6.*r*dh1_8*h2_8 - r*dh1_9*h2_8 - 2.*I*h1_5*h2_8 + \
+4.*h1_8*h2_8 - 2.*h1_9*h2_8 + h1_4*(2.*r*dh2_4 - r*dh2_5 - 2.*I*r*dh2_8 + \
+I*r*dh2_9 - 4.*h2_4 - 2.*h2_5 + 4.*I*h2_8 + 2.*I*h2_9) + I*r*dh1_4*h2_9 + \
+4.*I*mu1l1_2*r*dh1_6*h2_9 + 4.*I*r*dh1_7*h2_9 + r*dh1_8*h2_9 + \
+4.*r*dh1_10*h2_9 + 4.*I*h1_5*h2_9 - 12.*I*mu1l1_2*h1_6*h2_9 - 8.*I*h1_7*h2_9 \
++ 2.*h1_8*h2_9 + 4.*h1_9*h2_9 - 8.*h1_10*h2_9 + 2.*I*h1_7*h2_10 + \
+2.*h1_10*h2_10)))/(f_2*mu1l1*mu1l2*r_5) + \
+(0.35355339059327373*ct4*(h1_1*(2.*M*mu2l2_2*h2_5 + 2.*I*M*mu2l2_2*h2_9 + \
+r*(mu1l2_2*mu2l2_2*h2_1 - omega2*r*(-1.*I*mu2l2_2*h2_4 + mu2l2_2*h2_8 + \
+omega2*r*(h2_7 + I*h2_10)))) - h1_2*(2.*M*mu2l2_2*h2_4 + 2.*I*M*mu2l2_2*h2_8 \
++ r*(2.*I*M*omega2*h2_7 + mu2l2_2*(mu1l2_2*h2_2 + I*omega2*r*h2_5 - \
+omega2*r*h2_9) - 2.*M*omega2*h2_10)) + f_3*r*(2.*h1_6*(h2_7 + I*h2_10) + \
+r*(2.*r*dh1_6*dh2_7 + 2.*I*r*dh1_6*dh2_10 - r*ddh2_7*h1_3 - I*r*ddh2_10*h1_3 \
++ 2.*dh2_7*h1_3 + 2.*I*dh2_10*h1_3 - 2.*dh1_6*h2_7 - 2.*I*dh1_6*h2_10)) - \
+f*r*(mu2l2_2*r*dh2_5*h1_1 + I*mu2l2_2*r*dh2_9*h1_1 - \
+I*mu2l2_2*omega2*r*h1_3*h2_4 + I*mu2l2_2*omega1*r*h1_6*h2_4 - \
+2.*mu2l2_2*h1_1*h2_5 + mu2l2_2*h1_5*h2_5 + omega2_2*r_2*h1_3*h2_7 - \
+2.*omega1*omega2*r_2*h1_6*h2_7 + omega2*r*h1_8*h2_7 + \
+mu2l2_2*omega2*r*h1_3*h2_8 - mu2l2_2*omega1*r*h1_6*h2_8 - \
+2.*I*mu2l2_2*h1_1*h2_9 + I*mu2l2_2*h1_5*h2_9 - h1_4*(mu2l2_2*h2_4 + \
+I*(mu2l2_2*h2_8 + omega2*r*(h2_7 + I*h2_10))) + I*omega2_2*r_2*h1_3*h2_10 - \
+2.*I*omega1*omega2*r_2*h1_6*h2_10 + I*omega2*r*h1_8*h2_10 + \
+h1_2*(2.*mu2l2_2*h2_4 + 2.*I*mu2l2_2*h2_8 + r*(-(mu2l2_2*dh2_4) - \
+2.*I*omega2*r*dh2_7 - I*mu2l2_2*dh2_8 + 2.*omega2*r*dh2_10 + 2.*I*omega2*h2_7 \
+- 2.*omega2*h2_10))) - f_2*(h1_3*(2.*M*h2_7 + r*(-(mu2l2_2*r*dh2_5) + \
+2.*M*dh2_7 - I*mu2l2_2*r*dh2_9 + 2.*I*M*dh2_10 - mu1l2_2*mu2l2_2*h2_3 + \
+2.*mu2l2_2*h2_5 + 2.*I*mu2l2_2*h2_9) + 2.*I*M*h2_10) + h1_6*((4.*M - \
+mu1l1_2*r)*h2_7 + mu2l2_2*r*(h2_5 + I*h2_9) + I*(4.*M - mu1l1_2*r)*h2_10) + \
+r*(-(r_2*ddh2_7*h1_1) - I*r_2*ddh2_10*h1_1 + 2.*r*dh2_7*h1_1 + \
+2.*I*r*dh2_10*h1_1 - I*r*dh2_7*h1_9 + r*dh2_10*h1_9 + mu2l2_2*r*dh1_6*h2_5 + \
+I*h1_9*h2_7 + I*mu2l2_2*r*dh1_6*h2_9 - h1_7*(h2_7 + I*h2_10) - h1_9*h2_10 + \
+h1_5*(h2_7 + I*(I*r*dh2_7 - r*dh2_10 + \
+h2_10))))))/(f_2*mu1l2*mu2l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{3.916403070732505*^9, 3.916403122655531*^9, 
+  3.916403158515236*^9, 3.916403275895875*^9, 3.9164045367894173`*^9, 
+  3.916421653881011*^9, 3.916462984559621*^9, 3.916463149322681*^9, 
+  3.916463288314805*^9, 3.916483010693624*^9, 3.916483445243038*^9},
+ CellLabel->
+  "Out[233]=",ExpressionUUID->"35982d6b-33e3-4f1e-93c0-9c20d9f44e6c"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=8", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 
+  3.916462359977983*^9}},ExpressionUUID->"f695275e-9fd2-42e1-bec2-\
+72088d527de8"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "8", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.916463167058083*^9, 3.916463167509963*^9}},
+ CellLabel->
+  "In[229]:=",ExpressionUUID->"c2bbc3a8-1d74-47fd-b13f-0704c4701b58"],
+
+Cell[BoxData["\<\"(0.17677669529663687*cv1*(2.*((2.*I*M*mu1l1_2*h1_2 + \
+r*(mu1l1_2*(omega1 + omega2)*r*h1_1 + 2.*M*omega1*h1_5 - \
+2.*I*M*omega1*h1_9))*h2_1 + (-2.*I*M*mu1l1_2*h1_1 + r_2*(-(mu1l1_2*(omega1 + \
+omega2)*h1_2) - I*omega1*(omega1 - omega2)*r*(h1_5 - I*h1_9)))*h2_2) + \
+2.*f_3*r*((r*(-1.*I*r*ddh1_4 - r*ddh1_8 + 3.*I*dh1_4 + 3.*dh1_8) - 2.*I*h1_4 \
+- 2.*h1_8)*h2_3 + r*(2.*I*dh2_3*h1_4 + 2.*dh2_3*h1_8 + (I*dh1_4 + \
+dh1_8)*(-(r*dh2_3) + r*dh2_6 + h2_6))) + f_2*(-2.*I*r_3*dh1_4*dh2_1 - \
+2.*r_3*dh1_8*dh2_1 - 2.*I*mu1l1_2*r_2*dh2_6*h1_2 + 2.*omega1*r_3*dh2_3*h1_5 - \
+I*r_2*dh2_4*h1_5 - 2.*omega2*r_3*dh2_6*h1_5 - 3.*r_2*dh2_8*h1_5 + \
+4.*r_2*dh2_1*h1_8 - 4.*M*r*dh2_6*h1_8 - 2.*I*omega1*r_3*dh2_3*h1_9 - \
+r_2*dh2_4*h1_9 + 2.*I*omega2*r_3*dh2_6*h1_9 + 3.*I*r_2*dh2_8*h1_9 + \
+2.*I*r_3*ddh1_4*h2_1 + 2.*r_3*ddh1_8*h2_1 - 2.*I*r_2*dh1_4*h2_1 - \
+2.*r_2*dh1_8*h2_1 - 4.*r*h1_8*h2_1 + 2.*I*mu1l1_2*r_2*dh1_3*h2_2 - \
+6.*I*mu1l1_2*r*h1_3*h2_2 + (-1.*I*(8.*M + mu1l2_2*r)*h1_4 - (8.*M + \
+mu1l2_2*r)*h1_8 + 2.*r*(-3.*I*mu1l1_2*h1_2 + r*(I*mu1l1_2*dh1_2 + \
+omega1*r*dh1_5 - I*omega1*r*dh1_9 + mu1l1_2*omega1*h1_3 + mu1l1_2*omega2*h1_3 \
+- omega1*h1_5 + I*omega1*h1_9)))*h2_3 + I*mu1l1_2*r*h1_3*h2_4 + \
+I*r_2*dh1_4*h2_5 + r_2*dh1_8*h2_5 - 2.*I*mu1l1_2*r*h1_2*h2_6 + \
+2.*mu1l1_2*omega2*r_2*h1_3*h2_6 - 4.*omega1*r_2*h1_5*h2_6 + \
+2.*omega2*r_2*h1_5*h2_6 + 2.*mu1l1_2*omega1*r_2*h1_6*h2_6 + \
+2.*mu1l1_2*omega2*r_2*h1_6*h2_6 + 2.*omega1*r_2*h1_7*h2_6 + 4.*M*h1_8*h2_6 - \
+2.*mu1l1_2*r*h1_8*h2_6 + 4.*I*omega1*r_2*h1_9*h2_6 - \
+2.*I*omega2*r_2*h1_9*h2_6 - 2.*I*omega1*r_2*h1_10*h2_6 + \
+4.*I*h1_4*(r*(r*dh2_1 - M*dh2_6 - h2_1) + M*h2_6) + mu1l1_2*r*h1_3*h2_8 + \
+8.*r*h1_5*h2_8 - 2.*mu1l1_2*r*h1_6*h2_8 - 2.*r*h1_7*h2_8 - 8.*I*r*h1_9*h2_8 + \
+2.*I*r*h1_10*h2_8 + r_2*dh1_4*h2_9 - I*r_2*dh1_8*h2_9) + I*f*((2.*M*h1_5 + \
+r*(mu1l1_2*h1_1 - 2.*I*omega2*r*h1_4 - 2.*omega2*r*h1_8) - 2.*I*M*h1_9)*h2_4 \
++ h1_4*(-2.*M*h2_5 + r*(-(mu1l2_2*h2_1) + 2.*r*(-2.*I*(omega1 - omega2)*h2_2 \
++ (omega1 - omega2)*omega2*r*h2_6 + omega1*h2_8)) + 2.*I*M*h2_9) + \
+I*(2.*I*omega1*r_3*dh2_1*h1_9 + 2.*I*mu1l1_2*r_2*dh1_2*h2_1 + \
+2.*omega1*r_3*dh1_5*h2_1 - 2.*I*omega1*r_3*dh1_9*h2_1 - \
+6.*I*mu1l1_2*r*h1_2*h2_1 + 2.*mu1l1_2*omega1*r_2*h1_3*h2_1 + \
+mu1l2_2*r*h1_8*h2_1 - 2.*I*omega1*r_2*h1_9*h2_1 - 2.*I*mu1l1_2*r_2*dh1_1*h2_2 \
++ 2.*omega1*r_3*dh1_4*h2_2 - 2.*omega2*r_3*dh1_4*h2_2 - \
+2.*I*omega1*r_3*dh1_8*h2_2 + 2.*I*omega2*r_3*dh1_8*h2_2 + \
+6.*I*mu1l1_2*r*h1_1*h2_2 + 4.*I*omega1*r_2*h1_8*h2_2 - \
+4.*I*omega2*r_2*h1_8*h2_2 - mu1l2_2*r*h1_9*h2_2 + \
+2.*mu1l1_2*omega1*r_2*h1_1*h2_3 - 4.*I*M*omega1*r*h1_9*h2_3 + (2.*M*h1_8 + \
+r*(I*mu1l1_2*h1_2 + (omega1 + omega2)*r*(h1_5 - I*h1_9)))*h2_5 - \
+2.*mu1l1_2*omega2*r_2*h1_1*h2_6 - 2.*omega1*omega2*r_3*h1_8*h2_6 + \
+2.*omega2_2*r_3*h1_8*h2_6 + 4.*I*M*omega2*r*h1_9*h2_6 - mu1l1_2*r*h1_1*h2_8 - \
+2.*omega1*r_2*h1_8*h2_8 + 2.*I*M*h1_9*h2_8 + mu1l1_2*r*h1_2*h2_9 - \
+2.*I*M*h1_8*h2_9 + omega1*r_2*h1_9*h2_9 + 3.*omega2*r_2*h1_9*h2_9 + \
+h1_5*(-2.*M*h2_8 + r*(-2.*omega1*r_2*dh2_1 + 2.*omega1*r*h2_1 - \
+I*mu1l2_2*h2_2 + 4.*M*omega1*h2_3 - 4.*M*omega2*h2_6 + I*omega1*r*h2_9 + \
+3.*I*omega2*r*h2_9))))))/(f_2*mu1l1*r_5) - \
+(0.17677669529663687*cv6*mu3l2*omega1*(h1_7 - I*h1_10)*(h2_7 + \
+I*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_3) + \
+(0.17677669529663687*cv5*mu3l1*omega2*(h1_7 - I*h1_10)*(h2_7 + \
+I*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_3) + \
+(0.17677669529663687*cv3*(I*mu1l2_2*mu2l2_2*r*h1_4*h2_1 + \
+mu1l2_2*mu2l2_2*r*h1_8*h2_1 - I*mu1l2_2*mu2l2_2*r*h1_5*h2_2 - \
+mu1l2_2*mu2l2_2*r*h1_9*h2_2 - I*mu2l2_2*(2.*M*h1_5 + r*(mu1l1_2*h1_1 - \
+2.*I*omega2*r*h1_4 - 2.*omega2*r*h1_8) - 2.*I*M*h1_9)*h2_4 + \
+I*mu1l1_2*mu2l2_2*r*h1_2*h2_5 + 2.*I*M*mu2l2_2*h1_4*h2_5 + \
+mu2l2_2*omega1*r_2*h1_5*h2_5 + mu2l2_2*omega2*r_2*h1_5*h2_5 + \
+2.*M*mu2l2_2*h1_8*h2_5 - I*mu2l2_2*omega1*r_2*h1_9*h2_5 - \
+I*mu2l2_2*omega2*r_2*h1_9*h2_5 + 2.*mu1l1_2*omega2*r_2*h1_1*h2_7 + \
+2.*I*omega1*omega2*r_3*h1_4*h2_7 - 2.*I*omega2_2*r_3*h1_4*h2_7 + \
+4.*M*omega2*r*h1_5*h2_7 + 2.*omega1*omega2*r_3*h1_8*h2_7 - \
+2.*omega2_2*r_3*h1_8*h2_7 - 4.*I*M*omega2*r*h1_9*h2_7 + \
+mu1l1_2*mu2l2_2*r*h1_1*h2_8 - 2.*I*mu2l2_2*omega2*r_2*h1_4*h2_8 + \
+2.*M*mu2l2_2*h1_5*h2_8 - 2.*mu2l2_2*omega2*r_2*h1_8*h2_8 - \
+2.*I*M*mu2l2_2*h1_9*h2_8 - mu1l1_2*mu2l2_2*r*h1_2*h2_9 - \
+2.*M*mu2l2_2*h1_4*h2_9 + I*mu2l2_2*omega1*r_2*h1_5*h2_9 + \
+I*mu2l2_2*omega2*r_2*h1_5*h2_9 + 2.*I*M*mu2l2_2*h1_8*h2_9 + \
+mu2l2_2*omega1*r_2*h1_9*h2_9 + mu2l2_2*omega2*r_2*h1_9*h2_9 + \
+2.*f_2*r_2*(I*dh1_4 + dh1_8)*(r*(dh2_7 + I*dh2_10) - h2_7 - I*h2_10) + \
+2.*I*mu1l1_2*omega2*r_2*h1_1*h2_10 - 2.*omega1*omega2*r_3*h1_4*h2_10 + \
+2.*omega2_2*r_3*h1_4*h2_10 + 4.*I*M*omega2*r*h1_5*h2_10 + \
+2.*I*omega1*omega2*r_3*h1_8*h2_10 - 2.*I*omega2_2*r_3*h1_8*h2_10 + \
+4.*M*omega2*r*h1_9*h2_10 + f*(-2.*I*mu1l1_2*r_2*dh2_7*h1_2 + \
+2.*mu1l1_2*r_2*dh2_10*h1_2 + I*mu2l2_2*r_2*dh2_4*h1_5 - \
+2.*omega2*r_3*dh2_7*h1_5 - mu2l2_2*r_2*dh2_8*h1_5 - \
+2.*I*omega2*r_3*dh2_10*h1_5 - 4.*M*r*dh2_7*h1_8 - 4.*I*M*r*dh2_10*h1_8 + \
+mu2l2_2*r_2*dh2_4*h1_9 + 2.*I*omega2*r_3*dh2_7*h1_9 + \
+I*mu2l2_2*r_2*dh2_8*h1_9 - 2.*omega2*r_3*dh2_10*h1_9 + \
+mu1l2_2*mu2l2_2*r*h1_8*h2_3 - I*mu1l1_2*mu2l2_2*r*h1_3*h2_4 - \
+I*mu2l2_2*r_2*dh1_4*h2_5 - mu2l2_2*r_2*dh1_8*h2_5 + (2.*(2.*M + \
+mu1l1_2*r)*h1_8 + r*(2.*I*mu1l1_2*h1_2 + r*(2.*mu1l1_2*omega2*h1_3 + \
+2.*omega2*h1_5 - 2.*mu1l1_2*omega1*h1_6 - (2.*omega1 + omega2)*h1_7 - \
+2.*I*omega2*h1_9 + 2.*I*omega1*h1_10 + I*omega2*h1_10)))*h2_7 + \
+mu1l1_2*mu2l2_2*r*h1_3*h2_8 + mu2l2_2*r_2*dh1_4*h2_9 - \
+I*mu2l2_2*r_2*dh1_8*h2_9 - 2.*mu1l1_2*r*h1_2*h2_10 + \
+2.*I*mu1l1_2*omega2*r_2*h1_3*h2_10 + 2.*I*omega2*r_2*h1_5*h2_10 - \
+2.*I*mu1l1_2*omega1*r_2*h1_6*h2_10 - 2.*I*omega1*r_2*h1_7*h2_10 - \
+I*omega2*r_2*h1_7*h2_10 + 4.*I*M*h1_8*h2_10 + 2.*I*mu1l1_2*r*h1_8*h2_10 + \
+2.*omega2*r_2*h1_9*h2_10 - 2.*omega1*r_2*h1_10*h2_10 - omega2*r_2*h1_10*h2_10 \
++ h1_4*(r*(-4.*I*M*dh2_7 + 4.*M*dh2_10 + I*mu1l2_2*mu2l2_2*h2_3) + \
+4.*I*M*h2_7 - 4.*M*h2_10))))/(f*mu1l1*mu1l2*mu2l2*r_5) + \
+(0.17677669529663687*I*cv2*(2.*mu1l2_2*(I*(omega1 + omega2)*r_2*h1_1 + \
+2.*M*h1_2)*h2_1 + 2.*f_3*r*((-2.*r*dh1_3 + h1_6)*h2_4 + h1_3*(r*(r*ddh2_4 + \
+I*r*ddh2_8 - 3.*dh2_4 - 3.*I*dh2_8) + 2.*h2_4 + 2.*I*h2_8) + \
+I*(h1_6*(I*r*dh2_4 - r*dh2_8 + h2_8) + r*(r*(dh1_3 - dh1_6)*(-1.*I*dh2_4 + \
+dh2_8) - 2.*dh1_3*h2_8))) - 4.*M*h1_1*(mu1l2_2*h2_2 + omega2*r*(-1.*I*h2_5 + \
+h2_9)) - 2.*I*r_2*h1_2*(mu1l2_2*(omega1 + omega2)*h2_2 + (omega1 - \
+omega2)*omega2*r*(-1.*I*h2_5 + h2_9)) + f*(2.*mu1l2_2*r_2*dh2_2*h1_1 - \
+2.*I*omega2*r_3*dh2_5*h1_1 + 2.*omega2*r_3*dh2_9*h1_1 - \
+2.*mu1l2_2*r_2*dh2_1*h1_2 + 2.*I*omega1*r_3*dh2_4*h1_2 - \
+2.*I*omega2*r_3*dh2_4*h1_2 - 2.*omega1*r_3*dh2_8*h1_2 + \
+2.*omega2*r_3*dh2_8*h1_2 + 6.*mu1l2_2*r*h1_2*h2_1 - \
+2.*I*mu1l2_2*omega2*r_2*h1_3*h2_1 + 2.*I*mu1l2_2*omega1*r_2*h1_6*h2_1 - \
+I*mu1l2_2*r*h1_8*h2_1 - 6.*mu1l2_2*r*h1_1*h2_2 + mu1l2_2*r*h1_5*h2_2 + \
+I*mu1l2_2*r*h1_9*h2_2 - 2.*I*mu1l2_2*omega2*r_2*h1_1*h2_3 + (2.*M*h1_5 + \
+r*(mu1l1_2*h1_1 + 2.*r*(-2.*I*(omega1 - omega2)*h1_2 + I*omega1*h1_4 + \
+omega1_2*r*h1_6 - omega1*omega2*r*h1_6 + omega2*h1_8)) + 2.*I*M*h1_9)*h2_4 - \
+I*(2.*M*h1_8 + r*(-2.*omega2*r_2*dh1_1 + 2.*omega2*r*h1_1 - I*mu1l1_2*h1_2 + \
+4.*M*omega2*h1_3 + omega1*r*h1_5 + omega2*r*h1_5 - 4.*M*omega1*h1_6 - \
+3.*I*omega1*r*h1_9 - I*omega2*r*h1_9))*h2_5 + I*mu1l1_2*r*h1_1*h2_8 + \
+4.*omega1*r_2*h1_2*h2_8 - 4.*omega2*r_2*h1_2*h2_8 + 2.*I*M*h1_5*h2_8 + \
+2.*I*omega1_2*r_3*h1_6*h2_8 - 2.*I*omega1*omega2*r_3*h1_6*h2_8 + \
+2.*I*omega2*r_2*h1_8*h2_8 - 2.*M*h1_9*h2_8 - 2.*omega2*r_3*dh1_1*h2_9 + \
+2.*omega2*r_2*h1_1*h2_9 - I*mu1l1_2*r*h1_2*h2_9 + 4.*M*omega2*r*h1_3*h2_9 + \
+omega1*r_2*h1_5*h2_9 + omega2*r_2*h1_5*h2_9 - 4.*M*omega1*r*h1_6*h2_9 + \
+2.*M*h1_8*h2_9 - 3.*I*omega1*r_2*h1_9*h2_9 - I*omega2*r_2*h1_9*h2_9 - \
+h1_4*(2.*M*h2_5 + r*(mu1l2_2*h2_1 + 2.*omega1*r*h2_8) + 2.*I*M*h2_9)) + \
+f_2*(h1_3*((8.*M + mu1l1_2*r)*h2_4 + I*((8.*M + mu1l1_2*r)*h2_8 + \
+2.*r*(-3.*I*mu1l2_2*h2_2 + r*(I*mu1l2_2*dh2_2 + omega2*r*dh2_5 + \
+I*omega2*r*dh2_9 + mu1l2_2*omega1*h2_3 + mu1l2_2*omega2*h2_3 - omega2*h2_5 - \
+I*omega2*h2_9)))) + r*(2.*r_2*dh1_1*dh2_4 + 2.*I*r_2*dh1_1*dh2_8 - \
+2.*mu1l2_2*r*dh2_3*h1_2 - r*dh2_4*h1_5 - I*r*dh2_8*h1_5 - I*r*dh2_4*h1_9 + \
+r*dh2_8*h1_9 + 2.*mu1l2_2*r*dh1_6*h2_2 + 2.*mu1l2_2*h1_6*h2_2 + \
+6.*mu1l2_2*h1_2*h2_3 - mu1l2_2*h1_4*h2_3 + 2.*I*mu1l2_2*omega1*r*h1_6*h2_3 - \
+I*mu1l2_2*h1_8*h2_3 - 4.*r*dh1_1*h2_4 + 4.*M*dh1_6*h2_4 - mu1l2_2*h1_6*h2_4 + \
+mu2l2_2*h1_6*h2_4 - I*(r*(-2.*omega2*r*dh1_3 + I*dh1_4 + 2.*omega1*r*dh1_6 - \
+3.*dh1_8 - 2.*(omega1 - 2.*omega2)*h1_6) + 8.*h1_8)*h2_5 + \
+2.*I*mu1l2_2*omega1*r*h1_6*h2_6 + 2.*I*mu1l2_2*omega2*r*h1_6*h2_6 + \
+2.*I*mu1l2_2*h1_8*h2_6 + 2.*I*omega2*r*h1_6*h2_7 + 2.*I*h1_8*h2_7 + \
+2.*h1_1*(r*(-(r*ddh2_4) - I*r*ddh2_8 + dh2_4 + I*dh2_8) + 2.*h2_4 + \
+2.*I*h2_8) - 4.*I*r*dh1_1*h2_8 + 4.*I*M*dh1_6*h2_8 + I*mu1l2_2*h1_6*h2_8 + \
+I*mu2l2_2*h1_6*h2_8 - 2.*omega2*r_2*dh1_3*h2_9 + I*r*dh1_4*h2_9 + \
+2.*omega1*r_2*dh1_6*h2_9 - 3.*r*dh1_8*h2_9 - 2.*omega1*r*h1_6*h2_9 + \
+4.*omega2*r*h1_6*h2_9 + 8.*h1_8*h2_9 - 2.*omega2*r*h1_6*h2_10 - \
+2.*h1_8*h2_10))))/(f_2*mu1l2*r_5) + \
+(0.17677669529663687*cv4*(-2.*mu1l2_2*omega1*r_2*h1_7*h2_1 + \
+mu1l2_2*mu2l1_2*r*h1_8*h2_1 + 2.*I*mu1l2_2*omega1*r_2*h1_10*h2_1 - \
+I*mu1l2_2*mu2l1_2*r*h1_5*h2_2 - mu1l2_2*mu2l1_2*r*h1_9*h2_2 - \
+I*(2.*M*mu2l1_2*h1_5 - 2.*I*M*mu2l1_2*h1_9 + r*(mu1l1_2*mu2l1_2*h1_1 + \
+2.*omega1*r*(I*mu2l1_2*h1_4 + mu2l1_2*h1_8 - (omega1 - omega2)*r*(h1_7 - \
+I*h1_10))))*h2_4 + I*mu1l1_2*mu2l1_2*r*h1_2*h2_5 - \
+mu2l1_2*omega1*r_2*h1_5*h2_5 - mu2l1_2*omega2*r_2*h1_5*h2_5 - \
+4.*M*omega1*r*h1_7*h2_5 + 2.*M*mu2l1_2*h1_8*h2_5 + \
+I*mu2l1_2*omega1*r_2*h1_9*h2_5 + I*mu2l1_2*omega2*r_2*h1_9*h2_5 + \
+4.*I*M*omega1*r*h1_10*h2_5 + mu1l1_2*mu2l1_2*r*h1_1*h2_8 + \
+2.*M*mu2l1_2*h1_5*h2_8 - 2.*omega1_2*r_3*h1_7*h2_8 + \
+2.*omega1*omega2*r_3*h1_7*h2_8 + 2.*mu2l1_2*omega1*r_2*h1_8*h2_8 - \
+2.*I*M*mu2l1_2*h1_9*h2_8 + 2.*I*omega1_2*r_3*h1_10*h2_8 - \
+2.*I*omega1*omega2*r_3*h1_10*h2_8 + 2.*f_2*r*(-1.*I*r_2*dh1_7*dh2_4 - \
+r_2*dh1_10*dh2_4 + r_2*dh1_7*dh2_8 - I*r_2*dh1_10*dh2_8 + r*dh2_4*h1_10 + \
+I*r*dh2_8*h1_10 + (-1.*I*h1_7 - h1_10)*h2_4 - I*h1_10*h2_8 + h1_7*(I*r*dh2_4 \
+- r*dh2_8 + h2_8)) - mu1l1_2*mu2l1_2*r*h1_2*h2_9 - \
+I*mu2l1_2*omega1*r_2*h1_5*h2_9 - I*mu2l1_2*omega2*r_2*h1_5*h2_9 - \
+4.*I*M*omega1*r*h1_7*h2_9 + 2.*I*M*mu2l1_2*h1_8*h2_9 - \
+mu2l1_2*omega1*r_2*h1_9*h2_9 - mu2l1_2*omega2*r_2*h1_9*h2_9 - \
+4.*M*omega1*r*h1_10*h2_9 + I*mu2l1_2*h1_4*(2.*M*h2_5 + r*(mu1l2_2*h2_1 + \
+2.*omega1*r*h2_8) + 2.*I*M*h2_9) + f*((r*(4.*I*M*dh1_7 + 4.*M*dh1_10 - \
+I*mu1l1_2*mu2l1_2*h1_3) - I*(8.*M - mu1l2_2*r + mu2l2_2*r)*h1_7 + (-8.*M + \
+mu1l2_2*r - mu2l2_2*r)*h1_10)*h2_4 + h1_7*((8.*M + mu1l2_2*r + \
+mu2l2_2*r)*h2_8 + r*(-2.*I*mu1l2_2*h2_2 + r*(-2.*mu1l2_2*omega1*h2_3 - \
+2.*omega1*h2_5 + 2.*mu1l2_2*omega2*h2_6 + (omega1 + 2.*omega2)*h2_7 - \
+2.*I*omega1*h2_9 + I*omega1*h2_10 + 2.*I*omega2*h2_10))) - \
+I*((I*r*(-4.*M*dh1_7 + 4.*I*M*dh1_10 + mu1l1_2*mu2l1_2*h1_3) + (8.*M + \
+mu1l2_2*r + mu2l2_2*r)*h1_10)*h2_8 + r*(-2.*I*mu1l2_2*(-1.*I*r*dh1_7 - \
+r*dh1_10 + h1_10)*h2_2 - mu1l2_2*(mu2l1_2*h1_4 - I*mu2l1_2*h1_8 + \
+2.*omega1*r*h1_10)*h2_3 + r*(-(mu2l1_2*dh2_4*h1_5) - I*mu2l1_2*dh2_8*h1_5 + \
+I*mu2l1_2*dh2_4*h1_9 - mu2l1_2*dh2_8*h1_9 + (mu2l1_2*(dh1_4 - I*dh1_8) + \
+2.*omega1*r*(I*dh1_7 + dh1_10) - 2.*omega1*h1_10)*h2_5 + \
+2.*mu1l2_2*omega2*h1_10*h2_6 + (omega1 + 2.*omega2)*h1_10*h2_7 + \
+I*mu2l1_2*dh1_4*h2_9 - 2.*omega1*r*dh1_7*h2_9 + mu2l1_2*dh1_8*h2_9 + \
+2.*I*omega1*r*dh1_10*h2_9 - 2.*I*omega1*h1_10*h2_9 + I*omega1*h1_10*h2_10 + \
+2.*I*omega2*h1_10*h2_10))))))/(f*mu1l1*mu1l2*mu2l1*r_5)\"\>"], "Output",
+ CellChangeTimes->{
+  3.916403070732505*^9, 3.916403122655531*^9, 3.916403158515236*^9, 
+   3.916403275895875*^9, 3.9164045367894173`*^9, 3.916421653881011*^9, {
+   3.916463161062175*^9, 3.9164631679967318`*^9}, 3.916463288369769*^9, 
+   3.916482711260972*^9},
+ CellLabel->
+  "Out[229]=",ExpressionUUID->"08b774dc-e956-44ab-b471-e4a7431136ce"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=9", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 3.916462331259982*^9}, {
+  3.916462362144639*^9, 
+  3.916462362370719*^9}},ExpressionUUID->"ae3cbadd-df79-49ac-ad64-\
+0afd7159f6c5"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "9", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, {
+  3.916463179514414*^9, 3.916463180672903*^9}},
+ CellLabel->
+  "In[230]:=",ExpressionUUID->"e74cf88a-6a1e-4943-a0f0-f9a0894fc7cb"],
+
+Cell[BoxData["\<\"(-0.17677669529663687*I*cv1*(-2.*I*mu1l1_2*omega1*r_2*h1_2*\
+h2_1 + 2.*omega1_2*r_3*h1_5*h2_1 - 2.*omega1*omega2*r_3*h1_5*h2_1 - \
+2.*I*omega1_2*r_3*h1_9*h2_1 + 2.*I*omega1*omega2*r_3*h1_9*h2_1 - \
+4.*M*mu1l1_2*h1_2*h2_2 + 4.*I*M*omega1*r*h1_5*h2_2 + 4.*M*omega1*r*h1_9*h2_2 \
++ 2.*mu1l1_2*h1_1*(2.*M*h2_1 + I*omega1*r_2*h2_2) - 2.*f_3*r*(r_2*dh1_5*dh2_6 \
+- I*r_2*dh1_9*dh2_6 + mu1l1_2*r*dh2_3*h1_3 + mu1l1_2*r*dh2_6*h1_3 + \
+mu1l1_2*r*dh2_6*h1_6 + I*r_2*ddh2_6*h1_9 - 2.*I*r*dh2_6*h1_9 + \
+(mu1l1_2*(r*dh1_3 - 2.*h1_3) + 2.*h1_5 - 2.*I*h1_9)*h2_3 - r*dh1_5*h2_6 + \
+mu1l1_2*r*dh1_6*h2_6 + r*dh1_7*h2_6 + I*r*dh1_9*h2_6 - I*r*dh1_10*h2_6 + \
+mu1l1_2*h1_3*h2_6 - 2.*mu1l1_2*h1_6*h2_6 - h1_7*h2_6 - 2.*I*h1_9*h2_6 + \
+I*h1_10*h2_6 + h1_5*(r*(-(r*ddh2_6) + 2.*dh2_6) + 2.*h2_6)) + f_2*(((8.*M + \
+mu1l2_2*r)*h1_5 + 2.*r*(3.*mu1l1_2*h1_1 + r*(-(mu1l1_2*dh1_1) - \
+I*omega1*r*dh1_4 - I*omega2*r*dh1_4 - omega1*r*dh1_8 - omega2*r*dh1_8 + \
+2.*I*(omega1 + omega2)*h1_4 + 2.*(omega1 + omega2)*h1_8)) - I*(8.*M + \
+mu1l2_2*r)*h1_9)*h2_3 + h1_5*(-4.*M*h2_6 + 2.*r*(r*dh2_5 + 2.*M*dh2_6 + \
+2.*h2_1 - h2_5 + I*h2_9)) + I*((-2.*r*(I*mu1l1_2*h1_1 + omega2*r*(h1_4 - \
+I*h1_8)) + (4.*M - 2.*mu1l1_2*r)*h1_9)*h2_6 + r*(-2.*I*r_2*dh1_4*dh2_2 - \
+2.*r_2*dh1_8*dh2_2 - 2.*I*mu1l1_2*r*dh2_6*h1_1 + 4.*r*dh2_2*h1_8 + \
+r*dh2_4*h1_8 - 2.*I*omega2*r_2*dh2_6*h1_8 + 3.*I*r*dh2_8*h1_8 - \
+2.*r*dh2_5*h1_9 - 4.*M*dh2_6*h1_9 + 2.*I*mu1l1_2*r*dh1_3*h2_1 - \
+6.*I*mu1l1_2*h1_3*h2_1 - 4.*h1_9*h2_1 + 2.*I*r_2*ddh1_4*h2_2 + \
+2.*r_2*ddh1_8*h2_2 - 2.*I*r*dh1_4*h2_2 - 2.*r*dh1_8*h2_2 + (r*(I*dh1_4 + \
+dh1_8) - 2.*h1_8)*h2_4 + I*mu1l1_2*h1_3*h2_5 + 2.*h1_9*h2_5 - r*dh1_4*h2_8 + \
+I*r*dh1_8*h2_8 - 6.*I*h1_8*h2_8 + h1_4*(r*(4.*I*dh2_2 + I*dh2_4 + \
+2.*omega2*r*dh2_6 - 3.*dh2_8) - 2.*I*h2_4 + 6.*h2_8) + 2.*r*dh1_5*h2_9 - \
+2.*I*r*dh1_9*h2_9 + mu1l1_2*h1_3*h2_9 - 2.*mu1l1_2*h1_6*h2_9 - 2.*h1_7*h2_9 - \
+2.*I*h1_9*h2_9 + 2.*I*h1_10*h2_9))) + f*(-2.*mu1l1_2*r_2*dh2_1*h1_1 + \
+2.*mu1l1_2*r_2*dh2_2*h1_2 + 2.*omega1*r_3*dh2_2*h1_9 - \
+2.*mu1l1_2*r_2*dh1_1*h2_1 - 2.*I*omega1*r_3*dh1_4*h2_1 + \
+2.*I*omega2*r_3*dh1_4*h2_1 - 2.*omega1*r_3*dh1_8*h2_1 + \
+2.*omega2*r_3*dh1_8*h2_1 + 4.*mu1l1_2*r*h1_1*h2_1 + 4.*omega1*r_2*h1_8*h2_1 - \
+4.*omega2*r_2*h1_8*h2_1 + I*mu1l2_2*r*h1_9*h2_1 + 2.*mu1l1_2*r_2*dh1_2*h2_2 - \
+2.*I*omega1*r_3*dh1_5*h2_2 - 2.*omega1*r_3*dh1_9*h2_2 - \
+4.*mu1l1_2*r*h1_2*h2_2 - 2.*I*mu1l1_2*omega1*r_2*h1_3*h2_2 - \
+I*mu1l2_2*r*h1_8*h2_2 - 2.*omega1*r_2*h1_9*h2_2 - \
+2.*I*mu1l1_2*omega1*r_2*h1_2*h2_3 - 2.*I*omega1_2*r_3*h1_9*h2_3 - \
+2.*I*omega1*omega2*r_3*h1_9*h2_3 - mu1l1_2*r*h1_2*h2_4 - 2.*I*M*h1_8*h2_4 - \
+omega1*r_2*h1_9*h2_4 + mu1l1_2*r*h1_1*h2_5 + omega2*r_2*h1_8*h2_5 + \
+2.*I*M*h1_9*h2_5 + 2.*I*mu1l1_2*omega2*r_2*h1_2*h2_6 + \
+2.*I*omega1*omega2*r_3*h1_9*h2_6 + I*mu1l1_2*r*h1_2*h2_8 + 2.*M*h1_8*h2_8 + \
+I*omega1*r_2*h1_9*h2_8 - I*mu1l1_2*r*h1_1*h2_9 - 3.*I*omega2*r_2*h1_8*h2_9 - \
+2.*M*h1_9*h2_9 - h1_5*(2.*M*h2_5 + r*(mu1l2_2*h2_1 + omega1*r*(-2.*I*r*dh2_2 \
++ 2.*I*h2_2 - 2.*omega1*r*h2_3 - 2.*omega2*r*h2_3 + I*h2_4 + 2.*omega2*r*h2_6 \
++ h2_8)) + 2.*I*M*h2_9) + h1_4*(2.*M*h2_4 + 2.*I*M*h2_8 + r*(4.*I*(omega1 - \
+omega2)*r*h2_1 + mu1l2_2*h2_2 + omega2*r*(I*h2_5 + \
+3.*h2_9))))))/(f_2*mu1l1*r_5) + (0.17677669529663687*cv5*f*mu3l1*(I*h1_7 + \
+h1_10)*(r*(dh2_7 + I*dh2_10) - h2_7 - I*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_4) \
++ (0.17677669529663687*cv6*f*mu3l2*(-1.*I*r*dh1_7 - r*dh1_10 + I*h1_7 + \
+h1_10)*(h2_7 + I*h2_10))/(mu1l1*mu1l2*mu2l1*mu2l2*r_4) + \
+(0.17677669529663687*cv4*(-1.*I*mu1l2_2*mu2l1_2*r*h1_5*h2_1 - \
+mu1l2_2*mu2l1_2*r*h1_9*h2_1 - 2.*mu1l2_2*omega1*r_2*h1_7*h2_2 + \
+mu1l2_2*mu2l1_2*r*h1_8*h2_2 + 2.*I*mu1l2_2*omega1*r_2*h1_10*h2_2 - \
+I*mu1l1_2*mu2l1_2*r*h1_2*h2_4 + mu2l1_2*omega1*r_2*h1_5*h2_4 - \
+2.*M*mu2l1_2*h1_8*h2_4 - I*mu2l1_2*omega1*r_2*h1_9*h2_4 + \
+I*mu1l1_2*mu2l1_2*r*h1_1*h2_5 + 2.*I*M*mu2l1_2*h1_5*h2_5 - \
+2.*I*omega1*omega2*r_3*h1_7*h2_5 + I*mu2l1_2*omega2*r_2*h1_8*h2_5 + \
+2.*M*mu2l1_2*h1_9*h2_5 - 2.*omega1*omega2*r_3*h1_10*h2_5 + \
+mu1l1_2*mu2l1_2*r*h1_2*h2_8 + I*mu2l1_2*omega1*r_2*h1_5*h2_8 - \
+2.*I*M*mu2l1_2*h1_8*h2_8 + mu2l1_2*omega1*r_2*h1_9*h2_8 + \
+mu2l1_2*h1_4*(I*mu1l2_2*r*h2_2 - 2.*I*M*h2_4 + 2.*M*h2_8 - omega2*r_2*(h2_5 + \
+I*h2_9)) - mu1l1_2*mu2l1_2*r*h1_1*h2_9 - 2.*M*mu2l1_2*h1_5*h2_9 + \
+2.*omega1*omega2*r_3*h1_7*h2_9 - mu2l1_2*omega2*r_2*h1_8*h2_9 + \
+2.*I*M*mu2l1_2*h1_9*h2_9 - 2.*I*omega1*omega2*r_3*h1_10*h2_9 + \
+f*(I*mu2l1_2*r_2*dh2_4*h1_4 - mu2l1_2*r_2*dh2_8*h1_4 + mu2l1_2*r_2*dh2_4*h1_8 \
++ I*mu2l1_2*r_2*dh2_8*h1_8 + 2.*I*mu1l2_2*r_2*dh1_7*h2_1 + \
+2.*mu1l2_2*r_2*dh1_10*h2_1 - 2.*mu1l2_2*r*h1_10*h2_1 + \
+I*mu1l2_2*mu2l1_2*r*h1_5*h2_3 + mu1l2_2*mu2l1_2*r*h1_9*h2_3 + \
+I*mu2l1_2*r_2*dh1_4*h2_4 - 2.*omega1*r_3*dh1_7*h2_4 + mu2l1_2*r_2*dh1_8*h2_4 \
++ 2.*I*omega1*r_3*dh1_10*h2_4 - 2.*I*mu2l1_2*r*h1_4*h2_4 - \
+2.*mu2l1_2*r*h1_8*h2_4 - 2.*I*omega1*r_2*h1_10*h2_4 + (-1.*I*(8.*M - \
+mu1l2_2*r + mu2l2_2*r)*h1_7 + r*(-2.*I*mu2l1_2*r*dh1_5 + 4.*I*M*dh1_7 - \
+2.*mu2l1_2*r*dh1_9 + 4.*M*dh1_10 - I*mu1l1_2*mu2l1_2*h1_3 + 2.*I*mu2l1_2*h1_5 \
++ 2.*mu2l1_2*h1_9) + (-8.*M + mu1l2_2*r - mu2l2_2*r)*h1_10)*h2_5 - \
+mu2l1_2*r_2*dh1_4*h2_8 - 2.*I*omega1*r_3*dh1_7*h2_8 + \
+I*mu2l1_2*r_2*dh1_8*h2_8 - 2.*omega1*r_3*dh1_10*h2_8 + 2.*mu2l1_2*r*h1_4*h2_8 \
+- 2.*I*mu2l1_2*r*h1_8*h2_8 + 2.*omega1*r_2*h1_10*h2_8 + \
+2.*mu2l1_2*r_2*dh1_5*h2_9 - 4.*M*r*dh1_7*h2_9 - 2.*I*mu2l1_2*r_2*dh1_9*h2_9 + \
+4.*I*M*r*dh1_10*h2_9 + mu1l1_2*mu2l1_2*r*h1_3*h2_9 - 2.*mu2l1_2*r*h1_5*h2_9 + \
+2.*I*mu2l1_2*r*h1_9*h2_9 - 8.*I*M*h1_10*h2_9 - I*mu1l2_2*r*h1_10*h2_9 - \
+I*mu2l2_2*r*h1_10*h2_9 + h1_7*(2.*r*(-1.*I*mu1l2_2*h2_1 + omega1*r*(h2_4 + \
+I*h2_8)) + (8.*M + mu1l2_2*r + mu2l2_2*r)*h2_9)) + \
+f_2*r*(-2.*I*r_2*dh1_7*dh2_5 - 2.*r_2*dh1_10*dh2_5 + 2.*r_2*dh1_7*dh2_9 - \
+2.*I*r_2*dh1_10*dh2_9 + 2.*r*dh2_5*h1_10 + 2.*mu1l2_2*r*dh2_6*h1_10 + \
+2.*r*dh2_7*h1_10 + 2.*I*r*dh2_9*h1_10 + 2.*I*r*dh2_10*h1_10 - \
+2.*I*mu1l2_2*r*dh1_7*h2_3 - 2.*mu1l2_2*r*dh1_10*h2_3 + 2.*mu1l2_2*h1_10*h2_3 \
++ 2.*(r*(I*r*ddh1_7 + r*ddh1_10 - 2.*I*dh1_7 - 2.*dh1_10) + I*h1_7 + \
+h1_10)*h2_5 - 2.*mu1l2_2*h1_10*h2_6 + I*r*dh1_7*h2_7 + r*dh1_10*h2_7 - \
+3.*h1_10*h2_7 - 2.*r_2*ddh1_7*h2_9 + 2.*I*r_2*ddh1_10*h2_9 + 4.*r*dh1_7*h2_9 \
+- 4.*I*r*dh1_10*h2_9 + 2.*I*h1_10*h2_9 - r*dh1_7*h2_10 + I*r*dh1_10*h2_10 - \
+3.*I*h1_10*h2_10 + h1_7*(2.*I*r*dh2_5 + 2.*I*mu1l2_2*r*dh2_6 + 2.*I*r*dh2_7 - \
+2.*r*dh2_9 - 2.*r*dh2_10 + 2.*I*mu1l2_2*h2_3 - 2.*I*mu1l2_2*h2_6 - 3.*I*h2_7 \
+- 2.*h2_9 + 3.*h2_10))))/(f*mu1l1*mu1l2*mu2l1*r_5) + \
+(0.17677669529663687*cv3*(-1.*I*mu1l2_2*mu2l2_2*r*h1_5*h2_1 - \
+mu1l2_2*mu2l2_2*r*h1_9*h2_1 + mu1l2_2*mu2l2_2*r*h1_8*h2_2 - \
+I*mu1l1_2*mu2l2_2*r*h1_2*h2_4 + mu2l2_2*omega1*r_2*h1_5*h2_4 + \
+2.*M*mu2l2_2*h1_8*h2_4 - I*mu2l2_2*omega1*r_2*h1_9*h2_4 + \
+I*mu1l1_2*mu2l2_2*r*h1_1*h2_5 - 2.*I*M*mu2l2_2*h1_5*h2_5 + \
+I*mu2l2_2*omega2*r_2*h1_8*h2_5 - 2.*M*mu2l2_2*h1_9*h2_5 + \
+2.*mu1l1_2*omega2*r_2*h1_2*h2_7 + 2.*I*omega1*omega2*r_3*h1_5*h2_7 + \
+2.*omega1*omega2*r_3*h1_9*h2_7 + mu1l1_2*mu2l2_2*r*h1_2*h2_8 + \
+I*mu2l2_2*omega1*r_2*h1_5*h2_8 + 2.*I*M*mu2l2_2*h1_8*h2_8 + \
+mu2l2_2*omega1*r_2*h1_9*h2_8 - mu1l1_2*mu2l2_2*r*h1_1*h2_9 + \
+2.*M*mu2l2_2*h1_5*h2_9 - mu2l2_2*omega2*r_2*h1_8*h2_9 - \
+2.*I*M*mu2l2_2*h1_9*h2_9 + I*mu2l2_2*h1_4*(2.*M*h2_4 + 2.*I*M*h2_8 + \
+r*(mu1l2_2*h2_2 + I*omega2*r*h2_5 - omega2*r*h2_9)) + \
+2.*I*mu1l1_2*omega2*r_2*h1_2*h2_10 - 2.*omega1*omega2*r_3*h1_5*h2_10 + \
+2.*I*omega1*omega2*r_3*h1_9*h2_10 + f_2*r*(2.*I*r_2*dh1_5*dh2_7 + \
+2.*r_2*dh1_9*dh2_7 - 2.*r_2*dh1_5*dh2_10 + 2.*I*r_2*dh1_9*dh2_10 + \
+2.*I*mu1l1_2*r*dh2_7*h1_3 - 2.*mu1l1_2*r*dh2_10*h1_3 - 2.*r_2*ddh2_7*h1_9 - \
+2.*I*r_2*ddh2_10*h1_9 + 4.*r*dh2_7*h1_9 + 4.*I*r*dh2_10*h1_9 - r*dh2_7*h1_10 \
+- I*r*dh2_10*h1_10 - 2.*I*r*dh1_5*h2_7 - 2.*I*mu1l1_2*r*dh1_6*h2_7 - \
+2.*I*r*dh1_7*h2_7 - 2.*r*dh1_9*h2_7 - 2.*r*dh1_10*h2_7 - \
+2.*I*mu1l1_2*h1_3*h2_7 + 2.*I*mu1l1_2*h1_6*h2_7 - 4.*h1_9*h2_7 + \
+3.*h1_10*h2_7 + h1_7*(r*(-1.*I*dh2_7 + dh2_10) + 3.*I*h2_7 - 3.*h2_10) + \
+2.*r*dh1_5*h2_10 + 2.*mu1l1_2*r*dh1_6*h2_10 + 2.*r*dh1_7*h2_10 - \
+2.*I*r*dh1_9*h2_10 - 2.*I*r*dh1_10*h2_10 + 2.*mu1l1_2*h1_3*h2_10 - \
+2.*mu1l1_2*h1_6*h2_10 - 4.*I*h1_9*h2_10 + 3.*I*h1_10*h2_10 + \
+2.*h1_5*(r*(-1.*I*r*ddh2_7 + r*ddh2_10 + 2.*I*dh2_7 - 2.*dh2_10) - 2.*I*h2_7 \
++ 2.*h2_10)) + f*(-2.*I*mu1l1_2*r_2*dh2_7*h1_1 + 2.*mu1l1_2*r_2*dh2_10*h1_1 - \
+I*mu2l2_2*r_2*dh2_4*h1_4 + 2.*omega2*r_3*dh2_7*h1_4 + mu2l2_2*r_2*dh2_8*h1_4 \
++ 2.*I*omega2*r_3*dh2_10*h1_4 - mu2l2_2*r_2*dh2_4*h1_8 - \
+2.*I*omega2*r_3*dh2_7*h1_8 - I*mu2l2_2*r_2*dh2_8*h1_8 + \
+2.*omega2*r_3*dh2_10*h1_8 + 2.*mu2l2_2*r_2*dh2_5*h1_9 - 4.*M*r*dh2_7*h1_9 + \
+2.*I*mu2l2_2*r_2*dh2_9*h1_9 - 4.*I*M*r*dh2_10*h1_9 + \
+mu1l2_2*mu2l2_2*r*h1_9*h2_3 - I*mu2l2_2*r_2*dh1_4*h2_4 - \
+mu2l2_2*r_2*dh1_8*h2_4 + 2.*I*mu2l2_2*r*h1_4*h2_4 + 2.*mu2l2_2*r*h1_8*h2_4 - \
+I*mu1l1_2*mu2l2_2*r*h1_3*h2_5 - 2.*mu2l2_2*r*h1_9*h2_5 + \
+2.*(I*r*(mu1l1_2*h1_1 + omega2*r*(I*h1_4 + h1_8)) + (2.*M + \
+mu1l1_2*r)*h1_9)*h2_7 + mu2l2_2*r_2*dh1_4*h2_8 - I*mu2l2_2*r_2*dh1_8*h2_8 - \
+2.*mu2l2_2*r*h1_4*h2_8 + 2.*I*mu2l2_2*r*h1_8*h2_8 + \
+mu1l1_2*mu2l2_2*r*h1_3*h2_9 - 2.*I*mu2l2_2*r*h1_9*h2_9 - \
+2.*mu1l1_2*r*h1_1*h2_10 - 2.*I*omega2*r_2*h1_4*h2_10 - \
+2.*omega2*r_2*h1_8*h2_10 + 4.*I*M*h1_9*h2_10 + 2.*I*mu1l1_2*r*h1_9*h2_10 + \
+h1_5*(4.*I*M*h2_7 + r*(2.*I*mu2l2_2*r*dh2_5 - 4.*I*M*dh2_7 - \
+2.*mu2l2_2*r*dh2_9 + 4.*M*dh2_10 + I*mu1l2_2*mu2l2_2*h2_3 - 2.*I*mu2l2_2*h2_5 \
++ 2.*mu2l2_2*h2_9) - 4.*M*h2_10))))/(f*mu1l1*mu1l2*mu2l2*r_5) + \
+(0.17677669529663687*I*cv2*(2.*h1_1*(2.*M*mu1l2_2*h2_1 + \
+omega2*r_2*(-1.*I*mu1l2_2*h2_2 - (omega1 - omega2)*r*(h2_5 + I*h2_9))) + \
+2.*h1_2*(-2.*M*mu1l2_2*h2_2 + I*omega2*r*(mu1l2_2*r*h2_1 + 2.*M*h2_5 + \
+2.*I*M*h2_9)) + f*(-2.*mu1l2_2*r_2*dh2_1*h1_1 + 2.*I*omega1*r_3*dh2_4*h1_1 - \
+2.*I*omega2*r_3*dh2_4*h1_1 - 2.*omega1*r_3*dh2_8*h1_1 + \
+2.*omega2*r_3*dh2_8*h1_1 + 2.*mu1l2_2*r_2*dh2_2*h1_2 - \
+2.*I*omega2*r_3*dh2_5*h1_2 + 2.*omega2*r_3*dh2_9*h1_2 - \
+2.*mu1l2_2*r_2*dh1_1*h2_1 + 4.*mu1l2_2*r*h1_1*h2_1 + I*mu1l2_2*r*h1_9*h2_1 + \
+2.*mu1l2_2*r_2*dh1_2*h2_2 - 4.*mu1l2_2*r*h1_2*h2_2 - \
+2.*I*mu1l2_2*omega2*r_2*h1_3*h2_2 + 2.*I*mu1l2_2*omega1*r_2*h1_6*h2_2 - \
+I*mu1l2_2*r*h1_8*h2_2 - 2.*I*mu1l2_2*omega2*r_2*h1_2*h2_3 - \
+4.*I*omega1*r_2*h1_1*h2_4 + 4.*I*omega2*r_2*h1_1*h2_4 + mu1l1_2*r*h1_2*h2_4 - \
+2.*I*M*h1_8*h2_4 - 3.*omega1*r_2*h1_9*h2_4 + 2.*I*omega2*r_3*dh1_2*h2_5 - \
+mu1l1_2*r*h1_1*h2_5 - 2.*I*omega2*r_2*h1_2*h2_5 + \
+2.*omega1*omega2*r_3*h1_3*h2_5 + 2.*omega2_2*r_3*h1_3*h2_5 - \
+2.*omega1*omega2*r_3*h1_6*h2_5 + omega2*r_2*h1_8*h2_5 + 2.*I*M*h1_9*h2_5 + \
+4.*omega1*r_2*h1_1*h2_8 - 4.*omega2*r_2*h1_1*h2_8 + I*mu1l1_2*r*h1_2*h2_8 + \
+2.*M*h1_8*h2_8 - 3.*I*omega1*r_2*h1_9*h2_8 - 2.*omega2*r_3*dh1_2*h2_9 - \
+I*mu1l1_2*r*h1_1*h2_9 + 2.*omega2*r_2*h1_2*h2_9 + \
+2.*I*omega1*omega2*r_3*h1_3*h2_9 + 2.*I*omega2_2*r_3*h1_3*h2_9 - \
+2.*I*omega1*omega2*r_3*h1_6*h2_9 + I*omega2*r_2*h1_8*h2_9 - 2.*M*h1_9*h2_9 + \
+h1_5*(-2.*M*h2_5 + r*(mu1l2_2*h2_1 + I*omega1*r*h2_4 - omega1*r*h2_8) - \
+2.*I*M*h2_9) + h1_4*(2.*M*h2_4 + 2.*I*M*h2_8 + r*(-(mu1l2_2*h2_2) + \
+omega2*r*(-1.*I*h2_5 + h2_9)))) - 2.*f_3*r*(r_2*dh1_6*dh2_5 + \
+I*r_2*dh1_6*dh2_9 - r*dh2_5*h1_6 + mu1l2_2*r*dh2_6*h1_6 + r*dh2_7*h1_6 - \
+I*r*dh2_9*h1_6 + I*r*dh2_10*h1_6 + mu1l2_2*r*dh1_3*h2_3 + \
+mu1l2_2*r*dh1_6*h2_3 + mu1l2_2*h1_6*h2_3 + (r*(-(r*ddh1_6) + 2.*dh1_6) + \
+h1_6)*h2_5 + mu1l2_2*r*dh1_6*h2_6 - 2.*mu1l2_2*h1_6*h2_6 - h1_6*h2_7 + \
+h1_3*(mu1l2_2*(r*dh2_3 - 2.*h2_3) + 2.*h2_5 + 2.*I*h2_9) - I*r_2*ddh1_6*h2_9 \
++ 2.*I*r*dh1_6*h2_9 + I*h1_6*h2_9 - I*h1_6*h2_10) + f_2*(h1_3*((8.*M + \
+mu1l1_2*r)*h2_5 + 2.*r*(3.*mu1l2_2*h2_1 + r*(-(mu1l2_2*dh2_1) - \
+I*omega1*r*dh2_4 - I*omega2*r*dh2_4 + omega1*r*dh2_8 + omega2*r*dh2_8 + \
+2.*I*(omega1 + omega2)*h2_4 - 2.*(omega1 + omega2)*h2_8)) + I*(8.*M + \
+mu1l1_2*r)*h2_9) + r*(2.*r_2*dh1_2*dh2_4 + 2.*I*r_2*dh1_2*dh2_8 - \
+2.*r_2*ddh2_4*h1_2 - 2.*I*r_2*ddh2_8*h1_2 + 2.*r*dh2_4*h1_2 + \
+2.*I*r*dh2_8*h1_2 + I*r*dh2_4*h1_8 - r*dh2_8*h1_8 - 2.*I*r*dh2_5*h1_9 + \
+2.*r*dh2_9*h1_9 + 2.*mu1l2_2*r*dh1_6*h2_1 + 2.*mu1l2_2*h1_6*h2_1 - \
+mu1l2_2*h1_5*h2_3 - I*mu1l2_2*h1_9*h2_3 - 4.*r*dh1_2*h2_4 - r*dh1_4*h2_4 + \
+2.*I*omega1*r_2*dh1_6*h2_4 + 3.*I*r*dh1_8*h2_4 - 2.*I*omega1*r*h1_6*h2_4 - \
+6.*I*h1_8*h2_4 + 2.*r*dh1_5*h2_5 + 4.*M*dh1_6*h2_5 - 2.*h1_5*h2_5 - \
+mu1l2_2*h1_6*h2_5 + mu2l2_2*h1_6*h2_5 - 2.*I*h1_9*h2_5 + \
+2.*I*mu1l2_2*h1_9*h2_6 + 2.*I*h1_9*h2_7 + h1_4*(-(r*(dh2_4 + I*dh2_8)) + \
+2.*h2_4 + 2.*I*h2_8) - 4.*I*r*dh1_2*h2_8 - I*r*dh1_4*h2_8 - \
+2.*omega1*r_2*dh1_6*h2_8 - 3.*r*dh1_8*h2_8 + 2.*omega1*r*h1_6*h2_8 + \
+6.*h1_8*h2_8 + h1_1*(2.*mu1l2_2*(-(r*dh2_3) + 3.*h2_3) + 4.*h2_5 + 4.*I*h2_9) \
++ 2.*I*r*dh1_5*h2_9 + 4.*I*M*dh1_6*h2_9 - 2.*I*h1_5*h2_9 + \
+I*mu1l2_2*h1_6*h2_9 + I*mu2l2_2*h1_6*h2_9 + 2.*h1_9*h2_9 - \
+2.*h1_9*h2_10))))/(f_2*mu1l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{3.916403070732505*^9, 3.916403122655531*^9, 
+  3.916403158515236*^9, 3.916403275895875*^9, 3.9164045367894173`*^9, 
+  3.916421653881011*^9, 3.916463181103154*^9, 3.916463288418105*^9, 
+  3.9164827158838663`*^9},
+ CellLabel->
+  "Out[230]=",ExpressionUUID->"7c9d310f-bd9f-4b02-9183-9323d7bb966b"]
+}, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["i=10", "Subsection",
+ CellChangeTimes->{{3.9164623306840553`*^9, 3.916462331259982*^9}, {
+  3.9164623638514*^9, 
+  3.9164623648862762`*^9}},ExpressionUUID->"7ed9def5-a048-4a34-8b50-\
+dfde1eda7305"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"toC", "[", 
+  RowBox[{"d2R", "[", "10", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.9164030670568*^9, 3.9164030701081533`*^9}, 
+   3.916463189732047*^9},
+ CellLabel->
+  "In[234]:=",ExpressionUUID->"64179c49-2891-498e-93ec-114d629b6955"],
+
+Cell[BoxData["\<\"(-0.35355339059327373*I*ct3*(-((2.*M*mu2l1_2*h1_5 - \
+2.*I*M*mu2l1_2*h1_9 + r*(mu1l1_2*mu2l1_2*h1_1 + omega1*r*(I*mu2l1_2*h1_4 - \
+omega1*r*h1_7 + mu2l1_2*h1_8 + I*omega1*r*h1_10)))*h2_1) + (2.*M*mu2l1_2*h1_4 \
+- 2.*I*M*mu2l1_2*h1_8 + r*(2.*I*M*omega1*h1_7 + mu2l1_2*(mu1l1_2*h1_2 + \
+omega1*r*(I*h1_5 + h1_9)) + 2.*M*omega1*h1_10))*h2_2 + \
+f_3*r*(r*(-2.*r*dh1_7*dh2_6 + 2.*I*r*dh1_10*dh2_6 + 2.*dh2_6*h1_7 - \
+2.*I*dh2_6*h1_10 + r*ddh1_7*h2_3 - I*r*ddh1_10*h2_3 - 2.*dh1_7*h2_3 + \
+2.*I*dh1_10*h2_3) - 2.*(h1_7 - I*h1_10)*h2_6) + f*r*(mu2l1_2*r*dh1_5*h2_1 - \
+I*mu2l1_2*r*dh1_9*h2_1 - 2.*mu2l1_2*h1_5*h2_1 + 2.*I*mu2l1_2*h1_9*h2_1 + \
+(2.*mu2l1_2*h1_4 - 2.*I*mu2l1_2*h1_8 + r*(-(mu2l1_2*dh1_4) - \
+2.*I*omega1*r*dh1_7 + I*mu2l1_2*dh1_8 - 2.*omega1*r*dh1_10 + 2.*I*omega1*h1_7 \
++ 2.*omega1*h1_10))*h2_2 + omega1_2*r_2*h1_7*h2_3 - \
+mu2l1_2*omega1*r*h1_8*h2_3 - I*omega1_2*r_2*h1_10*h2_3 - I*omega1*r*h1_7*h2_4 \
++ I*mu2l1_2*h1_8*h2_4 - omega1*r*h1_10*h2_4 + mu2l1_2*h1_5*h2_5 - \
+I*mu2l1_2*h1_9*h2_5 - 2.*omega1*omega2*r_2*h1_7*h2_6 + \
+mu2l1_2*omega2*r*h1_8*h2_6 + 2.*I*omega1*omega2*r_2*h1_10*h2_6 - \
+mu2l1_2*h1_4*(h2_4 + I*r*(omega1*h2_3 - omega2*h2_6)) - omega1*r*h1_7*h2_8 + \
+I*omega1*r*h1_10*h2_8) + f_2*((2.*M*h1_7 - r*(mu2l1_2*r*dh1_5 - 2.*M*dh1_7 - \
+I*mu2l1_2*r*dh1_9 + 2.*I*M*dh1_10 + mu1l1_2*mu2l1_2*h1_3 - 2.*mu2l1_2*h1_5 + \
+2.*I*mu2l1_2*h1_9) - 2.*I*M*h1_10)*h2_3 + ((4.*M - mu1l2_2*r)*h1_7 + \
+mu2l1_2*r*(h1_5 - I*h1_9) - I*(4.*M - mu1l2_2*r)*h1_10)*h2_6 + \
+r*(mu2l1_2*r*dh2_6*h1_5 - I*mu2l1_2*r*dh2_6*h1_9 - r_2*ddh1_7*h2_1 + \
+I*r_2*ddh1_10*h2_1 + 2.*r*dh1_7*h2_1 - 2.*I*r*dh1_10*h2_1 + (-(r*dh1_7) + \
+I*r*dh1_10 + h1_7 - I*h1_10)*h2_5 + I*h1_10*h2_7 - h1_7*(h2_7 + I*h2_9) + \
+I*r*dh1_7*h2_9 + r*dh1_10*h2_9 - h1_10*h2_9))))/(f_2*mu1l1*mu2l1*r_5) + \
+(0.17677669529663687*ct5*mu3l1*(h1_7 - I*h1_10)*(-2.*I*h2_5 + I*h2_7 + \
+2.*h2_9 - h2_10))/(mu1l1*mu1l2*mu2l1*r_4) + \
+(0.17677669529663687*ct6*mu3l2*(2.*I*h1_5 - I*h1_7 + 2.*h1_9 - h1_10)*(h2_7 + \
+I*h2_10))/(mu1l1*mu1l2*mu2l2*r_4) + \
+(0.08838834764831843*I*ct1*(2.*mu1l1_2*mu1l2_2*h1_2*h2_1 + \
+2.*mu1l1_2*mu1l2_2*h1_2*h2_2 - 2.*mu1l1_2*mu1l2_2*h1_1*(h2_1 + h2_2) + \
+omega1*omega2*r_2*h1_5*h2_4 + I*omega1*omega2*r_2*h1_9*h2_4 - \
+omega1*omega2*r_2*h1_4*h2_5 - 2.*omega1*omega2*r_2*h1_5*h2_5 - \
+I*omega1*omega2*r_2*h1_8*h2_5 - 2.*I*omega1*omega2*r_2*h1_9*h2_5 + \
+I*omega1*omega2*r_2*h1_5*h2_8 - omega1*omega2*r_2*h1_9*h2_8 - \
+I*omega1*omega2*r_2*h1_4*h2_9 - 2.*I*omega1*omega2*r_2*h1_5*h2_9 + \
+omega1*omega2*r_2*h1_8*h2_9 + 2.*omega1*omega2*r_2*h1_9*h2_9 - \
+f*(omega1*r_2*dh2_4*h1_8 + I*omega1*r_2*dh2_8*h1_8 + 2.*omega1*r_2*dh2_4*h1_9 \
+- omega1*r_2*dh2_5*h1_9 + 2.*I*omega1*r_2*dh2_8*h1_9 - \
+I*omega1*r_2*dh2_9*h1_9 + I*omega2*r_2*dh1_4*h2_4 - omega2*r_2*dh1_8*h2_4 - \
+4.*I*mu1l1_2*omega1*r*h1_6*h2_4 - 4.*I*omega1*r*h1_7*h2_4 - \
+2.*I*mu1l1_2*h1_8*h2_4 - 2.*I*mu2l1_2*h1_8*h2_4 - omega1*r*h1_8*h2_4 + \
+omega2*r*h1_8*h2_4 - 6.*omega1*r*h1_9*h2_4 + 4.*omega1*r*h1_10*h2_4 - \
+2.*I*omega2*r_2*dh1_4*h2_5 - I*omega2*r_2*dh1_5*h2_5 + \
+2.*omega2*r_2*dh1_8*h2_5 + omega2*r_2*dh1_9*h2_5 - 2.*omega2*r*h1_8*h2_5 + \
+2.*I*mu1l1_2*h1_9*h2_5 + 2.*I*mu2l1_2*h1_9*h2_5 + omega1*r*h1_9*h2_5 - \
+omega2*r*h1_9*h2_5 - omega2*r_2*dh1_4*h2_8 - I*omega2*r_2*dh1_8*h2_8 + \
+4.*mu1l1_2*omega1*r*h1_6*h2_8 + 4.*omega1*r*h1_7*h2_8 + 2.*mu1l1_2*h1_8*h2_8 \
++ 2.*mu2l1_2*h1_8*h2_8 - I*omega1*r*h1_8*h2_8 + I*omega2*r*h1_8*h2_8 - \
+6.*I*omega1*r*h1_9*h2_8 + 4.*I*omega1*r*h1_10*h2_8 + 2.*omega2*r_2*dh1_4*h2_9 \
++ omega2*r_2*dh1_5*h2_9 + 2.*I*omega2*r_2*dh1_8*h2_9 + \
+I*omega2*r_2*dh1_9*h2_9 - 2.*I*omega2*r*h1_8*h2_9 - 2.*mu1l1_2*h1_9*h2_9 - \
+2.*mu2l1_2*h1_9*h2_9 + I*omega1*r*h1_9*h2_9 - I*omega2*r*h1_9*h2_9 + \
+h1_5*((-2.*mu1l1_2 + 2.*mu2l1_2 - I*(omega1 - omega2)*r)*h2_5 + \
+omega1*r*(r*(-2.*I*dh2_4 + I*dh2_5 + 2.*dh2_8 - dh2_9) + 6.*I*h2_4 - 6.*h2_8) \
++ (-2.*I*mu1l1_2 + 2.*I*mu2l1_2 + (omega1 - omega2)*r)*h2_9) + \
+h1_4*((2.*mu1l1_2 - 2.*mu2l1_2 + I*(omega1 - omega2)*r)*h2_4 + (2.*I*mu1l1_2 \
+- 2.*I*mu2l1_2 + (-omega1 + omega2)*r)*h2_8 + r*(omega1*r*(-1.*I*dh2_4 + \
+dh2_8) + 2.*I*omega2*h2_5 - 2.*omega2*h2_9))) + f_2*(2.*r_2*dh1_4*dh2_4 + \
+r_2*dh1_5*dh2_4 + 2.*I*r_2*dh1_8*dh2_4 + I*r_2*dh1_9*dh2_4 - r_2*dh1_4*dh2_5 \
+- I*r_2*dh1_8*dh2_5 + 2.*I*r_2*dh1_4*dh2_8 + I*r_2*dh1_5*dh2_8 - \
+2.*r_2*dh1_8*dh2_8 - r_2*dh1_9*dh2_8 - I*r_2*dh1_4*dh2_9 + r_2*dh1_8*dh2_9 - \
+r*dh2_4*h1_5 - I*r*dh2_8*h1_5 - 2.*I*r*dh2_4*h1_8 + I*r*dh2_5*h1_8 + \
+2.*r*dh2_8*h1_8 - r*dh2_9*h1_8 - I*r*dh2_4*h1_9 + r*dh2_8*h1_9 - \
+2.*mu1l1_2*mu1l2_2*h1_3*h2_3 + (-(r*(6.*dh1_4 + dh1_5 + I*(6.*dh1_8 + \
+dh1_9))) + 2.*h1_5 + 8.*I*h1_8 + 2.*I*h1_9)*h2_4 + r*dh1_4*h2_5 + \
+4.*mu1l1_2*r*dh1_6*h2_5 + 4.*r*dh1_7*h2_5 + I*r*dh1_8*h2_5 + \
+4.*I*r*dh1_10*h2_5 - 12.*mu1l1_2*h1_6*h2_5 - 8.*h1_7*h2_5 - 2.*I*h1_8*h2_5 - \
+8.*I*h1_10*h2_5 + 4.*mu1l1_2*h1_6*h2_7 + 2.*h1_7*h2_7 + 2.*I*h1_10*h2_7 - \
+6.*I*r*dh1_4*h2_8 - I*r*dh1_5*h2_8 + 6.*r*dh1_8*h2_8 + r*dh1_9*h2_8 + \
+2.*I*h1_5*h2_8 - 8.*h1_8*h2_8 - 2.*h1_9*h2_8 + h1_4*(-2.*r*dh2_4 + r*dh2_5 - \
+2.*I*r*dh2_8 + I*r*dh2_9 + 8.*h2_4 - 2.*h2_5 + 8.*I*h2_8 - 2.*I*h2_9) + \
+I*r*dh1_4*h2_9 + 4.*I*mu1l1_2*r*dh1_6*h2_9 + 4.*I*r*dh1_7*h2_9 - r*dh1_8*h2_9 \
+- 4.*r*dh1_10*h2_9 - 12.*I*mu1l1_2*h1_6*h2_9 - 8.*I*h1_7*h2_9 + 2.*h1_8*h2_9 \
++ 8.*h1_10*h2_9 + 4.*I*mu1l1_2*h1_6*h2_10 + 2.*I*h1_7*h2_10 - \
+2.*h1_10*h2_10)))/(f_2*mu1l1*mu1l2*r_4) + \
+(0.08838834764831843*I*ct2*(-(r*(2.*mu1l1_2*mu1l2_2*h1_2*h2_1 + \
+2.*mu1l1_2*mu1l2_2*h1_2*h2_2 - 2.*mu1l1_2*mu1l2_2*h1_1*(h2_1 + h2_2) + \
+omega1*omega2*r_2*h1_5*h2_4 - I*omega1*omega2*r_2*h1_9*h2_4 - \
+omega1*omega2*r_2*h1_4*h2_5 - 2.*omega1*omega2*r_2*h1_5*h2_5 + \
+I*omega1*omega2*r_2*h1_8*h2_5 + 2.*I*omega1*omega2*r_2*h1_9*h2_5 - \
+I*omega1*omega2*r_2*h1_5*h2_8 - omega1*omega2*r_2*h1_9*h2_8 + \
+I*omega1*omega2*r_2*h1_4*h2_9 + 2.*I*omega1*omega2*r_2*h1_5*h2_9 + \
+omega1*omega2*r_2*h1_8*h2_9 + 2.*omega1*omega2*r_2*h1_9*h2_9)) + \
+f*(-2.*I*omega1*r_3*dh2_4*h1_5 + I*omega1*r_3*dh2_5*h1_5 - \
+2.*omega1*r_3*dh2_8*h1_5 + omega1*r_3*dh2_9*h1_5 - omega1*r_3*dh2_4*h1_8 + \
+I*omega1*r_3*dh2_8*h1_8 - 2.*omega1*r_3*dh2_4*h1_9 + omega1*r_3*dh2_5*h1_9 + \
+2.*I*omega1*r_3*dh2_8*h1_9 - I*omega1*r_3*dh2_9*h1_9 + (I*omega2*r_3*dh1_4 + \
+omega2*r_3*dh1_8 + (8.*M + 6.*I*omega1*r_2)*h1_5 - \
+4.*I*mu1l1_2*omega1*r_2*h1_6 - 4.*I*omega1*r_2*h1_7 + (-8.*I*M + \
+4.*I*mu1l1_2*r + (omega1 - omega2)*r_2)*h1_8 - 8.*I*M*h1_9 + \
+6.*omega1*r_2*h1_9 - 4.*omega1*r_2*h1_10)*h2_4 - 2.*I*omega2*r_3*dh1_4*h2_5 - \
+I*omega2*r_3*dh1_5*h2_5 - 2.*omega2*r_3*dh1_8*h2_5 - omega2*r_3*dh1_9*h2_5 - \
+8.*M*h1_5*h2_5 - I*omega1*r_2*h1_5*h2_5 + I*omega2*r_2*h1_5*h2_5 + \
+8.*I*M*h1_8*h2_5 + 2.*omega2*r_2*h1_8*h2_5 + 8.*I*M*h1_9*h2_5 - \
+4.*I*mu1l1_2*r*h1_9*h2_5 - omega1*r_2*h1_9*h2_5 + omega2*r_2*h1_9*h2_5 + \
+omega2*r_3*dh1_4*h2_8 - I*omega2*r_3*dh1_8*h2_8 - 8.*I*M*h1_5*h2_8 + \
+6.*omega1*r_2*h1_5*h2_8 - 4.*mu1l1_2*omega1*r_2*h1_6*h2_8 - \
+4.*omega1*r_2*h1_7*h2_8 - 8.*M*h1_8*h2_8 + 4.*mu1l1_2*r*h1_8*h2_8 - \
+I*omega1*r_2*h1_8*h2_8 + I*omega2*r_2*h1_8*h2_8 - 8.*M*h1_9*h2_8 - \
+6.*I*omega1*r_2*h1_9*h2_8 + 4.*I*omega1*r_2*h1_10*h2_8 - \
+2.*omega2*r_3*dh1_4*h2_9 - omega2*r_3*dh1_5*h2_9 + 2.*I*omega2*r_3*dh1_8*h2_9 \
++ I*omega2*r_3*dh1_9*h2_9 + 8.*I*M*h1_5*h2_9 - omega1*r_2*h1_5*h2_9 + \
+omega2*r_2*h1_5*h2_9 + 8.*M*h1_8*h2_9 - 2.*I*omega2*r_2*h1_8*h2_9 + \
+8.*M*h1_9*h2_9 - 4.*mu1l1_2*r*h1_9*h2_9 + I*omega1*r_2*h1_9*h2_9 - \
+I*omega2*r_2*h1_9*h2_9 + h1_4*(-1.*I*omega1*r_3*dh2_4 - omega1*r_3*dh2_8 + \
+(8.*M + I*(omega1 - omega2)*r_2)*h2_4 + (-8.*M + 2.*I*omega2*r_2)*h2_5 - \
+8.*I*M*h2_8 + omega1*r_2*h2_8 - omega2*r_2*h2_8 + 8.*I*M*h2_9 + \
+2.*omega2*r_2*h2_9)) + f_2*r*(-2.*r_2*dh1_4*dh2_4 - r_2*dh1_5*dh2_4 + \
+2.*I*r_2*dh1_8*dh2_4 + I*r_2*dh1_9*dh2_4 + r_2*dh1_4*dh2_5 - \
+I*r_2*dh1_8*dh2_5 + 2.*I*r_2*dh1_4*dh2_8 + I*r_2*dh1_5*dh2_8 + \
+2.*r_2*dh1_8*dh2_8 + r_2*dh1_9*dh2_8 - I*r_2*dh1_4*dh2_9 - r_2*dh1_8*dh2_9 + \
+r*dh2_4*h1_5 - I*r*dh2_8*h1_5 - 2.*I*r*dh2_4*h1_8 + I*r*dh2_5*h1_8 - \
+2.*r*dh2_8*h1_8 + r*dh2_9*h1_8 - I*r*dh2_4*h1_9 - r*dh2_8*h1_9 + \
+2.*mu1l1_2*mu1l2_2*h1_3*h2_3 + (6.*r*dh1_4 + r*dh1_5 - 6.*I*r*dh1_8 - \
+I*r*dh1_9 + 2.*h1_5 + 4.*I*h1_8 - 2.*I*h1_9)*h2_4 - r*dh1_4*h2_5 - \
+4.*mu1l1_2*r*dh1_6*h2_5 - 4.*r*dh1_7*h2_5 + I*r*dh1_8*h2_5 + \
+4.*I*r*dh1_10*h2_5 - 4.*h1_5*h2_5 + 12.*mu1l1_2*h1_6*h2_5 + 8.*h1_7*h2_5 + \
+2.*I*h1_8*h2_5 + 4.*I*h1_9*h2_5 - 8.*I*h1_10*h2_5 - 4.*mu1l2_2*h1_7*h2_6 + \
+4.*I*mu1l2_2*h1_10*h2_6 - 2.*h1_7*h2_7 + 2.*I*h1_10*h2_7 - 6.*I*r*dh1_4*h2_8 \
+- I*r*dh1_5*h2_8 - 6.*r*dh1_8*h2_8 - r*dh1_9*h2_8 - 2.*I*h1_5*h2_8 + \
+4.*h1_8*h2_8 - 2.*h1_9*h2_8 + h1_4*(2.*r*dh2_4 - r*dh2_5 - 2.*I*r*dh2_8 + \
+I*r*dh2_9 - 4.*h2_4 - 2.*h2_5 + 4.*I*h2_8 + 2.*I*h2_9) + I*r*dh1_4*h2_9 + \
+4.*I*mu1l1_2*r*dh1_6*h2_9 + 4.*I*r*dh1_7*h2_9 + r*dh1_8*h2_9 + \
+4.*r*dh1_10*h2_9 + 4.*I*h1_5*h2_9 - 12.*I*mu1l1_2*h1_6*h2_9 - 8.*I*h1_7*h2_9 \
++ 2.*h1_8*h2_9 + 4.*h1_9*h2_9 - 8.*h1_10*h2_9 + 2.*I*h1_7*h2_10 + \
+2.*h1_10*h2_10)))/(f_2*mu1l1*mu1l2*r_5) + \
+(0.35355339059327373*I*ct4*(h1_1*(-2.*M*mu2l2_2*h2_5 - 2.*I*M*mu2l2_2*h2_9 + \
+r*(-(mu1l2_2*mu2l2_2*h2_1) + omega2*r*(-1.*I*mu2l2_2*h2_4 + mu2l2_2*h2_8 + \
+omega2*r*(h2_7 + I*h2_10)))) + h1_2*(2.*M*mu2l2_2*h2_4 + 2.*I*M*mu2l2_2*h2_8 \
++ r*(2.*I*M*omega2*h2_7 + mu2l2_2*(mu1l2_2*h2_2 + I*omega2*r*h2_5 - \
+omega2*r*h2_9) - 2.*M*omega2*h2_10)) + f_3*r*(-2.*h1_6*(h2_7 + I*h2_10) + \
+r*(-2.*r*dh1_6*dh2_7 - 2.*I*r*dh1_6*dh2_10 + r*ddh2_7*h1_3 + I*r*ddh2_10*h1_3 \
+- 2.*dh2_7*h1_3 - 2.*I*dh2_10*h1_3 + 2.*dh1_6*h2_7 + 2.*I*dh1_6*h2_10)) + \
+f*r*(mu2l2_2*r*dh2_5*h1_1 + I*mu2l2_2*r*dh2_9*h1_1 - \
+I*mu2l2_2*omega2*r*h1_3*h2_4 + I*mu2l2_2*omega1*r*h1_6*h2_4 - \
+2.*mu2l2_2*h1_1*h2_5 + mu2l2_2*h1_5*h2_5 + omega2_2*r_2*h1_3*h2_7 - \
+2.*omega1*omega2*r_2*h1_6*h2_7 + omega2*r*h1_8*h2_7 + \
+mu2l2_2*omega2*r*h1_3*h2_8 - mu2l2_2*omega1*r*h1_6*h2_8 - \
+2.*I*mu2l2_2*h1_1*h2_9 + I*mu2l2_2*h1_5*h2_9 - h1_4*(mu2l2_2*h2_4 + \
+I*(mu2l2_2*h2_8 + omega2*r*(h2_7 + I*h2_10))) + I*omega2_2*r_2*h1_3*h2_10 - \
+2.*I*omega1*omega2*r_2*h1_6*h2_10 + I*omega2*r*h1_8*h2_10 + \
+h1_2*(2.*mu2l2_2*h2_4 + 2.*I*mu2l2_2*h2_8 + r*(-(mu2l2_2*dh2_4) - \
+2.*I*omega2*r*dh2_7 - I*mu2l2_2*dh2_8 + 2.*omega2*r*dh2_10 + 2.*I*omega2*h2_7 \
+- 2.*omega2*h2_10))) + f_2*(h1_3*(2.*M*h2_7 + r*(-(mu2l2_2*r*dh2_5) + \
+2.*M*dh2_7 - I*mu2l2_2*r*dh2_9 + 2.*I*M*dh2_10 - mu1l2_2*mu2l2_2*h2_3 + \
+2.*mu2l2_2*h2_5 + 2.*I*mu2l2_2*h2_9) + 2.*I*M*h2_10) + h1_6*((4.*M - \
+mu1l1_2*r)*h2_7 + mu2l2_2*r*(h2_5 + I*h2_9) + I*(4.*M - mu1l1_2*r)*h2_10) + \
+r*(-(r_2*ddh2_7*h1_1) - I*r_2*ddh2_10*h1_1 + 2.*r*dh2_7*h1_1 + \
+2.*I*r*dh2_10*h1_1 - I*r*dh2_7*h1_9 + r*dh2_10*h1_9 + mu2l2_2*r*dh1_6*h2_5 + \
+I*h1_9*h2_7 + I*mu2l2_2*r*dh1_6*h2_9 - h1_7*(h2_7 + I*h2_10) - h1_9*h2_10 + \
+h1_5*(h2_7 + I*(I*r*dh2_7 - r*dh2_10 + \
+h2_10))))))/(f_2*mu1l2*mu2l2*r_5)\"\>"], "Output",
+ CellChangeTimes->{3.916403070732505*^9, 3.916403122655531*^9, 
+  3.916403158515236*^9, 3.916403275895875*^9, 3.9164045367894173`*^9, 
+  3.916421653881011*^9, 3.916463190696933*^9, 3.9164632884665813`*^9, 
+  3.916483799924921*^9},
+ CellLabel->
+  "Out[234]=",ExpressionUUID->"c614f9ee-e43b-4a31-88dc-4aedc7ea1167"]
+}, Open  ]]
+}, Closed]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1716, 973},
+WindowMargins->{{Automatic, 37}, {Automatic, 0}},
+FrontEndVersion->"13.3 for Mac OS X x86 (64-bit) (June 3, 2023)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"eb94a56c-913c-4f88-87eb-850541d11fea"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 171, 3, 98, "Title",ExpressionUUID->"c9dedb48-f863-40d7-a49e-446801dddd65"],
+Cell[754, 27, 249, 6, 35, "Text",ExpressionUUID->"8a8640bc-893a-421c-963d-b01fa3487f64"],
+Cell[CellGroupData[{
+Cell[1028, 37, 290, 4, 67, "Section",ExpressionUUID->"ffad90a6-b3a7-4ced-ab4c-9f098a8cd1a1"],
+Cell[1321, 43, 332, 8, 30, "Input",ExpressionUUID->"564f9a90-7ec7-4d7b-b041-421b036b41f7"],
+Cell[CellGroupData[{
+Cell[1678, 55, 212, 3, 30, "Input",ExpressionUUID->"606398d3-7b27-485c-b0c8-fe47fdb1bd86"],
+Cell[1893, 60, 272, 7, 34, "Output",ExpressionUUID->"c223f5df-58f6-4ff6-8261-45bcc1506728"]
+}, Open  ]],
+Cell[2180, 70, 418, 9, 30, "Input",ExpressionUUID->"5aa9e0c6-6521-4366-86ef-6289f70a3a13"],
+Cell[2601, 81, 854, 17, 30, "Input",ExpressionUUID->"12564c9a-45ab-4f27-beb7-e5d7508f4e92"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[3492, 103, 287, 4, 53, "Section",ExpressionUUID->"b2d21999-9b5c-489d-ae38-03225ff8180c"],
+Cell[3782, 109, 2717, 78, 52, "Input",ExpressionUUID->"aa912c4b-c5e2-40ad-97dd-a906ba22299b"],
+Cell[6502, 189, 867, 31, 30, "Input",ExpressionUUID->"a411fed8-2471-49d8-b138-11bffa5705dc"],
+Cell[7372, 222, 12255, 341, 388, "Input",ExpressionUUID->"6145d368-711c-43e9-b57e-68a96e3f2daf"],
+Cell[19630, 565, 2650, 60, 73, "Input",ExpressionUUID->"35f10741-d6ba-488f-b32e-bdc897b8317c"],
+Cell[22283, 627, 535, 14, 30, "Input",ExpressionUUID->"e3bb891e-511c-49fd-82f6-3b3d0f6057ba"],
+Cell[22821, 643, 6097, 138, 200, "Input",ExpressionUUID->"391a1e65-b983-44d1-9dd9-8b1f574b4e33"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[28955, 786, 284, 5, 53, "Section",ExpressionUUID->"d3718061-a2f9-4319-bdc7-486d6a41977f"],
+Cell[CellGroupData[{
+Cell[29264, 795, 153, 3, 54, "Subsection",ExpressionUUID->"3a05da6c-37b2-42a1-8fb1-51cc3cb3ccac"],
+Cell[CellGroupData[{
+Cell[29442, 802, 235, 5, 30, "Input",ExpressionUUID->"d8a7f49b-998f-4ffc-9eaa-b68bdab2f7d1"],
+Cell[29680, 809, 8019, 113, 896, "Output",ExpressionUUID->"d53af5f5-18fd-4494-9a92-8ce740c0a4f2"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[37748, 928, 153, 3, 38, "Subsection",ExpressionUUID->"b4740531-a106-414a-9da5-d5229ddb724a"],
+Cell[CellGroupData[{
+Cell[37926, 935, 284, 6, 30, "Input",ExpressionUUID->"444aa76b-84d6-4d24-8d9f-7574f6156c5c"],
+Cell[38213, 943, 8266, 121, 917, "Output",ExpressionUUID->"5032bd2b-337d-4314-84ba-dc5b93cbb29b"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[46528, 1070, 153, 3, 38, "Subsection",ExpressionUUID->"df052bb0-a9c0-49cf-a188-289c8d1c8e19"],
+Cell[CellGroupData[{
+Cell[46706, 1077, 284, 6, 30, "Input",ExpressionUUID->"86959d9d-2f9d-49ad-9e44-e6a014e8e327"],
+Cell[46993, 1085, 10090, 148, 1106, "Output",ExpressionUUID->"c3cfd438-423d-466b-b255-751d2b0c9b17"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[57132, 1239, 153, 3, 38, "Subsection",ExpressionUUID->"30843305-d1c0-41d1-9313-e2c9156c619a"],
+Cell[CellGroupData[{
+Cell[57310, 1246, 286, 6, 30, "Input",ExpressionUUID->"41cc12fc-0539-4658-9d17-61a1c74d16c0"],
+Cell[57599, 1254, 12175, 181, 1337, "Output",ExpressionUUID->"3c04f334-5bec-45fc-bce7-a55943e82850"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[69823, 1441, 153, 3, 38, "Subsection",ExpressionUUID->"54681652-c05a-4121-ab45-8a09670014c7"],
+Cell[CellGroupData[{
+Cell[70001, 1448, 286, 6, 30, "Input",ExpressionUUID->"b0bf545b-6cb6-4264-bdac-820d15ce7857"],
+Cell[70290, 1456, 12854, 190, 1421, "Output",ExpressionUUID->"6a2d6f87-64af-4410-b7f3-2b871bfb40fb"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[83193, 1652, 155, 3, 38, "Subsection",ExpressionUUID->"19c9f0dc-56b7-49e1-b5a5-d2ce23afd3bc"],
+Cell[CellGroupData[{
+Cell[83373, 1659, 286, 6, 30, "Input",ExpressionUUID->"9b552d82-0ab7-4c8e-8e13-070d20ca1ecb"],
+Cell[83662, 1667, 5786, 82, 623, "Output",ExpressionUUID->"74ae5abb-44e4-4be7-aef4-428fee3ef8dd"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[89497, 1755, 153, 3, 38, "Subsection",ExpressionUUID->"6fec0b75-00ff-4f7f-bc67-168d95252811"],
+Cell[CellGroupData[{
+Cell[89675, 1762, 286, 6, 30, "Input",ExpressionUUID->"eddb1456-a06d-4b7b-bd86-a3f0b1de0421"],
+Cell[89964, 1770, 11060, 157, 1211, "Output",ExpressionUUID->"35982d6b-33e3-4f1e-93c0-9c20d9f44e6c"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[101073, 1933, 153, 3, 38, "Subsection",ExpressionUUID->"f695275e-9fd2-42e1-bec2-72088d527de8"],
+Cell[CellGroupData[{
+Cell[101251, 1940, 284, 6, 30, "Input",ExpressionUUID->"c2bbc3a8-1d74-47fd-b13f-0704c4701b58"],
+Cell[101538, 1948, 11921, 177, 1316, "Output",ExpressionUUID->"08b774dc-e956-44ab-b471-e4a7431136ce"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[113508, 2131, 202, 4, 38, "Subsection",ExpressionUUID->"ae3cbadd-df79-49ac-ad64-0afd7159f6c5"],
+Cell[CellGroupData[{
+Cell[113735, 2139, 284, 6, 30, "Input",ExpressionUUID->"e74cf88a-6a1e-4943-a0f0-f9a0894fc7cb"],
+Cell[114022, 2147, 13012, 189, 1442, "Output",ExpressionUUID->"7c9d310f-bd9f-4b02-9183-9323d7bb966b"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[127083, 2342, 203, 4, 38, "Subsection",ExpressionUUID->"7ed9def5-a048-4a34-8b50-dfde1eda7305"],
+Cell[CellGroupData[{
+Cell[127311, 2350, 262, 6, 30, "Input",ExpressionUUID->"64179c49-2891-498e-93ec-114d629b6955"],
+Cell[127576, 2358, 11034, 158, 1232, "Output",ExpressionUUID->"c614f9ee-e43b-4a31-88dc-4aedc7ea1167"]
+}, Open  ]]
+}, Closed]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

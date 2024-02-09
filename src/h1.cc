@@ -316,9 +316,9 @@ void read_h1(const string dir, double &r0, vector<double> &r, vector<double> &f,
         const complex<double> dhbarj = dhbar[i][l][m][j];
         const complex<double> ddhbarj = ddhbar[i][l][m][j];
         const double rj = r[j];
-        h[ih][l][m][j] = a*hbarj/rj;
-        dh[ih][l][m][j] = a*(dhbarj - hbarj/rj)/rj;
-        ddh[ih][l][m][j] = a*(ddhbarj - 2.0*(dhbarj - hbarj/rj)/rj)/rj;
+        h[ih][l][m][j] = hbarj;
+        dh[ih][l][m][j] = dhbarj;
+        ddh[ih][l][m][j] = ddhbarj;
       }
     }
 
