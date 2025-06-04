@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: SecondOrderRicci
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file and by including the
+  acknowledgment "This work makes use of the Black Hole
+  Perturbation Toolkit." in any papers.
+type: software
+authors:
+  - email: barry.wardell@gmail.com
+    affiliation: University College Dublin
+    given-names: Barry
+    family-names: Wardell
+    orcid: 'https://orcid.org/0000-0001-6176-9006'
+repository-code: >-
+  https://github.com/BlackHolePerturbationToolkit/SecondOrderRicci
+abstract: >-
+  Code to compute the source for the second order Lorenz
+  gauge equation.
+license: NCSA
