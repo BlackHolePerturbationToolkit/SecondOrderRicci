@@ -118,12 +118,14 @@ int read_h1(const string dir, double &r0, int &r0i, vector<double> &r, vector<do
     for (size_t it = 0; it != fields.size(); ++it) {
       const int i = fields[it];
       const int ih = (i == 3) ? 6 : ((i == 6) ? 3 : i);
-      complex<double> *ph = h.slot(ih, l, m), *pdh = dh.slot(ih, l, m), *pddh = ddh.slot(ih, l, m);
+      double *hr = h.slot_re(ih, l, m), *hi = h.slot_im(ih, l, m);
+      double *dhr = dh.slot_re(ih, l, m), *dhi = dh.slot_im(ih, l, m);
+      double *ddhr = ddh.slot_re(ih, l, m), *ddhi = ddh.slot_im(ih, l, m);
       for (size_t j = 0; j < N; ++j) {
         const double *row = (j < N_left) ? &data_left[j*num_fields] : &data_right[(j - N_left)*num_fields];
-        ph[j] = complex<double>(row[6*it], row[6*it+1]);
-        pdh[j] = complex<double>(row[6*it+2], row[6*it+3]);
-        pddh[j] = complex<double>(row[6*it+4], row[6*it+5]);
+        hr[j] = row[6*it];     hi[j] = row[6*it+1];
+        dhr[j] = row[6*it+2];  dhi[j] = row[6*it+3];
+        ddhr[j] = row[6*it+4]; ddhi[j] = row[6*it+5];
       }
     }
   }

@@ -31,16 +31,20 @@ void Field::init(int lmax, std::size_t N)
           offset_[index(i, l, m)] = next;
           next += static_cast<long>(N);
         }
-  data_.assign(static_cast<std::size_t>(next), value_type(0.0, 0.0));
-  zeros_.assign(N, value_type(0.0, 0.0));
+  re_.assign(static_cast<std::size_t>(next), 0.0);
+  im_.assign(static_cast<std::size_t>(next), 0.0);
+  zeros_.assign(N, 0.0);
 }
 
-Field::value_type *Field::slot(int i, int l, int m)
+long Field::offset(int i, int l, int m) const
 {
   if (l < 0 || l > lmax_ || m < 0 || m > l || i < 1 || i > 10)
-    throw std::out_of_range("Field::slot: mode outside the stored range");
+    throw std::out_of_range("Field: mode outside the stored range");
   const long off = offset_[index(i, l, m)];
   if (off < 0)
-    throw std::out_of_range("Field::slot: component not stored for this parity");
-  return data_.data() + off;
+    throw std::out_of_range("Field: component not stored for this parity");
+  return off;
 }
+
+double *Field::slot_re(int i, int l, int m) { return re_.data() + offset(i, l, m); }
+double *Field::slot_im(int i, int l, int m) { return im_.data() + offset(i, l, m); }

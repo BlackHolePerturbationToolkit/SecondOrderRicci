@@ -9,10 +9,9 @@
  *     i = 8..10 for l+m odd, fewer at l = 0, 1),
  * which is ~8x less memory at lmax = 50.
  *
- * Access keeps the dense array syntax h[i][l][m][j] used by the generated Ricci
- * expressions: h[i][l][m] resolves (once per mode) to a pointer into the packed data, or
- * to a shared buffer of zeros for absent components, plus the conjugation needed for
- * m < 0; [j] then returns the value at grid point j.
+ * Real and imaginary parts are stored in separate planes, so that each component is a
+ * contiguous array of doubles over the grid and the kernels can be vectorised across grid
+ * points.
  */
 #pragma once
 
@@ -22,26 +21,12 @@
 
 class Field {
 public:
-  typedef std::complex<double> value_type;
-
-  /* A resolved (i, l, m) mode: indexing by grid point j. */
+  /* A resolved (i, l, m) mode: real and imaginary planes of the stored m >= 0 mode (or
+   * zeros for an absent component); for m < 0 the values are sign*conj(stored). */
   struct Mode {
-    const value_type *p;
+    const double *re, *im;
     bool negate_conj;   /* true for m < 0 */
     double sign;        /* (-1)^m for m < 0 */
-    inline value_type operator[](std::size_t j) const {
-      return negate_conj ? sign*std::conj(p[j]) : p[j];
-    }
-    inline const value_type *data() const { return p; }
-  };
-
-  struct LIndex {
-    const Field *f; int i; int l;
-    inline Mode operator[](int m) const { return f->mode(i, l, m); }
-  };
-  struct IIndex {
-    const Field *f; int i;
-    inline LIndex operator[](int l) const { return LIndex{f, i, l}; }
   };
 
   Field() : lmax_(-1), N_(0) {}
@@ -53,35 +38,42 @@ public:
   /* Components stored for an (l, m >= 0) mode. */
   static bool present(int i, int l, int m);
 
-  /* Writable pointer to the N values of a stored (i, l, m >= 0) component. */
-  value_type *slot(int i, int l, int m);
+  /* Writable planes of a stored (i, l, m >= 0) component. */
+  double *slot_re(int i, int l, int m);
+  double *slot_im(int i, int l, int m);
+  void set(int i, int l, int m, std::size_t j, std::complex<double> v) {
+    slot_re(i, l, m)[j] = v.real();
+    slot_im(i, l, m)[j] = v.imag();
+  }
+  std::complex<double> get(int i, int l, int m, std::size_t j) {
+    return std::complex<double>(slot_re(i, l, m)[j], slot_im(i, l, m)[j]);
+  }
 
   inline Mode mode(int i, int l, int m) const {
     const int am = m < 0 ? -m : m;
-    const value_type *p = zeros_.data();
+    const double *re = zeros_.data(), *im = zeros_.data();
     if (l >= 0 && l <= lmax_ && am <= l && i >= 1 && i <= 10) {
       const long off = offset_[index(i, l, am)];
-      if (off >= 0) p = data_.data() + off;
+      if (off >= 0) { re = re_.data() + off; im = im_.data() + off; }
     }
     if (m < 0)
-      return Mode{p, true, (am % 2) ? -1.0 : 1.0};
-    return Mode{p, false, 1.0};
+      return Mode{re, im, true, (am % 2) ? -1.0 : 1.0};
+    return Mode{re, im, false, 1.0};
   }
 
-  inline IIndex operator[](int i) const { return IIndex{this, i}; }
-
-  const value_type *zeros() const { return zeros_.data(); }
+  const double *zeros() const { return zeros_.data(); }
   int lmax() const { return lmax_; }
   std::size_t size() const { return N_; }
-  std::size_t bytes() const { return data_.size()*sizeof(value_type) + zeros_.size()*sizeof(value_type); }
+  std::size_t bytes() const { return (re_.size() + im_.size() + zeros_.size())*sizeof(double); }
 
 private:
   inline std::size_t index(int i, int l, int m) const {
     return (static_cast<std::size_t>(i - 1)*(lmax_ + 1) + l)*(lmax_ + 1) + m;
   }
+  long offset(int i, int l, int m) const;
   int lmax_;
   std::size_t N_;
-  std::vector<long> offset_;           /* [i][l][m>=0] -> offset into data_, or -1 */
-  std::vector<value_type> data_;
-  std::vector<value_type> zeros_;
+  std::vector<long> offset_;           /* [i][l][m>=0] -> offset into re_/im_, or -1 */
+  std::vector<double> re_, im_;
+  std::vector<double> zeros_;
 };

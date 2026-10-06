@@ -66,7 +66,7 @@ const double M = 1.0;
 typedef void (*R2G_function)(const double, const double, const vector<double>&, const vector<double>&,
                              const vector<double>&, const ModeBlock&, const ModeBlock&, const ModeBlock&,
                              const ModeBlock&, const ModeBlock&, const ModeBlock&,
-                             int, int, int, int, complex<double> *const*, size_t, size_t);
+                             int, int, int, int, double *const*, double *const*, size_t, size_t);
 typedef void (*R2C_function)(int, int, int, int, int, int, double*);
 static const R2G_function R2G[11] = {nullptr, R2G_1, R2G_2, R2G_3, R2G_4, R2G_5, R2G_6, R2G_7, R2G_8, R2G_9, R2G_10};
 static const R2C_function R2C[11] = {nullptr, R2C_1, R2C_2, R2C_3, R2C_4, R2C_5, R2C_6, R2C_7, R2C_8, R2C_9, R2C_10};
@@ -287,9 +287,7 @@ int main(int argc, char* argv[])
       bh1.reserve(N); bdh1.reserve(N); bddh1.reserve(N);
       bh2.reserve(N); bdh2.reserve(N); bddh2.reserve(N);
       ModeBlock Bh1, Bdh1, Bddh1, Bh2, Bdh2, Bddh2;
-      vector<complex<double>> Gbuf(static_cast<size_t>(R2_NC_MAX)*N);
-      complex<double> *G[R2_NC_MAX];
-      for (int k = 0; k < R2_NC_MAX; ++k) G[k] = Gbuf.data() + static_cast<size_t>(k)*N;
+      GBuffer G(R2_NC_MAX, N);
       double c[R2_NC_MAX];
 
 #pragma omp for schedule(dynamic)
@@ -316,16 +314,15 @@ int main(int argc, char* argv[])
             bh2.resolve(hB, l2, m2, iv.jb, iv.je, Bh2);
             bdh2.resolve(dhB, l2, m2, iv.jb, iv.je, Bdh2);
             bddh2.resolve(ddhB, l2, m2, iv.jb, iv.je, Bddh2);
-            for (int k = 0; k < K; ++k) fill(G[k] + iv.jb, G[k] + iv.je, complex<double>(0.0, 0.0));
-            R2G[i3](M, r0, r, f, fp, Bh1, Bdh1, Bddh1, Bh2, Bdh2, Bddh2, l1, m1, l2, m2, G, iv.jb, iv.je);
+            G.zero(K, iv.jb, iv.je);
+            R2G[i3](M, r0, r, f, fp, Bh1, Bdh1, Bddh1, Bh2, Bdh2, Bddh2, l1, m1, l2, m2, G.re(), G.im(), iv.jb, iv.je);
           }
           for (size_t a : targets) {
             R2C[i3](t.l3s[a], m3, l1, m1, l2, m2, c);
             complex<double> *o = out[a];
             for (const Interval &iv : ivs)
               for (size_t j = iv.jb; j < iv.je; ++j) {
-                complex<double> v = 0.0;
-                for (int k = 0; k < K; ++k) v += c[k]*G[k][j];
+                const complex<double> v = G.combine(K, c, j);
                 o[j] += v;
               }
           }
@@ -412,9 +409,7 @@ int main(int argc, char* argv[])
     bh1.reserve(N); bdh1.reserve(N); bddh1.reserve(N);
     bh2.reserve(N); bdh2.reserve(N); bddh2.reserve(N);
     ModeBlock Bh1, Bdh1, Bddh1, Bh2, Bdh2, Bddh2;
-    vector<complex<double>> Gbuf(static_cast<size_t>(R2_NC_MAX)*N);
-    complex<double> *G[R2_NC_MAX];
-    for (int k = 0; k < R2_NC_MAX; ++k) G[k] = Gbuf.data() + static_cast<size_t>(k)*N;
+    GBuffer G(R2_NC_MAX, N);
     double c[R2_NC_MAX];
 
 #pragma omp for schedule(dynamic)
@@ -433,14 +428,13 @@ int main(int argc, char* argv[])
           bh2.resolve(hB, l2, m2, iv.jb, iv.je, Bh2);
           bdh2.resolve(dhB, l2, m2, iv.jb, iv.je, Bdh2);
           bddh2.resolve(ddhB, l2, m2, iv.jb, iv.je, Bddh2);
-          for (int k = 0; k < K; ++k) fill(G[k] + iv.jb, G[k] + iv.je, complex<double>(0.0, 0.0));
-          R2G[i3](M, r0, r, f, fp, Bh1, Bdh1, Bddh1, Bh2, Bdh2, Bddh2, l1, m1, l2, m2, G, iv.jb, iv.je);
+          G.zero(K, iv.jb, iv.je);
+          R2G[i3](M, r0, r, f, fp, Bh1, Bdh1, Bddh1, Bh2, Bdh2, Bddh2, l1, m1, l2, m2, G.re(), G.im(), iv.jb, iv.je);
         }
         R2C[i3](l3, m3, l1, m1, l2, m2, c);
         for (const Interval &iv : ivs)
           for (size_t j = iv.jb; j < iv.je; ++j) {
-            complex<double> v = 0.0;
-            for (int k = 0; k < K; ++k) v += c[k]*G[k][j];
+            const complex<double> v = G.combine(K, c, j);
             acc[j] += v;
           }
       };

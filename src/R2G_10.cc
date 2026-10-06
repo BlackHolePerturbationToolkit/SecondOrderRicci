@@ -12,7 +12,7 @@ void R2G_10(const double M, const double r0,
     const vector<double> &r_grid, const vector<double> &f_grid, const vector<double> &fp_grid,
     const ModeBlock &h1, const ModeBlock &dh1, const ModeBlock &ddh1,
     const ModeBlock &h2, const ModeBlock &dh2, const ModeBlock &ddh2,
-    int l1, int m1, int l2, int m2, complex<double> *const *G, size_t jb, size_t je)
+    int l1, int m1, int l2, int m2, double *const *Gr, double *const *Gi, size_t jb, size_t je)
 {
   const complex<double> I(0.0, 1.0);
   const double Omega = sqrt(M/(r0*r0*r0));
@@ -173,50 +173,50 @@ void R2G_10(const double M, const double r0,
   const double K5_36 = use5 ? ((0.044194173824159216*omega1)/(mu1l1*mu1l2)) : 0.0;
   const double K5_37 = use5 ? ((-0.022097086912079608*omega1)/(mu1l1*mu1l2)) : 0.0;
   const double K5_38 = use5 ? ((-0.044194173824159216*omega1)/(mu1l1*mu1l2)) : 0.0;
-  const double *h1_1p = reinterpret_cast<const double*>(h1[1]);
-  const double *h1_2p = reinterpret_cast<const double*>(h1[2]);
-  const double *h1_3p = reinterpret_cast<const double*>(h1[3]);
-  const double *h1_4p = reinterpret_cast<const double*>(h1[4]);
-  const double *h1_5p = reinterpret_cast<const double*>(h1[5]);
-  const double *h1_6p = reinterpret_cast<const double*>(h1[6]);
-  const double *h1_7p = reinterpret_cast<const double*>(h1[7]);
-  const double *h1_8p = reinterpret_cast<const double*>(h1[8]);
-  const double *h1_9p = reinterpret_cast<const double*>(h1[9]);
-  const double *h1_10p = reinterpret_cast<const double*>(h1[10]);
-  const double *dh1_4p = reinterpret_cast<const double*>(dh1[4]);
-  const double *dh1_5p = reinterpret_cast<const double*>(dh1[5]);
-  const double *dh1_6p = reinterpret_cast<const double*>(dh1[6]);
-  const double *dh1_7p = reinterpret_cast<const double*>(dh1[7]);
-  const double *dh1_8p = reinterpret_cast<const double*>(dh1[8]);
-  const double *dh1_9p = reinterpret_cast<const double*>(dh1[9]);
-  const double *dh1_10p = reinterpret_cast<const double*>(dh1[10]);
-  const double *ddh1_7p = reinterpret_cast<const double*>(ddh1[7]);
-  const double *ddh1_10p = reinterpret_cast<const double*>(ddh1[10]);
-  const double *h2_1p = reinterpret_cast<const double*>(h2[1]);
-  const double *h2_2p = reinterpret_cast<const double*>(h2[2]);
-  const double *h2_3p = reinterpret_cast<const double*>(h2[3]);
-  const double *h2_4p = reinterpret_cast<const double*>(h2[4]);
-  const double *h2_5p = reinterpret_cast<const double*>(h2[5]);
-  const double *h2_6p = reinterpret_cast<const double*>(h2[6]);
-  const double *h2_7p = reinterpret_cast<const double*>(h2[7]);
-  const double *h2_8p = reinterpret_cast<const double*>(h2[8]);
-  const double *h2_9p = reinterpret_cast<const double*>(h2[9]);
-  const double *h2_10p = reinterpret_cast<const double*>(h2[10]);
-  const double *dh2_4p = reinterpret_cast<const double*>(dh2[4]);
-  const double *dh2_5p = reinterpret_cast<const double*>(dh2[5]);
-  const double *dh2_6p = reinterpret_cast<const double*>(dh2[6]);
-  const double *dh2_7p = reinterpret_cast<const double*>(dh2[7]);
-  const double *dh2_8p = reinterpret_cast<const double*>(dh2[8]);
-  const double *dh2_9p = reinterpret_cast<const double*>(dh2[9]);
-  const double *dh2_10p = reinterpret_cast<const double*>(dh2[10]);
-  const double *ddh2_7p = reinterpret_cast<const double*>(ddh2[7]);
-  const double *ddh2_10p = reinterpret_cast<const double*>(ddh2[10]);
-  double *Gd0 = reinterpret_cast<double*>(G[0]);
-  double *Gd1 = reinterpret_cast<double*>(G[1]);
-  double *Gd2 = reinterpret_cast<double*>(G[2]);
-  double *Gd3 = reinterpret_cast<double*>(G[3]);
-  double *Gd4 = reinterpret_cast<double*>(G[4]);
-  double *Gd5 = reinterpret_cast<double*>(G[5]);
+  const double *__restrict h1_1re = h1.re[1], *__restrict h1_1im = h1.im[1];
+  const double *__restrict h1_2re = h1.re[2], *__restrict h1_2im = h1.im[2];
+  const double *__restrict h1_3re = h1.re[3], *__restrict h1_3im = h1.im[3];
+  const double *__restrict h1_4re = h1.re[4], *__restrict h1_4im = h1.im[4];
+  const double *__restrict h1_5re = h1.re[5], *__restrict h1_5im = h1.im[5];
+  const double *__restrict h1_6re = h1.re[6], *__restrict h1_6im = h1.im[6];
+  const double *__restrict h1_7re = h1.re[7], *__restrict h1_7im = h1.im[7];
+  const double *__restrict h1_8re = h1.re[8], *__restrict h1_8im = h1.im[8];
+  const double *__restrict h1_9re = h1.re[9], *__restrict h1_9im = h1.im[9];
+  const double *__restrict h1_10re = h1.re[10], *__restrict h1_10im = h1.im[10];
+  const double *__restrict dh1_4re = dh1.re[4], *__restrict dh1_4im = dh1.im[4];
+  const double *__restrict dh1_5re = dh1.re[5], *__restrict dh1_5im = dh1.im[5];
+  const double *__restrict dh1_6re = dh1.re[6], *__restrict dh1_6im = dh1.im[6];
+  const double *__restrict dh1_7re = dh1.re[7], *__restrict dh1_7im = dh1.im[7];
+  const double *__restrict dh1_8re = dh1.re[8], *__restrict dh1_8im = dh1.im[8];
+  const double *__restrict dh1_9re = dh1.re[9], *__restrict dh1_9im = dh1.im[9];
+  const double *__restrict dh1_10re = dh1.re[10], *__restrict dh1_10im = dh1.im[10];
+  const double *__restrict ddh1_7re = ddh1.re[7], *__restrict ddh1_7im = ddh1.im[7];
+  const double *__restrict ddh1_10re = ddh1.re[10], *__restrict ddh1_10im = ddh1.im[10];
+  const double *__restrict h2_1re = h2.re[1], *__restrict h2_1im = h2.im[1];
+  const double *__restrict h2_2re = h2.re[2], *__restrict h2_2im = h2.im[2];
+  const double *__restrict h2_3re = h2.re[3], *__restrict h2_3im = h2.im[3];
+  const double *__restrict h2_4re = h2.re[4], *__restrict h2_4im = h2.im[4];
+  const double *__restrict h2_5re = h2.re[5], *__restrict h2_5im = h2.im[5];
+  const double *__restrict h2_6re = h2.re[6], *__restrict h2_6im = h2.im[6];
+  const double *__restrict h2_7re = h2.re[7], *__restrict h2_7im = h2.im[7];
+  const double *__restrict h2_8re = h2.re[8], *__restrict h2_8im = h2.im[8];
+  const double *__restrict h2_9re = h2.re[9], *__restrict h2_9im = h2.im[9];
+  const double *__restrict h2_10re = h2.re[10], *__restrict h2_10im = h2.im[10];
+  const double *__restrict dh2_4re = dh2.re[4], *__restrict dh2_4im = dh2.im[4];
+  const double *__restrict dh2_5re = dh2.re[5], *__restrict dh2_5im = dh2.im[5];
+  const double *__restrict dh2_6re = dh2.re[6], *__restrict dh2_6im = dh2.im[6];
+  const double *__restrict dh2_7re = dh2.re[7], *__restrict dh2_7im = dh2.im[7];
+  const double *__restrict dh2_8re = dh2.re[8], *__restrict dh2_8im = dh2.im[8];
+  const double *__restrict dh2_9re = dh2.re[9], *__restrict dh2_9im = dh2.im[9];
+  const double *__restrict dh2_10re = dh2.re[10], *__restrict dh2_10im = dh2.im[10];
+  const double *__restrict ddh2_7re = ddh2.re[7], *__restrict ddh2_7im = ddh2.im[7];
+  const double *__restrict ddh2_10re = ddh2.re[10], *__restrict ddh2_10im = ddh2.im[10];
+  double *__restrict Gr0 = Gr[0], *__restrict Gi0 = Gi[0];
+  double *__restrict Gr1 = Gr[1], *__restrict Gi1 = Gi[1];
+  double *__restrict Gr2 = Gr[2], *__restrict Gi2 = Gi[2];
+  double *__restrict Gr3 = Gr[3], *__restrict Gi3 = Gi[3];
+  double *__restrict Gr4 = Gr[4], *__restrict Gi4 = Gi[4];
+  double *__restrict Gr5 = Gr[5], *__restrict Gi5 = Gi[5];
   (void) fp_grid; (void) Omega;
 #pragma omp simd
   for (size_t j = jb; j < je; ++j) {
@@ -239,44 +239,44 @@ void R2G_10(const double M, const double r0,
     const double R_rm2_fm1 = rinv*rinv*finv;
     const double R_rm2_f0 = rinv*rinv*1.0;
     const double R_rm2_f1 = rinv*rinv*f;
-    const double h1_1_r = h1_1p[2*j], h1_1_i = h1_1p[2*j+1];
-    const double h1_2_r = h1_2p[2*j], h1_2_i = h1_2p[2*j+1];
-    const double h1_3_r = h1_3p[2*j], h1_3_i = h1_3p[2*j+1];
-    const double h1_4_r = h1_4p[2*j], h1_4_i = h1_4p[2*j+1];
-    const double h1_5_r = h1_5p[2*j], h1_5_i = h1_5p[2*j+1];
-    const double h1_6_r = h1_6p[2*j], h1_6_i = h1_6p[2*j+1];
-    const double h1_7_r = h1_7p[2*j], h1_7_i = h1_7p[2*j+1];
-    const double h1_8_r = h1_8p[2*j], h1_8_i = h1_8p[2*j+1];
-    const double h1_9_r = h1_9p[2*j], h1_9_i = h1_9p[2*j+1];
-    const double h1_10_r = h1_10p[2*j], h1_10_i = h1_10p[2*j+1];
-    const double dh1_4_r = dh1_4p[2*j], dh1_4_i = dh1_4p[2*j+1];
-    const double dh1_5_r = dh1_5p[2*j], dh1_5_i = dh1_5p[2*j+1];
-    const double dh1_6_r = dh1_6p[2*j], dh1_6_i = dh1_6p[2*j+1];
-    const double dh1_7_r = dh1_7p[2*j], dh1_7_i = dh1_7p[2*j+1];
-    const double dh1_8_r = dh1_8p[2*j], dh1_8_i = dh1_8p[2*j+1];
-    const double dh1_9_r = dh1_9p[2*j], dh1_9_i = dh1_9p[2*j+1];
-    const double dh1_10_r = dh1_10p[2*j], dh1_10_i = dh1_10p[2*j+1];
-    const double ddh1_7_r = ddh1_7p[2*j], ddh1_7_i = ddh1_7p[2*j+1];
-    const double ddh1_10_r = ddh1_10p[2*j], ddh1_10_i = ddh1_10p[2*j+1];
-    const double h2_1_r = h2_1p[2*j], h2_1_i = h2_1p[2*j+1];
-    const double h2_2_r = h2_2p[2*j], h2_2_i = h2_2p[2*j+1];
-    const double h2_3_r = h2_3p[2*j], h2_3_i = h2_3p[2*j+1];
-    const double h2_4_r = h2_4p[2*j], h2_4_i = h2_4p[2*j+1];
-    const double h2_5_r = h2_5p[2*j], h2_5_i = h2_5p[2*j+1];
-    const double h2_6_r = h2_6p[2*j], h2_6_i = h2_6p[2*j+1];
-    const double h2_7_r = h2_7p[2*j], h2_7_i = h2_7p[2*j+1];
-    const double h2_8_r = h2_8p[2*j], h2_8_i = h2_8p[2*j+1];
-    const double h2_9_r = h2_9p[2*j], h2_9_i = h2_9p[2*j+1];
-    const double h2_10_r = h2_10p[2*j], h2_10_i = h2_10p[2*j+1];
-    const double dh2_4_r = dh2_4p[2*j], dh2_4_i = dh2_4p[2*j+1];
-    const double dh2_5_r = dh2_5p[2*j], dh2_5_i = dh2_5p[2*j+1];
-    const double dh2_6_r = dh2_6p[2*j], dh2_6_i = dh2_6p[2*j+1];
-    const double dh2_7_r = dh2_7p[2*j], dh2_7_i = dh2_7p[2*j+1];
-    const double dh2_8_r = dh2_8p[2*j], dh2_8_i = dh2_8p[2*j+1];
-    const double dh2_9_r = dh2_9p[2*j], dh2_9_i = dh2_9p[2*j+1];
-    const double dh2_10_r = dh2_10p[2*j], dh2_10_i = dh2_10p[2*j+1];
-    const double ddh2_7_r = ddh2_7p[2*j], ddh2_7_i = ddh2_7p[2*j+1];
-    const double ddh2_10_r = ddh2_10p[2*j], ddh2_10_i = ddh2_10p[2*j+1];
+    const double h1_1_r = h1_1re[j], h1_1_i = h1_1im[j];
+    const double h1_2_r = h1_2re[j], h1_2_i = h1_2im[j];
+    const double h1_3_r = h1_3re[j], h1_3_i = h1_3im[j];
+    const double h1_4_r = h1_4re[j], h1_4_i = h1_4im[j];
+    const double h1_5_r = h1_5re[j], h1_5_i = h1_5im[j];
+    const double h1_6_r = h1_6re[j], h1_6_i = h1_6im[j];
+    const double h1_7_r = h1_7re[j], h1_7_i = h1_7im[j];
+    const double h1_8_r = h1_8re[j], h1_8_i = h1_8im[j];
+    const double h1_9_r = h1_9re[j], h1_9_i = h1_9im[j];
+    const double h1_10_r = h1_10re[j], h1_10_i = h1_10im[j];
+    const double dh1_4_r = dh1_4re[j], dh1_4_i = dh1_4im[j];
+    const double dh1_5_r = dh1_5re[j], dh1_5_i = dh1_5im[j];
+    const double dh1_6_r = dh1_6re[j], dh1_6_i = dh1_6im[j];
+    const double dh1_7_r = dh1_7re[j], dh1_7_i = dh1_7im[j];
+    const double dh1_8_r = dh1_8re[j], dh1_8_i = dh1_8im[j];
+    const double dh1_9_r = dh1_9re[j], dh1_9_i = dh1_9im[j];
+    const double dh1_10_r = dh1_10re[j], dh1_10_i = dh1_10im[j];
+    const double ddh1_7_r = ddh1_7re[j], ddh1_7_i = ddh1_7im[j];
+    const double ddh1_10_r = ddh1_10re[j], ddh1_10_i = ddh1_10im[j];
+    const double h2_1_r = h2_1re[j], h2_1_i = h2_1im[j];
+    const double h2_2_r = h2_2re[j], h2_2_i = h2_2im[j];
+    const double h2_3_r = h2_3re[j], h2_3_i = h2_3im[j];
+    const double h2_4_r = h2_4re[j], h2_4_i = h2_4im[j];
+    const double h2_5_r = h2_5re[j], h2_5_i = h2_5im[j];
+    const double h2_6_r = h2_6re[j], h2_6_i = h2_6im[j];
+    const double h2_7_r = h2_7re[j], h2_7_i = h2_7im[j];
+    const double h2_8_r = h2_8re[j], h2_8_i = h2_8im[j];
+    const double h2_9_r = h2_9re[j], h2_9_i = h2_9im[j];
+    const double h2_10_r = h2_10re[j], h2_10_i = h2_10im[j];
+    const double dh2_4_r = dh2_4re[j], dh2_4_i = dh2_4im[j];
+    const double dh2_5_r = dh2_5re[j], dh2_5_i = dh2_5im[j];
+    const double dh2_6_r = dh2_6re[j], dh2_6_i = dh2_6im[j];
+    const double dh2_7_r = dh2_7re[j], dh2_7_i = dh2_7im[j];
+    const double dh2_8_r = dh2_8re[j], dh2_8_i = dh2_8im[j];
+    const double dh2_9_r = dh2_9re[j], dh2_9_i = dh2_9im[j];
+    const double dh2_10_r = dh2_10re[j], dh2_10_i = dh2_10im[j];
+    const double ddh2_7_r = ddh2_7re[j], ddh2_7_i = ddh2_7im[j];
+    const double ddh2_10_r = ddh2_10re[j], ddh2_10_i = ddh2_10im[j];
     const double P_h1_1_h2_1_r = h1_1_r*h2_1_r - h1_1_i*h2_1_i, P_h1_1_h2_1_i = h1_1_r*h2_1_i + h1_1_i*h2_1_r;
     const double P_h1_1_h2_2_r = h1_1_r*h2_2_r - h1_1_i*h2_2_i, P_h1_1_h2_2_i = h1_1_r*h2_2_i + h1_1_i*h2_2_r;
     const double P_h1_1_h2_4_r = h1_1_r*h2_4_r - h1_1_i*h2_4_i, P_h1_1_h2_4_i = h1_1_r*h2_4_i + h1_1_i*h2_4_r;
@@ -469,7 +469,7 @@ void R2G_10(const double M, const double r0,
         const double br = K0_1*P_h1_5_h2_7_r + K0_2*P_h1_7_h2_7_r + K0_1*P_h1_9_h2_10_r + K0_2*P_h1_10_h2_10_r;
         const double bi = K0_1*P_h1_5_h2_7_i + K0_2*P_h1_7_h2_7_i + K0_1*P_h1_9_h2_10_i + K0_2*P_h1_10_h2_10_i;
         gr += R_rm4_f0*(ar - bi); gi += R_rm4_f0*(ai + br); }
-      Gd0[2*j] += gr; Gd0[2*j+1] += gi;
+      Gr0[j] += gr; Gi0[j] += gi;
     }
     {
       double gr = 0.0, gi = 0.0;
@@ -543,7 +543,7 @@ void R2G_10(const double M, const double r0,
         const double br = K1_22*P_h1_1_ddh2_7_r;
         const double bi = K1_22*P_h1_1_ddh2_7_i;
         gr += R_rm2_f0*(ar - bi); gi += R_rm2_f0*(ai + br); }
-      Gd1[2*j] += gr; Gd1[2*j+1] += gi;
+      Gr1[j] += gr; Gi1[j] += gi;
     }
     {
       double gr = 0.0, gi = 0.0;
@@ -587,7 +587,7 @@ void R2G_10(const double M, const double r0,
         const double br = K2_6*P_dh1_4_dh2_4_r + K2_19*P_dh1_5_dh2_4_r + K2_17*P_dh1_4_dh2_5_r + K2_13*P_dh1_8_dh2_8_r + K2_17*P_dh1_9_dh2_8_r + K2_19*P_dh1_8_dh2_9_r;
         const double bi = K2_6*P_dh1_4_dh2_4_i + K2_19*P_dh1_5_dh2_4_i + K2_17*P_dh1_4_dh2_5_i + K2_13*P_dh1_8_dh2_8_i + K2_17*P_dh1_9_dh2_8_i + K2_19*P_dh1_8_dh2_9_i;
         gr += R_rm2_f0*(ar - bi); gi += R_rm2_f0*(ai + br); }
-      Gd2[2*j] += gr; Gd2[2*j+1] += gi;
+      Gr2[j] += gr; Gi2[j] += gi;
     }
     {
       double gr = 0.0, gi = 0.0;
@@ -596,7 +596,7 @@ void R2G_10(const double M, const double r0,
         const double br = K3_1*P_h1_7_h2_5_r + K3_2*P_h1_7_h2_7_r + K3_1*P_h1_10_h2_9_r + K3_2*P_h1_10_h2_10_r;
         const double bi = K3_1*P_h1_7_h2_5_i + K3_2*P_h1_7_h2_7_i + K3_1*P_h1_10_h2_9_i + K3_2*P_h1_10_h2_10_i;
         gr += R_rm4_f0*(ar - bi); gi += R_rm4_f0*(ai + br); }
-      Gd3[2*j] += gr; Gd3[2*j+1] += gi;
+      Gr3[j] += gr; Gi3[j] += gi;
     }
     {
       double gr = 0.0, gi = 0.0;
@@ -670,7 +670,7 @@ void R2G_10(const double M, const double r0,
         const double br = K4_19*P_h1_7_h2_6_r;
         const double bi = K4_19*P_h1_7_h2_6_i;
         gr += R_rm4_f1*(ar - bi); gi += R_rm4_f1*(ai + br); }
-      Gd4[2*j] += gr; Gd4[2*j+1] += gi;
+      Gr4[j] += gr; Gi4[j] += gi;
     }
     {
       double gr = 0.0, gi = 0.0;
@@ -719,7 +719,7 @@ void R2G_10(const double M, const double r0,
         const double br = K5_20*P_dh1_4_dh2_4_r + K5_28*P_dh1_5_dh2_4_r + K5_17*P_dh1_4_dh2_5_r + K5_6*P_dh1_8_dh2_8_r + K5_17*P_dh1_9_dh2_8_r + K5_28*P_dh1_8_dh2_9_r;
         const double bi = K5_20*P_dh1_4_dh2_4_i + K5_28*P_dh1_5_dh2_4_i + K5_17*P_dh1_4_dh2_5_i + K5_6*P_dh1_8_dh2_8_i + K5_17*P_dh1_9_dh2_8_i + K5_28*P_dh1_8_dh2_9_i;
         gr += R_rm2_f0*(ar - bi); gi += R_rm2_f0*(ai + br); }
-      Gd5[2*j] += gr; Gd5[2*j+1] += gi;
+      Gr5[j] += gr; Gi5[j] += gi;
     }
   }
 }

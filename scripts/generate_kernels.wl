@@ -24,16 +24,18 @@
                 constants K (functions of l, m only) computed once per call, and each distinct
                 product X_a Y_b and power r^p f^q computed once per grid point.
 
-     real     : as factored, but written in explicit double arithmetic (real and imaginary
-                parts loaded from the interleaved complex arrays), branch-free (constants of
-                guarded-off couplings are zero), so that the grid-point loop can be vectorised.
+     real     : as factored, but written in explicit double arithmetic on the separate real
+                and imaginary planes of the fields (ModeBlock) and of the outputs G_k,
+                branch-free (constants of guarded-off couplings are zero), so that the
+                grid-point loop is vectorised across grid points.
+   Only the real form matches the current storage; the other two are kept in the git history.
 
    Usage: WolframKernel -script scripts/generate_kernels.wl [direct|factored|real] *)
 
 root = DirectoryName[$InputFileName] // ParentDirectory;
 form = SelectFirst[Join[$ScriptCommandLine, $CommandLine], MemberQ[{"direct", "factored", "real"}, #] &, "real"];
 Print["code form: ", form];
-If[! MemberQ[{"direct", "factored", "real"}, form], Print["unknown form ", form]; Abort[]];
+If[form =!= "real", Print["only the real form matches the current storage (separate real/imaginary planes); the direct and complex-factored forms are in the git history (commit 0bed18f)"]; Abort[]];
 
 Block[{Print}, << xAct`PerturbationEquations`];
 Print["PerturbationEquations ", xAct`PerturbationEquations`$Version];
@@ -131,7 +133,7 @@ Do[
                 "      { const double ar = " <> rsum[k, re, "_r"] <> ";\n        const double ai = " <> rsum[k, re, "_i"] <> ";\n" <>
                 "        const double br = " <> rsum[k, im, "_r"] <> ";\n        const double bi = " <> rsum[k, im, "_i"] <> ";\n" <>
                 "        gr += " <> rname[pq] <> "*(ar - bi); gi += " <> rname[pq] <> "*(ai + br); }\n"]], byR]] <>
-           "      Gd" <> ToString[k - 1] <> "[2*j] += gr; Gd" <> ToString[k - 1] <> "[2*j+1] += gi;\n    }\n"],
+           "      Gr" <> ToString[k - 1] <> "[j] += gr; Gi" <> ToString[k - 1] <> "[j] += gi;\n    }\n"],
          {k, Length[recs]}]];
     ];
     allcode = cDecl;
@@ -154,7 +156,7 @@ Do[
     "    const vector<double> &r_grid, const vector<double> &f_grid, const vector<double> &fp_grid,\n",
     "    const ModeBlock &h1, const ModeBlock &dh1, const ModeBlock &ddh1,\n",
     "    const ModeBlock &h2, const ModeBlock &dh2, const ModeBlock &ddh2,\n",
-    "    int l1, int m1, int l2, int m2, complex<double> *const *G, size_t jb, size_t je)\n{\n",
+    "    int l1, int m1, int l2, int m2, double *const *Gr, double *const *Gi, size_t jb, size_t je)\n{\n",
     "  const complex<double> I(0.0, 1.0);\n",
     "  const double Omega = sqrt(M/(r0*r0*r0));\n",
     "  const double omega1 = m1*Omega, omega2 = m2*Omega;\n",
@@ -166,12 +168,12 @@ Do[
     If[form === "real",
       StringJoin[Table["  const bool use" <> ToString[k - 1] <> " = (l1 >= " <> ToString[terms[[k, "req1"]]] <> " && l2 >= " <> ToString[terms[[k, "req2"]]] <> ");  /* spins (s3, s2, s1) = " <> ToString[terms[[k, "s"]]] <> " */\n", {k, Length[terms]}]] <>
       cDecl <>
-      StringJoin[("  const double *" <> fname[#] <> "p = reinterpret_cast<const double*>(" <> StringReplace[fname[#], "_" -> "["] <> "]);\n") & /@ fieldsF] <>
-      StringJoin[Table["  double *Gd" <> ToString[k - 1] <> " = reinterpret_cast<double*>(G[" <> ToString[k - 1] <> "]);\n", {k, Length[terms]}]] <>
+      StringJoin[Module[{b = StringSplit[fname[#], "_"]}, "  const double *__restrict " <> fname[#] <> "re = " <> b[[1]] <> ".re[" <> b[[2]] <> "], *__restrict " <> fname[#] <> "im = " <> b[[1]] <> ".im[" <> b[[2]] <> "];\n"] & /@ fieldsF] <>
+      StringJoin[Table["  double *__restrict Gr" <> ToString[k - 1] <> " = Gr[" <> ToString[k - 1] <> "], *__restrict Gi" <> ToString[k - 1] <> " = Gi[" <> ToString[k - 1] <> "];\n", {k, Length[terms]}]] <>
       "  (void) fp_grid; (void) Omega;\n#pragma omp simd\n  for (size_t j = jb; j < je; ++j) {\n" <>
       "    const double r = r_grid[j];\n    const double f = f_grid[j];\n    const double rinv = 1.0/r, finv = 1.0/f;\n    (void) rinv; (void) finv;\n" <>
       StringJoin[rdecl /@ rmons] <>
-      StringJoin[("    const double " <> fname[#] <> "_r = " <> fname[#] <> "p[2*j], " <> fname[#] <> "_i = " <> fname[#] <> "p[2*j+1];\n") & /@ fieldsF] <>
+      StringJoin[("    const double " <> fname[#] <> "_r = " <> fname[#] <> "re[j], " <> fname[#] <> "_i = " <> fname[#] <> "im[j];\n") & /@ fieldsF] <>
       StringJoin[("    const double " <> pname @@ # <> "_r = " <> fname[#[[1]]] <> "_r*" <> fname[#[[2]]] <> "_r - " <> fname[#[[1]]] <> "_i*" <> fname[#[[2]]] <> "_i, " <>
           pname @@ # <> "_i = " <> fname[#[[1]]] <> "_r*" <> fname[#[[2]]] <> "_i + " <> fname[#[[1]]] <> "_i*" <> fname[#[[2]]] <> "_r;\n") & /@ prods] <>
       body <> "  }\n}\n\n",
@@ -203,13 +205,14 @@ Do[
 
 header = StringJoin[
   "/* Generated by scripts/generate_kernels.wl: the d2R components split by coupling coefficient,\n",
-  " *   d2R_i = sum_k R2C_i(l3, m3, ...)[k] * G_ik,  G_ik from R2G_i (independent of l3, m3). */\n",
+  " *   d2R_i = sum_k R2C_i(l3, m3, ...)[k] * G_ik,  G_ik from R2G_i (independent of l3, m3),
+ *   returned as real (Gr) and imaginary (Gi) planes. */\n",
   "#pragma once\n#include <complex>\n#include <cstddef>\n#include <vector>\n#include \"modeblock.h\"\n\n",
   StringJoin[Table["void R2G_" <> ToString[i] <> "(const double M, const double r0,\n" <>
      "  const std::vector<double> &r_grid, const std::vector<double> &f_grid, const std::vector<double> &fp_grid,\n" <>
      "  const ModeBlock &h1, const ModeBlock &dh1, const ModeBlock &ddh1,\n" <>
      "  const ModeBlock &h2, const ModeBlock &dh2, const ModeBlock &ddh2,\n" <>
-     "  int l1, int m1, int l2, int m2, std::complex<double> *const *G, std::size_t jb, std::size_t je);\n" <>
+     "  int l1, int m1, int l2, int m2, double *const *Gr, double *const *Gi, std::size_t jb, std::size_t je);\n" <>
      "void R2C_" <> ToString[i] <> "(int l3, int m3, int l1, int m1, int l2, int m2, double *c);\n", {i, 1, 10}]],
   "\n/* number of coupling coefficients of each component (index 0 unused) */\n",
   "static const int R2_NC[11] = {0, ", StringRiffle[ToString /@ Table[nc[i], {i, 1, 10}], ", "], "};\n",

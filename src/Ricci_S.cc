@@ -32,7 +32,7 @@ const double M = 1.0;
 typedef void (*R2G_function)(const double, const double, const vector<double>&, const vector<double>&,
                              const vector<double>&, const ModeBlock&, const ModeBlock&, const ModeBlock&,
                              const ModeBlock&, const ModeBlock&, const ModeBlock&,
-                             int, int, int, int, complex<double> *const*, size_t, size_t);
+                             int, int, int, int, double *const*, double *const*, size_t, size_t);
 typedef void (*R2C_function)(int, int, int, int, int, int, double*);
 static const R2G_function R2G[11] = {nullptr, R2G_1, R2G_2, R2G_3, R2G_4, R2G_5, R2G_6, R2G_7, R2G_8, R2G_9, R2G_10};
 static const R2C_function R2C[11] = {nullptr, R2C_1, R2C_2, R2C_3, R2C_4, R2C_5, R2C_6, R2C_7, R2C_8, R2C_9, R2C_10};
@@ -105,20 +105,17 @@ int main(int argc, char* argv[])
     for (int k = 0; k < 3; ++k) { bA[k].reserve(N); bB[k].reserve(N); }
     ModeBlock A[3], B[3];
     vector<complex<double>> tmp1(N), tmp2(N);
-    vector<complex<double>> Gbuf(static_cast<size_t>(R2_NC_MAX)*N);
-    complex<double> *G[R2_NC_MAX];
-    for (int k = 0; k < R2_NC_MAX; ++k) G[k] = Gbuf.data() + static_cast<size_t>(k)*N;
+    GBuffer G(R2_NC_MAX, N);
     double c[R2_NC_MAX];
     /* d2R_i3 for one ordering of the two modes, written into out */
     auto eval = [&](const ModeBlock *X, int lx, int mx, const ModeBlock *Y, int ly, int my, int i3, int l3, int m3,
                     complex<double> *out) {
       const int K = R2_NC[i3];
-      for (int k = 0; k < K; ++k) fill(G[k], G[k] + N, complex<double>(0.0, 0.0));
-      R2G[i3](M, r0, r, f, fp, X[0], X[1], X[2], Y[0], Y[1], Y[2], lx, mx, ly, my, G, 0, N);
+      G.zero(K, 0, N);
+      R2G[i3](M, r0, r, f, fp, X[0], X[1], X[2], Y[0], Y[1], Y[2], lx, mx, ly, my, G.re(), G.im(), 0, N);
       R2C[i3](l3, m3, lx, mx, ly, my, c);
       for (size_t j = 0; j < N; ++j) {
-        complex<double> v = 0.0;
-        for (int k = 0; k < K; ++k) v += c[k]*G[k][j];
+        const complex<double> v = G.combine(K, c, j);
         out[j] = v;
       }
     };
