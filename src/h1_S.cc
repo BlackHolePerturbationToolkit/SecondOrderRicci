@@ -12,10 +12,7 @@
 #include <iostream>
 
 using namespace std;
-using boost::multi_array;
-typedef boost::multi_array_types::extent_range range;
-typedef boost::multi_array_types::index_range irange;
-typedef boost::multi_array<complex<double>,4> field_type;
+typedef Field field_type;
 
 const double M = 1.0;
 
@@ -34,24 +31,37 @@ void h1_S(const double &r0, const vector<double> &r, const vector<double> &f, co
   cout << "Grid size: [" << r.front() << ", " << r.back() << "] (" << N << " points)" << endl;
   cout << "Worldline: r_0 = " << r0  << endl;
 
-  /* Evaluate the perturbation on the grid */
-  h.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
-  dh.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
-  ddh.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
-
-  fill(h.data(), h.data() + h.num_elements(), 0.0);
-  fill(dh.data(), dh.data() + dh.num_elements(), 0.0);
-  fill(ddh.data(), ddh.data() + ddh.num_elements(), 0.0);
+  /* Evaluate the perturbation on the grid (packed storage: only the l = 1, m = 0 mode) */
+  h.init(l_max, N);
+  dh.init(l_max, N);
+  ddh.init(l_max, N);
 
   for(size_t j=0; j<N; ++j) {
     // i=8
-    h[8][l][m][j] = -8*pow(M_PI/3.,0.5)*pow(r[j],-2);
-    dh[8][l][m][j] = 16*pow(M_PI/3.,0.5)*pow(r[j],-3);
-    ddh[8][l][m][j] = -48*pow(M_PI/3.,0.5)*pow(r[j],-4);
+    h.slot(8, l, m)[j] = -8*pow(M_PI/3.,0.5)*pow(r[j],-2);
+    dh.slot(8, l, m)[j] = 16*pow(M_PI/3.,0.5)*pow(r[j],-3);
+    ddh.slot(8, l, m)[j] = -48*pow(M_PI/3.,0.5)*pow(r[j],-4);
 
     // i=9
-    h[9][l][m][j] = -16*pow(M_PI/3.,0.5)*pow(r[j],-3);
-    dh[9][l][m][j] = 48*pow(M_PI/3.,0.5)*pow(r[j],-4);
-    ddh[9][l][m][j] = -192*pow(M_PI/3.,0.5)*pow(r[j],-5);
+    h.slot(9, l, m)[j] = -16*pow(M_PI/3.,0.5)*pow(r[j],-3);
+    dh.slot(9, l, m)[j] = 48*pow(M_PI/3.,0.5)*pow(r[j],-4);
+    ddh.slot(9, l, m)[j] = -192*pow(M_PI/3.,0.5)*pow(r[j],-5);
+  }
+
+  /* The expressions above give the field in the convention of the original coupling code
+   * (Barack-Lousto a_il and 1/r factors included). The kernels generated from
+   * PerturbationEquations use the field without these factors: h -> h r / a_il. */
+  for (int i = 1; i <= 10; ++i) {
+    if (!Field::present(i, l, m)) continue;
+    double a = pow(2, -0.5);
+    if (i == 4 || i == 5 || i == 8 || i == 9) a *= pow(l*(l+1), -0.5);
+    if (i == 7 || i == 10) a *= pow((l-1)*l*(l+1)*(l+2), -0.5);
+    complex<double> *ph = h.slot(i, l, m), *pdh = dh.slot(i, l, m), *pddh = ddh.slot(i, l, m);
+    for (size_t j = 0; j < N; ++j) {
+      const complex<double> h0 = ph[j], d0 = pdh[j], dd0 = pddh[j];
+      ph[j] = h0*r[j]/a;
+      pdh[j] = (h0 + r[j]*d0)/a;
+      pddh[j] = (2.0*d0 + r[j]*dd0)/a;
+    }
   }
 }

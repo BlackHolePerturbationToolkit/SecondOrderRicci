@@ -12,10 +12,7 @@
 #include <iostream>
 
 using namespace std;
-using boost::multi_array;
-typedef boost::multi_array_types::extent_range range;
-typedef boost::multi_array_types::index_range irange;
-typedef boost::multi_array<complex<double>,4> field_type;
+typedef Field field_type;
 
 const double M = 1.0;
 
@@ -34,27 +31,23 @@ void h1_M(const double &r0, const vector<double> &r, const vector<double> &f, co
   cout << "Grid size: [" << r.front() << ", " << r.back() << "] (" << N << " points)" << endl;
   cout << "Worldline: r_0 = " << r0  << endl;
 
-  /* Evaluate the perturbation on the grid */
-  h.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
-  dh.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
-  ddh.resize(boost::extents[range(1,11)][l_max+1][range(-l_max,l_max+1)][N]);
-
-  fill(h.data(), h.data() + h.num_elements(), 0.0);
-  fill(dh.data(), dh.data() + dh.num_elements(), 0.0);
-  fill(ddh.data(), ddh.data() + ddh.num_elements(), 0.0);
+  /* Evaluate the perturbation on the grid (packed storage: only the l = 0, m = 0 mode) */
+  h.init(l_max, N);
+  dh.init(l_max, N);
+  ddh.init(l_max, N);
 
   for(size_t j=0; j<N; ++j) {
     // i=1
-    h[1][l][m][j] = (2*pow(M,-1)*pow(2*M_PI,0.5)*pow(r[j],-4)*(16*log((r[j]*pow(M,-1))/2.)*(M - r[j])*pow(M,3) - 
+    h.slot(1, l, m)[j] = (2*pow(M,-1)*pow(2*M_PI,0.5)*pow(r[j],-4)*(16*log((r[j]*pow(M,-1))/2.)*(M - r[j])*pow(M,3) - 
        2*(4*pow(M,2) - pow(r[j],2))*(-6*M*r[j] + 2*f[j]*(2*M - r[j])*r[j] + 5*pow(M,2) + 2*pow(r[j],2)) + 
        log(f[j])*(-16*r[j]*pow(M,3) + 24*pow(M,4) + M*f[j]*r[j]*(2*M*r[j] + 4*pow(M,2) + pow(r[j],2)) + 
           3*M*pow(r[j],3) - pow(r[j],4))))/3.;
-    dh[1][l][m][j] = (-2*pow(2*M_PI,0.5)*pow(f[j],-1)*pow(r[j],-6)*(32*r[j]*pow(M,3) - 48*pow(M,4) - 6*M*pow(r[j],3) + 
+    dh.slot(1, l, m)[j] = (-2*pow(2*M_PI,0.5)*pow(f[j],-1)*pow(r[j],-6)*(32*r[j]*pow(M,3) - 48*pow(M,4) - 6*M*pow(r[j],3) + 
        f[j]*r[j]*(8*f[j]*r[j]*(-2*M + r[j])*(6*M + r[j]) + 16*log(r[j]*pow(M,-1))*(4*M - 3*r[j])*pow(M,2) + 
           4*(31 + 6*log(4))*r[j]*pow(M,2) - 8*(15 + log(256))*pow(M,3) - 30*M*pow(r[j],2) - 4*pow(r[j],3) + 
           log(f[j])*(-52*r[j]*pow(M,2) + 88*pow(M,3) - 2*M*pow(r[j],2) + 
              f[j]*r[j]*(4*M*r[j] + 12*pow(M,2) + pow(r[j],2)) + 3*pow(r[j],3))) + 2*pow(r[j],4)))/3.;
-    ddh[1][l][m][j] = (4*pow(2*M_PI,0.5)*pow(f[j],-2)*pow(r[j],-8)*(2*M*(16*r[j]*pow(M,3) - 24*pow(M,4) - 3*M*pow(r[j],3) + pow(r[j],4)) + 
+    ddh.slot(1, l, m)[j] = (4*pow(2*M_PI,0.5)*pow(f[j],-2)*pow(r[j],-8)*(2*M*(16*r[j]*pow(M,3) - 24*pow(M,4) - 3*M*pow(r[j],3) + pow(r[j],4)) + 
        f[j]*r[j]*(f[j]*r[j]*(32*log((r[j]*pow(M,-1))/2.)*(5*M - 3*r[j])*pow(M,2) + 236*r[j]*pow(M,2) - 
              248*pow(M,3) + log(f[j])*(2*M - r[j])*(-2*M*r[j] + 104*pow(M,2) - 3*pow(r[j],2)) - 54*M*pow(r[j],2) + 
              f[j]*r[j]*(8*(6*M*r[j] - 24*pow(M,2) + pow(r[j],2)) + 
@@ -62,12 +55,12 @@ void h1_M(const double &r0, const vector<double> &r, const vector<double> &f, co
           2*(66*r[j]*pow(M,3) - 116*pow(M,4) + pow(M,2)*pow(r[j],2) - 6*M*pow(r[j],3) + pow(r[j],4)))))/3.;
 
     // i=3
-    h[3][l][m][j] = (2*pow(M,-1)*pow(2*M_PI,0.5)*pow(f[j],-1)*pow(r[j],-4)*
+    h.slot(3, l, m)[j] = (2*pow(M,-1)*pow(2*M_PI,0.5)*pow(f[j],-1)*pow(r[j],-4)*
      (16*log((r[j]*pow(M,-1))/2.)*(-2*M + r[j])*pow(M,3) + 
        f[j]*r[j]*(64*pow(M,3) + M*log(f[j])*(2*M*r[j] + 4*pow(M,2) + pow(r[j],2)) - 2*pow(r[j],3)) + 
        log(f[j])*(16*r[j]*pow(M,3) - 24*pow(M,4) - 3*M*pow(r[j],3) + pow(r[j],4)) + 
        2*(3*M*r[j] + 10*pow(M,2) + pow(r[j],2))*pow(-2*M + r[j],2)))/3.;
-    dh[3][l][m][j] = (-2*pow(2*M_PI,0.5)*pow(f[j],-2)*pow(r[j],-6)*(pow(f[j],2)*pow(r[j],2)*
+    dh.slot(3, l, m)[j] = (-2*pow(2*M_PI,0.5)*pow(f[j],-2)*pow(r[j],-6)*(pow(f[j],2)*pow(r[j],2)*
         (192*pow(M,2) + log(f[j])*(4*M*r[j] + 12*pow(M,2) + pow(r[j],2))) + 
        2*(2*M - r[j])*(-10*r[j]*pow(M,2) + (52 + 8*log(4))*pow(M,3) - 16*log(r[j]*pow(M,-1))*pow(M,3) - 
           3*M*pow(r[j],2) - pow(r[j],3)) + f[j]*r[j]*
@@ -75,7 +68,7 @@ void h1_M(const double &r0, const vector<double> &r, const vector<double> &f, co
           8*(43 + 8*log(4))*pow(M,3) + 6*M*pow(r[j],2) - 2*pow(r[j],3) - 
           3*log(f[j])*(-16*r[j]*pow(M,2) + 32*pow(M,3) + pow(r[j],3))) + 
        2*log(f[j])*(16*r[j]*pow(M,3) - 24*pow(M,4) - 3*M*pow(r[j],3) + pow(r[j],4))))/3.;
-    ddh[3][l][m][j] = (4*pow(2*M_PI,0.5)*pow(f[j],-3)*pow(r[j],-8)*(2*M*(2*M - r[j])*
+    ddh.slot(3, l, m)[j] = (4*pow(2*M_PI,0.5)*pow(f[j],-3)*pow(r[j],-8)*(2*M*(2*M - r[j])*
         (-22*r[j]*pow(M,2) + 4*(29 + log(256))*pow(M,3) - 32*log(r[j]*pow(M,-1))*pow(M,3) - 7*M*pow(r[j],2) - 
           pow(r[j],3)) + pow(f[j],3)*(384*pow(M,2) + log(f[j])*(6*M*r[j] + 24*pow(M,2) + pow(r[j],2)))*
         pow(r[j],3) + pow(f[j],2)*pow(r[j],2)*(-4*(101 + 12*log(4))*r[j]*pow(M,2) + 
@@ -87,15 +80,32 @@ void h1_M(const double &r0, const vector<double> &r, const vector<double> &f, co
           log(f[j])*(64*r[j]*pow(M,3) - 120*pow(M,4) - 6*M*pow(r[j],3) + pow(r[j],4)))))/3.;
 
     // i=6
-    h[6][l][m][j] = (-4*pow(M,-1)*pow(2*M_PI,0.5)*pow(r[j],-3)*(-4*r[j]*pow(M,2) + 4*(5 + log(4))*pow(M,3) - 
+    h.slot(6, l, m)[j] = (-4*pow(M,-1)*pow(2*M_PI,0.5)*pow(r[j],-3)*(-4*r[j]*pow(M,2) + 4*(5 + log(4))*pow(M,3) - 
        8*log(r[j]*pow(M,-1))*pow(M,3) - M*pow(r[j],2) + 4*f[j]*r[j]*(2*M*r[j] + 4*pow(M,2) + pow(r[j],2)) - 
        4*pow(r[j],3) + log(f[j])*(-8*pow(M,3) + pow(r[j],3))))/3.;
-    dh[6][l][m][j] = (4*pow(2*M_PI,0.5)*pow(f[j],-1)*pow(r[j],-5)*(16*pow(M,3) + 
+    dh.slot(6, l, m)[j] = (4*pow(2*M_PI,0.5)*pow(f[j],-1)*pow(r[j],-5)*(16*pow(M,3) + 
        f[j]*r[j]*(8*f[j]*r[j]*(4*M + r[j]) + 3*
            (-8*M*r[j] + 4*(3 + log(4))*pow(M,2) - 8*(log(f[j]) + log(r[j]*pow(M,-1)))*pow(M,2) - 3*pow(r[j],2))) - 
        2*pow(r[j],3)))/3.;
-    ddh[6][l][m][j] = (-8*pow(2*M_PI,0.5)*pow(f[j],-2)*pow(r[j],-7)*(16*pow(M,4) + 
+    ddh.slot(6, l, m)[j] = (-8*pow(2*M_PI,0.5)*pow(f[j],-2)*pow(r[j],-7)*(16*pow(M,4) + 
        f[j]*r[j]*(64*pow(M,3) + f[j]*r[j]*(-44*M*r[j] + 8*f[j]*r[j]*(6*M + r[j]) + 4*(13 + 6*log(4))*pow(M,2) - 
              48*(log(f[j]) + log(r[j]*pow(M,-1)))*pow(M,2) - 9*pow(r[j],2)) - 2*pow(r[j],3)) - 2*M*pow(r[j],3)))/3.;
+  }
+
+  /* The expressions above give the field in the convention of the original coupling code
+   * (Barack-Lousto a_il and 1/r factors included). The kernels generated from
+   * PerturbationEquations use the field without these factors: h -> h r / a_il. */
+  for (int i = 1; i <= 10; ++i) {
+    if (!Field::present(i, l, m)) continue;
+    double a = pow(2, -0.5);
+    if (i == 4 || i == 5 || i == 8 || i == 9) a *= pow(l*(l+1), -0.5);
+    if (i == 7 || i == 10) a *= pow((l-1)*l*(l+1)*(l+2), -0.5);
+    complex<double> *ph = h.slot(i, l, m), *pdh = dh.slot(i, l, m), *pddh = ddh.slot(i, l, m);
+    for (size_t j = 0; j < N; ++j) {
+      const complex<double> h0 = ph[j], d0 = pdh[j], dd0 = pddh[j];
+      ph[j] = h0*r[j]/a;
+      pdh[j] = (h0 + r[j]*d0)/a;
+      pddh[j] = (2.0*d0 + r[j]*dd0)/a;
+    }
   }
 }

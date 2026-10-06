@@ -10,13 +10,16 @@
 #include <complex>
 #include <iostream>
 #include <sstream>
+#include <limits>
 #include <boost/multi_array.hpp>
 #ifdef _OPENMP
 #  include <omp.h>
 #endif
+#include "field.h"
+#include "modeblock.h"
 #include "h1.h"
 #include "h1_M.h"
-#include "R2.h"
+#include "R2G.h"
 #include "utils.h"
 #include "h5wrapper.h"
 
@@ -26,6 +29,14 @@ typedef boost::multi_array_types::extent_range range;
 
 const double M = 1.0;
 
+typedef void (*R2G_function)(const double, const double, const vector<double>&, const vector<double>&,
+                             const vector<double>&, const ModeBlock&, const ModeBlock&, const ModeBlock&,
+                             const ModeBlock&, const ModeBlock&, const ModeBlock&,
+                             int, int, int, int, complex<double> *const*, size_t, size_t);
+typedef void (*R2C_function)(int, int, int, int, int, int, double*);
+static const R2G_function R2G[11] = {nullptr, R2G_1, R2G_2, R2G_3, R2G_4, R2G_5, R2G_6, R2G_7, R2G_8, R2G_9, R2G_10};
+static const R2C_function R2C[11] = {nullptr, R2C_1, R2C_2, R2C_3, R2C_4, R2C_5, R2C_6, R2C_7, R2C_8, R2C_9, R2C_10};
+
 int main(int argc, char* argv[])
 {
   cout << "Version: " << __GIT_VERSION << endl;
@@ -33,7 +44,6 @@ int main(int argc, char* argv[])
   string dir;
   int lmax;
   const int dlmax = 0;
-
   switch(argc) {
     case 2:
       dir = argv[1];
@@ -48,20 +58,21 @@ int main(int argc, char* argv[])
       exit(1);
   }
 
+  int num_threads = 1;
 #ifdef _OPENMP
-  int num_threads = omp_get_max_threads();
+  num_threads = omp_get_max_threads();
   cout << "Running with " << num_threads << " OpenMP threads" << endl;
 #endif
 
-  /* Read in first-order fields */
+  /* Read in first-order fields (B) and the mass perturbation (A) */
   vector<double> r, f, fp;
   double r0;
-  multi_array<complex<double>, 4> hA, dhA, ddhA, hB, dhB, ddhB;
-  read_h1(dir, r0, r, f, fp, hB, dhB, ddhB, lmax);
-  int h1lmax = hB[1].size()-1;
-
+  int r0i;
+  Field hA, dhA, ddhA, hB, dhB, ddhB;
+  int h1lmax = read_h1(dir, r0, r0i, r, f, fp, hB, dhB, ddhB, lmax);
   h1_M(r0, r, f, fp, hA, dhA, ddhA);
-  const int N = r.size();
+  lmax = min(lmax, h1lmax);
+  const size_t N = r.size();
 
   /* Compute the source */
   multi_array<complex<double>,4> src(boost::extents[range(1,11)][lmax+1][lmax+1][N]);
@@ -88,108 +99,78 @@ int main(int argc, char* argv[])
   int status = 0;
   const int status_frequency = 4*num_threads;
   const int num_modes = modes.size();
-#pragma omp parallel for
-  for(vector<ilm_mode>::iterator mode = modes.begin(); mode < modes.end(); mode++) {
-    int i3 = mode->i;
-    int l3 = mode->l;
-    int m3 = mode->m;
+#pragma omp parallel
+  {
+    ModeBuffer bA[3], bB[3];
+    for (int k = 0; k < 3; ++k) { bA[k].reserve(N); bB[k].reserve(N); }
+    ModeBlock A[3], B[3];
+    vector<complex<double>> tmp1(N), tmp2(N);
+    vector<complex<double>> Gbuf(static_cast<size_t>(R2_NC_MAX)*N);
+    complex<double> *G[R2_NC_MAX];
+    for (int k = 0; k < R2_NC_MAX; ++k) G[k] = Gbuf.data() + static_cast<size_t>(k)*N;
+    double c[R2_NC_MAX];
+    /* d2R_i3 for one ordering of the two modes, written into out */
+    auto eval = [&](const ModeBlock *X, int lx, int mx, const ModeBlock *Y, int ly, int my, int i3, int l3, int m3,
+                    complex<double> *out) {
+      const int K = R2_NC[i3];
+      for (int k = 0; k < K; ++k) fill(G[k], G[k] + N, complex<double>(0.0, 0.0));
+      R2G[i3](M, r0, r, f, fp, X[0], X[1], X[2], Y[0], Y[1], Y[2], lx, mx, ly, my, G, 0, N);
+      R2C[i3](l3, m3, lx, mx, ly, my, c);
+      for (size_t j = 0; j < N; ++j) {
+        complex<double> v = 0.0;
+        for (int k = 0; k < K; ++k) v += c[k]*G[k][j];
+        out[j] = v;
+      }
+    };
+#pragma omp for schedule(dynamic)
+    for(int im = 0; im < num_modes; ++im) {
+      const int i3 = modes[im].i, l3 = modes[im].l, m3 = modes[im].m;
+      complex<double> *out = &src[i3][l3][m3][0];
 
-    /* Sum over l1, l2, m1, m2 = m3-m1.
-     * The sum is done in the range l3-dlmax <= (l1,l2) <= l3+dlmax, within
-     * physical (l1,l2 >=0) and practical (l1,l2 <= lmax for the first order
-     * fields) constraints.*/
-    vector<complex<double>> tmp1(r.size(), 0.0);
-    vector<complex<double>> tmp2(r.size(), 0.0);
-    {
+      /* Sum over l2, m1, m2 = m3-m1 with l1 = 0 fixed (the mass perturbation), both
+       * orderings d2R[hA, hB] + d2R[hB, hA]. */
       int l1 = 0;
       for(int l2=max(abs(l3-l1),l3-dlmax); l2<=min(min(l3+l1, h1lmax),l3+dlmax); ++l2) {
         for(int m1=-l1; m1<=l1; ++m1) {
-          if(abs(m3 - m1) > l2)
+          const int m2 = m3 - m1;
+          if(abs(m2) > l2)
             continue;
-          switch(i3) {
-            case 1:
-              tmp1 = R2_1(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_1(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 2:
-              tmp1 = R2_2(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_2(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 3:
-              tmp1 = R2_3(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_3(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 4:
-              tmp1 = R2_4(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_4(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 5:
-              tmp1 = R2_5(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_5(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 6:
-              tmp1 = R2_6(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_6(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 7:
-              tmp1 = R2_7(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_7(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 8:
-              tmp1 = R2_8(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_8(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 9:
-              tmp1 = R2_9(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_9(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-            case 10:
-              tmp1 = R2_10(M, r0, r, f, fp, hA, dhA, ddhA, hB, dhB, ddhB, l3, m3, l1, m1, l2, m3-m1);
-              tmp2 = R2_10(M, r0, r, f, fp, hB, dhB, ddhB, hA, dhA, ddhA, l3, m3, l2, m3-m1, l1, m1);
-              break;
-          }
-          for(size_t j = 0; j < tmp1.size(); ++j)
-            src[i3][l3][m3][j] += tmp1[j] + tmp2[j];
+          bA[0].resolve(hA, l1, m1, 0, N, A[0]); bA[1].resolve(dhA, l1, m1, 0, N, A[1]); bA[2].resolve(ddhA, l1, m1, 0, N, A[2]);
+          bB[0].resolve(hB, l2, m2, 0, N, B[0]); bB[1].resolve(dhB, l2, m2, 0, N, B[1]); bB[2].resolve(ddhB, l2, m2, 0, N, B[2]);
+          eval(A, l1, m1, B, l2, m2, i3, l3, m3, tmp1.data());
+          eval(B, l2, m2, A, l1, m1, i3, l3, m3, tmp2.data());
+          for(size_t j = 0; j < N; ++j)
+            out[j] += tmp1[j] + tmp2[j];
         }
       }
-    }
 
 #pragma omp critical
-    {
-      if(++status % status_frequency == 0)
-        cout << "Finished " << status << " of " << num_modes << " modes" << endl;
+      {
+        if(++status % status_frequency == 0)
+          cout << "Finished " << status << " of " << num_modes << " modes" << endl;
+      }
     }
   }
   if(num_modes % status_frequency != 0)
     cout << "Finished " << status << " of " << num_modes << " modes" << endl;
-  
+
   /* Output result */
   cout << "Saving results" << endl;
   H5F src_h5("src_M.h5", H5F_ACC_TRUNC);
-  for(vector<ilm_mode>::iterator mode = modes.begin(); mode < modes.end(); mode++) {
-    int i = mode->i;
-    int l = mode->l;
-    int m = mode->m;
-
+  for(const ilm_mode &mode : modes) {
     multi_array<double,2> data(boost::extents[N][2]);
-
-    /* Second order source */
     stringstream srcds;
-    srcds << "src i=" << i << " l=" << l << " m=" << m;
-    for(int j=0; j<N; ++j) {
-      data[j][0] = real(src[i][l][m][j]);
-      data[j][1] = imag(src[i][l][m][j]);
+    srcds << "src i=" << mode.i << " l=" << mode.l << " m=" << mode.m;
+    for(size_t j=0; j<N; ++j) {
+      data[j][0] = real(src[mode.i][mode.l][mode.m][j]);
+      data[j][1] = imag(src[mode.i][mode.l][mode.m][j]);
     }
     src_h5.write_dataset(srcds.str(), data);
   }
-  /* Grid coordinates */
-  stringstream rds;
-  rds << "r";
   multi_array<double,1> rdata(boost::extents[N]);
-  for(int j=0; j<N; ++j) {
+  for(size_t j=0; j<N; ++j)
     rdata[j] = r[j];
-  }
-  src_h5.write_dataset(rds.str(), rdata);
+  src_h5.write_dataset("r", rdata);
   cout << "Done" << endl;
   return 0;
 }

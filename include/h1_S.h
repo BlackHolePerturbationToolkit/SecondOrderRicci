@@ -6,10 +6,12 @@
  *
  */
 
-#include <boost/multi_array.hpp>
+#include <complex>
+#include <vector>
+#include "field.h"
 
 void h1_S(const double &r0,
              const std::vector<double> &r, const std::vector<double> &f, const std::vector<double> &fp,
-             boost::multi_array<std::complex<double>,4> &h,
-             boost::multi_array<std::complex<double>,4> &dh,
-             boost::multi_array<std::complex<double>,4> &ddh);
+             Field &h,
+             Field &dh,
+             Field &ddh);

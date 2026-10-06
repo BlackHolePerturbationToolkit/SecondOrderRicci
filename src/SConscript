@@ -1,3 +1,4 @@
+import os
 import sys
 from subprocess import Popen, CalledProcessError, PIPE
 
@@ -24,15 +25,19 @@ env['LIBS']     = ['gsl', 'gslcblas', 'm', 'hdf5']
 env['LIBPATH']  = ['/usr/local/lib/', '/usr/lib/x86_64-linux-gnu/hdf5/serial/']
 env['LINKFLAGS']= ['-fopenmp']
 env['CPPPATH']  = ['/usr/local/include', '/usr/include/hdf5/serial', '../include']
+# Homebrew library and include paths when present (macOS); choose the compiler with `scons CXX=...`
+for prefix in ['/opt/homebrew']:
+  if os.path.isdir(prefix):
+    env.Prepend(LIBPATH=[prefix + '/lib'], CPPPATH=[prefix + '/include'])
 env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-g',
                    '-Wall', '-Wno-unused-local-typedefs', '-DH5_USE_110_API',
                    '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
-env['CXX']      = 'g++'
+env['CXX']      = ARGUMENTS.get('CXX', 'g++')
 
 # Common source files
-sources = ['Coupling.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc',
-           'R2_1.cc', 'R2_2.cc', 'R2_3.cc', 'R2_4.cc', 'R2_5.cc',
-           'R2_6.cc', 'R2_7.cc', 'R2_8.cc', 'R2_9.cc', 'R2_10.cc']
+sources = ['Coupling.cc', 'field.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc',
+           'R2G_1.cc', 'R2G_2.cc', 'R2G_3.cc', 'R2G_4.cc', 'R2G_5.cc',
+           'R2G_6.cc', 'R2G_7.cc', 'R2G_8.cc', 'R2G_9.cc', 'R2G_10.cc']
 
 # Main coupling code
 sources_Ricci = sources + ['Ricci.cc']
