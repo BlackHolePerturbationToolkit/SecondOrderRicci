@@ -17,9 +17,23 @@
    original, and 0.4.0 normalises it 4x smaller than 0.3.0 (verified numerically against the
    original code: all components and modes agree to ~1e-14 after scaling).
 
-   Usage: wolframscript -file scripts/generate_kernels.wl   (run from the repository root) *)
+   Code forms (optional argument, default "real"):
+     direct   : each G_ik written as the (nested) expression from PerturbationEquations;
+     factored : each G_ik expanded as  sum_{p,q} r^p f^q sum_{a,b} K_{k,a,b,p,q} X_a Y_b,  with
+                X_a, Y_b the fields of the two modes (the operator is bilinear in them), the
+                constants K (functions of l, m only) computed once per call, and each distinct
+                product X_a Y_b and power r^p f^q computed once per grid point.
+
+     real     : as factored, but written in explicit double arithmetic (real and imaginary
+                parts loaded from the interleaved complex arrays), branch-free (constants of
+                guarded-off couplings are zero), so that the grid-point loop can be vectorised.
+
+   Usage: WolframKernel -script scripts/generate_kernels.wl [direct|factored|real] *)
 
 root = DirectoryName[$InputFileName] // ParentDirectory;
+form = SelectFirst[Join[$ScriptCommandLine, $CommandLine], MemberQ[{"direct", "factored", "real"}, #] &, "real"];
+Print["code form: ", form];
+If[! MemberQ[{"direct", "factored", "real"}, form], Print["unknown form ", form]; Abort[]];
 
 Block[{Print}, << xAct`PerturbationEquations`];
 Print["PerturbationEquations ", xAct`PerturbationEquations`$Version];
@@ -44,6 +58,22 @@ toC[expr_] := StringReplace[StringReplace[ToString[CForm[expr /. {\[Omega]1 -> o
 
 spinOf[arg_] := First[Cases[arg, LI[x_] :> x, {0, Infinity}]];
 
+(* --- factored form ------------------------------------------------------------------- *)
+xyRules = {PD[{1, -BL}][PD[{1, -BL}][hBS[LI[i_], LI[l1], LI[m1]]]] :> X[2, i], PD[{1, -BL}][hBS[LI[i_], LI[l1], LI[m1]]] :> X[1, i], hBS[LI[i_], LI[l1], LI[m1]] :> X[0, i],
+   PD[{1, -BL}][PD[{1, -BL}][hBS[LI[i_], LI[l2], LI[m2]]]] :> Y[2, i], PD[{1, -BL}][hBS[LI[i_], LI[l2], LI[m2]]] :> Y[1, i], hBS[LI[i_], LI[l2], LI[m2]] :> Y[0, i]};
+fname[X[s_, i_]] := {"h1", "dh1", "ddh1"}[[s + 1]] <> "_" <> ToString[i];
+fname[Y[s_, i_]] := {"h2", "dh2", "ddh2"}[[s + 1]] <> "_" <> ToString[i];
+pname[x_, y_] := "P_" <> fname[x] <> "_" <> fname[y];
+sgn[n_] := If[n < 0, "m" <> ToString[-n], ToString[n]];
+rname[{p_, q_}] := "R_r" <> sgn[p] <> "_f" <> sgn[q];
+powExpr[v_, n_] := Which[n == 0, "1.0", n > 0, StringRiffle[Table[v, {n}], "*"], True, StringRiffle[Table[v <> "inv", {-n}], "*"]];
+rdecl[{p_, q_}] := "    const double " <> rname[{p, q}] <> " = " <> powExpr["r", p] <> "*" <> powExpr["f", q] <> ";\n";
+(* expand one coefficient into {p, q, X, Y, constant} records *)
+expandTerms[coef_] := Module[{e = Expand[coef /. xyRules /. {r[] -> rr, f[r[]] -> ff}], ts},
+   ts = If[Head[e] === Plus, List @@ e, {e}];
+   Map[Function[t, Module[{x = First[Cases[t, _X, {0, Infinity}]], y = First[Cases[t, _Y, {0, Infinity}]]},
+       {Exponent[t, rr], Exponent[t, ff], x, y, t /. {_X -> 1, _Y -> 1, rr -> 1, ff -> 1}}]], ts]];
+
 (* --- per component ------------------------------------------------------------------ *)
 nc = <||>;
 Do[
@@ -61,7 +91,53 @@ Do[
     {c, cints}];
   nc[i] = Length[terms];
 
-  allcode = StringRiffle[#["code"] & /@ terms, " "];
+  If[form === "factored" || form === "real",
+    (* records per coupling, combined over identical (p, q, X, Y) *)
+    recs = Table[Normal[GroupBy[expandTerms[Coefficient[expr, cints[[k]]]], (#[[1 ;; 4]] &) -> (#[[5]] &), Total]], {k, Length[cints]}];
+    (* split every constant into real and imaginary parts (all symbols are real), so that
+       each term is a real x complex multiplication; the I is applied once per sum *)
+    reim[c_] := Module[{e = Expand[c]}, {e /. Complex[a_, b_] :> a, (e - (e /. Complex[a_, b_] :> a))/I // Expand}];
+    recs = Table[Flatten[(Function[rule, MapThread[If[#2 === 0, Nothing, Append[rule[[1]], #1] -> #2] &, {{"re", "im"}, reim[rule[[2]]]}]] /@ recs[[k]])], {k, Length[recs]}];
+    consts = DeleteDuplicates[Flatten[Table[Values[recs[[k]]], {k, Length[recs]}]]];
+    consts = DeleteCases[consts, 0];
+    cIndex = AssociationThread[consts -> Range[Length[consts]]];
+    If[! AllTrue[consts, FreeQ[N[# /. {\[Omega]1 -> 1.1, \[Omega]2 -> 1.3, M -> 1.7, mu[__] -> 1.9}], _Complex] &], Print["complex constant left in component ", i]; Abort[]];
+    cDecl = StringJoin[Table["  const double K" <> ToString[n] <> " = " <> toC[consts[[n]]] <> ";\n", {n, Length[consts]}]];
+    rmons = Union[Flatten[Table[#[[1 ;; 2]] & /@ Keys[recs[[k]]], {k, Length[recs]}], 1]];
+    prods = Union[Flatten[Table[#[[3 ;; 4]] & /@ Keys[recs[[k]]], {k, Length[recs]}], 1]];
+    fieldsF = Union[Flatten[prods]];
+    term[rule_] := "K" <> ToString[cIndex[rule[[2]]]] <> "*" <> pname @@ rule[[1, 3 ;; 4]];
+    body = StringJoin[Table[
+       Module[{byR = GroupBy[Normal[recs[[k]]], (#[[1, 1 ;; 2]] &)]},
+        "    if (use" <> ToString[k - 1] <> ") G[" <> ToString[k - 1] <> "][j] +=\n      " <>
+         StringRiffle[KeyValueMap[Function[{pq, rs},
+             Module[{re = Select[rs, #[[1, 5]] === "re" &], im = Select[rs, #[[1, 5]] === "im" &], sre, sim},
+              sre = If[re === {}, "", "(" <> StringRiffle[term /@ re, " + "] <> ")"];
+              sim = If[im === {}, "", "I*(" <> StringRiffle[term /@ im, " + "] <> ")"];
+              rname[pq] <> "*(" <> StringRiffle[DeleteCases[{sre, sim}, ""], " + "] <> ")"]], byR], "\n      + "] <> ";\n"],
+       {k, Length[recs]}]];
+    If[form === "real",
+      kconsts = Table[DeleteCases[DeleteDuplicates[Values[recs[[k]]]], 0], {k, Length[recs]}];
+      kIndex = Table[AssociationThread[kconsts[[k]] -> Range[Length[kconsts[[k]]]]], {k, Length[recs]}];
+      cDecl = StringJoin[Table["  const double K" <> ToString[k - 1] <> "_" <> ToString[n] <> " = use" <> ToString[k - 1] <> " ? (" <> toC[kconsts[[k, n]]] <> ") : 0.0;\n",
+          {k, Length[recs]}, {n, Length[kconsts[[k]]]}]];
+      rterm[k_, rule_, part_] := "K" <> ToString[k - 1] <> "_" <> ToString[kIndex[[k]][rule[[2]]]] <> "*" <> pname @@ rule[[1, 3 ;; 4]] <> part;
+      rsum[k_, rs_, part_] := If[rs === {}, "0.0", StringRiffle[rterm[k, #, part] & /@ rs, " + "]];
+      body = StringJoin[Table[
+         Module[{byR = GroupBy[Normal[recs[[k]]], (#[[1, 1 ;; 2]] &)], gr, gi},
+          "    {\n      double gr = 0.0, gi = 0.0;\n" <>
+           StringJoin[KeyValueMap[Function[{pq, rs},
+               Module[{re = Select[rs, #[[1, 5]] === "re" &], im = Select[rs, #[[1, 5]] === "im" &]},
+                "      { const double ar = " <> rsum[k, re, "_r"] <> ";\n        const double ai = " <> rsum[k, re, "_i"] <> ";\n" <>
+                "        const double br = " <> rsum[k, im, "_r"] <> ";\n        const double bi = " <> rsum[k, im, "_i"] <> ";\n" <>
+                "        gr += " <> rname[pq] <> "*(ar - bi); gi += " <> rname[pq] <> "*(ai + br); }\n"]], byR]] <>
+           "      Gd" <> ToString[k - 1] <> "[2*j] += gr; Gd" <> ToString[k - 1] <> "[2*j+1] += gi;\n    }\n"],
+         {k, Length[recs]}]];
+    ];
+    allcode = cDecl;
+  ,
+    allcode = StringRiffle[#["code"] & /@ terms, " "];
+  ];
   used[pat_] := Union[StringCases[allcode, pat]];
   fields = used[RegularExpression["\\b(ddh|dh|h)[12]_\\d+\\b"]];
   rpow = used[RegularExpression["\\b[rf]_\\d+\\b"]];
@@ -86,19 +162,42 @@ Do[
     "  const double mu2l1 = sqrt((l1-1.0)*(l1+2.0)), mu2l2 = sqrt((l2-1.0)*(l2+2.0));\n",
     "  const double mu3l1 = sqrt((l1-2.0)*(l1+3.0)), mu3l2 = sqrt((l2-2.0)*(l2+3.0));\n",
     StringJoin[("  const double " <> # <> " = " <> powDecl[#] <> ";\n") & /@ cpow],
+    If[form === "factored", cDecl, ""],
+    If[form === "real",
+      StringJoin[Table["  const bool use" <> ToString[k - 1] <> " = (l1 >= " <> ToString[terms[[k, "req1"]]] <> " && l2 >= " <> ToString[terms[[k, "req2"]]] <> ");  /* spins (s3, s2, s1) = " <> ToString[terms[[k, "s"]]] <> " */\n", {k, Length[terms]}]] <>
+      cDecl <>
+      StringJoin[("  const double *" <> fname[#] <> "p = reinterpret_cast<const double*>(" <> StringReplace[fname[#], "_" -> "["] <> "]);\n") & /@ fieldsF] <>
+      StringJoin[Table["  double *Gd" <> ToString[k - 1] <> " = reinterpret_cast<double*>(G[" <> ToString[k - 1] <> "]);\n", {k, Length[terms]}]] <>
+      "  (void) fp_grid; (void) Omega;\n#pragma omp simd\n  for (size_t j = jb; j < je; ++j) {\n" <>
+      "    const double r = r_grid[j];\n    const double f = f_grid[j];\n    const double rinv = 1.0/r, finv = 1.0/f;\n    (void) rinv; (void) finv;\n" <>
+      StringJoin[rdecl /@ rmons] <>
+      StringJoin[("    const double " <> fname[#] <> "_r = " <> fname[#] <> "p[2*j], " <> fname[#] <> "_i = " <> fname[#] <> "p[2*j+1];\n") & /@ fieldsF] <>
+      StringJoin[("    const double " <> pname @@ # <> "_r = " <> fname[#[[1]]] <> "_r*" <> fname[#[[2]]] <> "_r - " <> fname[#[[1]]] <> "_i*" <> fname[#[[2]]] <> "_i, " <>
+          pname @@ # <> "_i = " <> fname[#[[1]]] <> "_r*" <> fname[#[[2]]] <> "_i + " <> fname[#[[1]]] <> "_i*" <> fname[#[[2]]] <> "_r;\n") & /@ prods] <>
+      body <> "  }\n}\n\n",
+    StringJoin[
     StringJoin[Table["  const bool use" <> ToString[k - 1] <> " = (l1 >= " <> ToString[terms[[k, "req1"]]] <> " && l2 >= " <> ToString[terms[[k, "req2"]]] <> ");  /* spins (s3, s2, s1) = " <> ToString[terms[[k, "s"]]] <> " */\n", {k, Length[terms]}]],
     "  (void) fp_grid; (void) Omega;\n",
     "  for (size_t j = jb; j < je; ++j) {\n",
     "    const double r = r_grid[j];\n    const double f = f_grid[j];\n",
-    StringJoin[("    const double " <> # <> " = " <> powDecl[#] <> ";\n") & /@ rpow],
-    StringJoin[("    " <> fieldDecl[#] <> "\n") & /@ fields],
-    StringJoin[Table["    if (use" <> ToString[k - 1] <> ") G[" <> ToString[k - 1] <> "][j] += " <> terms[[k, "code"]] <> ";\n", {k, Length[terms]}]],
-    "  }\n}\n\n",
+    If[form === "factored",
+      StringJoin[
+        "    const double rinv = 1.0/r, finv = 1.0/f;\n    (void) rinv; (void) finv;\n",
+        StringJoin[rdecl /@ rmons],
+        StringJoin[("    const complex<double> " <> fname[#] <> " = " <> StringReplace[fname[#], "_" -> "["] <> "][j];\n") & /@ fieldsF],
+        StringJoin[("    const complex<double> " <> pname @@ # <> " = " <> fname[#[[1]]] <> "*" <> fname[#[[2]]] <> ";\n") & /@ prods],
+        body],
+      StringJoin[
+        StringJoin[("    const double " <> # <> " = " <> powDecl[#] <> ";\n") & /@ rpow],
+        StringJoin[("    " <> fieldDecl[#] <> "\n") & /@ fields],
+        StringJoin[Table["    if (use" <> ToString[k - 1] <> ") G[" <> ToString[k - 1] <> "][j] += " <> terms[[k, "code"]] <> ";\n", {k, Length[terms]}]]]],
+    "  }\n}\n\n"]],
     "void R2C_", ToString[i], "(int l3, int m3, int l1, int m1, int l2, int m2, double *c)\n{\n",
     StringJoin[Table["  c[" <> ToString[k - 1] <> "] = " <> scale <> "*Coupling(l3,m3," <> ToString[terms[[k, "s"]][[1]]] <> ",l2,m2," <> ToString[terms[[k, "s"]][[2]]] <> ",l1,m1," <> ToString[terms[[k, "s"]][[3]]] <> ");\n", {k, Length[terms]}]],
     "}\n"];
   Export[FileNameJoin[{root, "src", "R2G_" <> ToString[i] <> ".cc"}], src, "Text"];
-  Print["component ", i, ": ", Length[terms], " couplings, ", Length[fields], " field arrays, requirements ",
+  Print["component ", i, " (", form, "): ", Length[terms], " couplings, ", Length[fields], " field arrays, ",
+    If[form === "factored", ToString[Length[consts]] <> " constants, " <> ToString[Length[prods]] <> " products, " <> ToString[Length[rmons]] <> " r/f monomials, ", ""], "requirements ",
     ({#["req1"], #["req2"]} & /@ terms)],
   {i, 1, 10}];
 
