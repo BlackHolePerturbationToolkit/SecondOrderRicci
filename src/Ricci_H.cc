@@ -14,7 +14,10 @@
  *   h^8 = -sqrt(pi/3) 16 S1/r,  h^9 = -sqrt(pi/3) 32 M S1/r^2   (S1 = 1),
  * and only the terms d2R[hS, h] + d2R[h, hS] with hS that dipole are summed. Output src_H_S1.h5.
  *
- * Usage: Ricci_H <horizon coefficients> <r0> <h1 mode file (for the grid)> <rmax> <lmax> <lmax_out> [S1]
+ * The grid is either that of an h1 mode file (points r < rmax), or, with grid = log:N, N points
+ * with r - 2M logarithmically spaced between 1e-6 M and rmax - 2M.
+ *
+ * Usage: Ricci_H <horizon coefficients> <r0> <h1 mode file | log:N> <rmax> <lmax> <lmax_out> [S1]
  */
 #include <vector>
 #include <complex>
@@ -90,7 +93,7 @@ int main(int argc, char* argv[])
 {
   cout << "Version: " << __GIT_VERSION << endl;
   if (argc != 7 && !(argc == 8 && string(argv[7]) == "S1")) {
-    cout << "Usage: " << argv[0] << " <horizon coefficients> <r0> <h1 mode file (grid)> <rmax> <lmax> <lmax_out> [S1]" << endl;
+    cout << "Usage: " << argv[0] << " <horizon coefficients> <r0> <h1 mode file | log:N> <rmax> <lmax> <lmax_out> [S1]" << endl;
     exit(1);
   }
   const bool spin = (argc == 8);
@@ -104,7 +107,15 @@ int main(int argc, char* argv[])
 
   /* grid points r < rmax */
   vector<double> r, f, fp;
-  {
+  if (gridFile.compare(0, 4, "log:") == 0) {
+    const int n = atoi(gridFile.c_str() + 4);
+    const double x0 = 1e-6*M, x1 = rmax - 2.0*M;
+    assert(n >= 2 && x1 > x0);
+    for (int k = 0; k < n; ++k) {
+      const double x = x0*pow(x1/x0, k/(n - 1.0));
+      r.push_back(2.0*M + x); f.push_back(1.0 - 2.0*M/(2.0*M + x)); fp.push_back(2.0*M/((2.0*M + x)*(2.0*M + x)));
+    }
+  } else {
     H5F h5_file(gridFile, H5F_ACC_RDONLY);
     H5D dataset(h5_file, "grid");
     H5S dataspace(dataset);
