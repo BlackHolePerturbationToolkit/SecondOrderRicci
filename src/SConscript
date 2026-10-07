@@ -35,9 +35,8 @@ env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '
 env['CXX']      = ARGUMENTS.get('CXX', 'g++')
 
 # Common source files
-sources = ['Coupling.cc', 'field.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc',
-           'R2G_1.cc', 'R2G_2.cc', 'R2G_3.cc', 'R2G_4.cc', 'R2G_5.cc',
-           'R2G_6.cc', 'R2G_7.cc', 'R2G_8.cc', 'R2G_9.cc', 'R2G_10.cc']
+sources = ['Coupling.cc', 'field.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc', 'horizon.cc'] + \
+          ['R2G_%d.cc' % i for i in range(1, 11)] + ['R2V_%d.cc' % i for i in range(1, 11)]
 
 # Main coupling code
 sources_Ricci = sources + ['Ricci.cc']
@@ -56,12 +55,5 @@ sources_S = sources + ['Ricci_S.cc', 'h1_S.cc']
 executable_S = '../Ricci_S'
 
 Program(executable_S, sources_S)
-
-# Near-horizon coupling code (v slice, horizon expansion of the first-order modes)
-sources_H = ['Coupling.cc', 'field.cc', 'h5wrapper.cc', 'utils.cc'] + \
-            ['R2G_%d.cc' % i for i in range(1, 11)] + ['R2V_%d.cc' % i for i in range(1, 11)] + ['Ricci_H.cc']
-executable_H = '../Ricci_H'
-
-Program(executable_H, sources_H)
 
 Decider('MD5-timestamp')

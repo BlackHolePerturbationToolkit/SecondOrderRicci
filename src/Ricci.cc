@@ -35,6 +35,18 @@
  *   --l3-reuse               : parallel tasks are (i3, m3, radial chunk) (--chunks n per
  *                              (i3, m3); default chosen from the number of threads); works
  *                              with and without --adaptive.
+ *   --horizon <coeffs>       : near the horizon (r < --horizon-attach, default 2.01M) compute
+ *                              the source from the horizon expansion of the first-order modes
+ *                              with kernels regular there (include/horizon.h), summed over
+ *                              l1, l2 <= --horizon-lmax (default 20), instead of the t-slice sum,
+ *                              whose terms diverge there and cancel; and write the Taylor
+ *                              coefficients of order 0-2 in r - 2M of exp(i m Omega r*) d2R for
+ *                              this piece and for the spin coupling (S1) as datasets
+ *                              "horizon i= l= m=" and "horizon_S1 i= l= m=" (3 x 2, Re/Im).
+ *                              For d2R[h1ret, h1ret] (RetRet) only.
+ *   Ricci --horizon-only <coeffs> --r0 <r0> --lmax <lmax> [--horizon-lmax <l>]
+ *                            : only the horizon coefficients (no first-order field data
+ *                              needed), written to horizon.h5.
  */
 
 #include <vector>
@@ -56,6 +68,7 @@
 #include "utils.h"
 #include "h5wrapper.h"
 #include "accel.h"
+#include "horizon.h"
 
 using namespace std;
 using boost::multi_array;
@@ -106,9 +119,25 @@ int main(int argc, char* argv[])
   double adapt_tol = 1e-10, adapt_floor = 1e-6;
   int adapt_window = 21, adapt_confirm = 3, adapt_min_shells = 6;
   bool adapt_accel = true;
+  string horizon_file;           /* horizon expansion coefficients of the first-order modes */
+  bool horizon_only = false;
+  double horizon_attach = 2.01, horizon_r0 = 0.0;
+  int horizon_lmax = 20, horizon_lout = -1;
   for (int a = 1; a < argc; ++a) {
     string s = argv[a];
-    if (s == "--skip-interior" && a + 2 < argc) {
+    if (s == "--horizon" && a + 1 < argc) {
+      horizon_file = argv[++a];
+    } else if (s == "--horizon-only" && a + 1 < argc) {
+      horizon_file = argv[++a]; horizon_only = true;
+    } else if (s == "--horizon-attach" && a + 1 < argc) {
+      horizon_attach = atof(argv[++a]);
+    } else if (s == "--horizon-lmax" && a + 1 < argc) {
+      horizon_lmax = atoi(argv[++a]);
+    } else if (s == "--r0" && a + 1 < argc) {
+      horizon_r0 = atof(argv[++a]);
+    } else if (s == "--lmax" && a + 1 < argc) {
+      horizon_lout = atoi(argv[++a]);
+    } else if (s == "--skip-interior" && a + 2 < argc) {
       skip = true;
       skip_lo = atof(argv[++a]);
       skip_hi = atof(argv[++a]);
@@ -138,6 +167,42 @@ int main(int argc, char* argv[])
       pos.push_back(s);
     }
   }
+  /* output modes up to lmax */
+  auto mode_list = [](int lmax) {
+    vector<ilm_mode> modes;
+    for (int l3 = 0; l3 <= lmax; ++l3)
+      for (int m3 = 0; m3 <= l3; ++m3)
+        for (int i3 = 1; i3 <= 10; ++i3)
+          if (Field::present(i3, l3, m3)) modes.push_back(ilm_mode({i3, l3, m3}));
+    return modes;
+  };
+  /* horizon coefficients of the RetRet and S1 pieces, as datasets in h5 */
+  auto write_horizon = [&](H5F &h5, const HorizonData &hd, double r0, const vector<ilm_mode> &modes) {
+    for (auto piece : {HorizonData::Piece::RetRet, HorizonData::Piece::S1}) {
+      const auto c = hd.coefficients(piece, r0, modes);
+      for (size_t im = 0; im < modes.size(); ++im) {
+        multi_array<double,2> data(boost::extents[3][2]);
+        for (int n = 0; n < 3; ++n) { data[n][0] = c[im][n].real(); data[n][1] = c[im][n].imag(); }
+        stringstream ds;
+        ds << (piece == HorizonData::Piece::S1 ? "horizon_S1" : "horizon") << " i=" << modes[im].i << " l=" << modes[im].l << " m=" << modes[im].m;
+        h5.write_dataset(ds.str(), data);
+      }
+    }
+    cout << "Wrote the horizon coefficients of " << modes.size() << " modes (RetRet and S1)" << endl;
+  };
+  if (horizon_only) {
+    if (horizon_r0 <= 0.0 || horizon_lout < 0) {
+      cout << "Usage: " << argv[0] << " --horizon-only <coeffs> --r0 <r0> --lmax <lmax> [--horizon-lmax <l>]" << endl;
+      exit(1);
+    }
+    HorizonData hd;
+    hd.load(horizon_file, horizon_lmax);
+    H5F h5("horizon.h5", H5F_ACC_TRUNC);
+    write_horizon(h5, hd, horizon_r0, mode_list(horizon_lout));
+    cout << "Done" << endl;
+    return 0;
+  }
+
   string dirA, dirB;
   if (pos.size() == 1) {
     dirA = dirB = pos[0];
@@ -200,20 +265,25 @@ int main(int argc, char* argv[])
   } else {
     ranges.push_back({0, N});
   }
+  /* points left to the horizon expansion */
+  HorizonData horizon;
+  size_t jh = 0;
+  if (!horizon_file.empty()) {
+    horizon.load(horizon_file, horizon_lmax);
+    while (jh < N && r[jh] < horizon_attach) ++jh;
+    vector<Interval> clipped;
+    for (const Interval &iv : ranges)
+      if (iv.je > max(iv.jb, jh)) clipped.push_back({max(iv.jb, jh), iv.je});
+    ranges = clipped;
+    cout << "Near the horizon: " << jh << " grid points with r < " << horizon_attach
+         << " from the horizon expansion (first-order l <= " << horizon.lmax() << ")" << endl;
+  }
 
   /* Compute the source */
   multi_array<complex<double>,4> src(boost::extents[range(1,11)][lmax+1][lmax+1][N]);
   fill(src.data(), src.data() + src.num_elements(), 0.0);
 
-  vector<ilm_mode> modes;
-  for (int l3 = 0; l3 <= lmax; ++l3)
-    for (int m3 = 0; m3 <= l3; ++m3)
-      for (int i3 = 1; i3 <= 10; ++i3) {
-        if (((i3 <= 7) && isOdd(l3+m3)) || ((i3 > 7) && isEven(l3+m3))) continue;
-        if (((i3 == 4) || (i3 == 5) || (i3 == 8) || (i3 == 9)) && l3 < 1) continue;
-        if (((i3 == 7) || (i3 == 10)) && l3 < 2) continue;
-        modes.push_back(ilm_mode({i3, l3, m3}));
-      }
+  const vector<ilm_mode> modes = mode_list(lmax);
 
   cout << "Computing source: " << modes.size() << " (i,l,m) modes, l_max = " << lmax
        << ", delta l_max = " << dlmax << endl;
@@ -518,9 +588,21 @@ int main(int argc, char* argv[])
   if (num_modes % status_frequency != 0)
     cout << "Finished " << status << " of " << num_modes << " modes" << endl;
 
+  /* Near-horizon points: exp(i m Omega r*) d2R from the horizon expansion, back to the t slice */
+  if (jh > 0) {
+    const vector<double> rnear(r.begin(), r.begin() + jh);
+    const auto v = horizon.values(HorizonData::Piece::RetRet, r0, rnear, modes);
+    const double Omega = sqrt(M/(r0*r0*r0));
+    for (size_t im = 0; im < modes.size(); ++im)
+      for (size_t j = 0; j < jh; ++j)
+        src[modes[im].i][modes[im].l][modes[im].m][j] = v[im][j]*exp(complex<double>(0.0, -modes[im].m*Omega*rstar(r[j])));
+  }
+
   /* Output result */
   cout << "Saving results" << endl;
   H5F src_h5("src.h5", H5F_ACC_TRUNC);
+  if (!horizon_file.empty())
+    write_horizon(src_h5, horizon, r0, modes);
   for (const ilm_mode &mode : modes) {
     multi_array<double,2> data(boost::extents[N][2]);
     stringstream srcds;

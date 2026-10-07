@@ -22,6 +22,7 @@
 #include "R2G.h"
 #include "utils.h"
 #include "h5wrapper.h"
+#include "horizon.h"
 
 using namespace std;
 using boost::multi_array;
@@ -41,20 +42,32 @@ int main(int argc, char* argv[])
 {
   cout << "Version: " << __GIT_VERSION << endl;
 
-  string dir;
+  /* --horizon <coeffs> [--horizon-attach r] [--horizon-lmax l]: as in Ricci, the points
+   * r < r_attach (default 2.01M) from the horizon expansion of the first-order modes */
+  string dir, horizon_file;
+  double horizon_attach = 2.01;
+  int horizon_lmax = 20;
+  vector<string> pos;
+  for (int a = 1; a < argc; ++a) {
+    string s = argv[a];
+    if (s == "--horizon" && a + 1 < argc) horizon_file = argv[++a];
+    else if (s == "--horizon-attach" && a + 1 < argc) horizon_attach = atof(argv[++a]);
+    else if (s == "--horizon-lmax" && a + 1 < argc) horizon_lmax = atoi(argv[++a]);
+    else pos.push_back(s);
+  }
   int lmax;
   const int dlmax = 1;
-  switch(argc) {
-    case 2:
-      dir = argv[1];
+  switch(pos.size()) {
+    case 1:
+      dir = pos[0];
       lmax = std::numeric_limits<int>::max();
       break;
-    case 3:
-      dir = argv[1];
-      lmax = atoi(argv[2]) + dlmax;
+    case 2:
+      dir = pos[0];
+      lmax = atoi(pos[1].c_str()) + dlmax;
       break;
     default:
-      cout << "Usage: " << argv[0] << " <dir> [<lmax>]" << endl;
+      cout << "Usage: " << argv[0] << " <dir> [<lmax>] [--horizon <coeffs> [--horizon-attach <r>] [--horizon-lmax <l>]]" << endl;
       exit(1);
   }
 
@@ -150,6 +163,21 @@ int main(int argc, char* argv[])
   }
   if(num_modes % status_frequency != 0)
     cout << "Finished " << status << " of " << num_modes << " modes" << endl;
+
+  /* Near-horizon points from the horizon expansion (exp(i m Omega r*) d2R, back to the t slice) */
+  if (!horizon_file.empty()) {
+    HorizonData hd;
+    hd.load(horizon_file, horizon_lmax);
+    size_t jh = 0;
+    while (jh < N && r[jh] < horizon_attach) ++jh;
+    const vector<double> rnear(r.begin(), r.begin() + jh);
+    const auto v = hd.values(HorizonData::Piece::S1, r0, rnear, modes);
+    const double Omega = sqrt(M/(r0*r0*r0));
+    for (size_t im = 0; im < modes.size(); ++im)
+      for (size_t j = 0; j < jh; ++j)
+        src[modes[im].i][modes[im].l][modes[im].m][j] = v[im][j]*exp(complex<double>(0.0, -modes[im].m*Omega*rstar(r[j])));
+    cout << "Near the horizon: " << jh << " grid points with r < " << horizon_attach << " from the horizon expansion" << endl;
+  }
 
   /* Output result */
   cout << "Saving results" << endl;

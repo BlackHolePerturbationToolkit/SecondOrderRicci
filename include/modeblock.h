@@ -13,10 +13,12 @@
 #include <algorithm>
 #include "field.h"
 
-struct ModeBlock {
-  const double *re[11];
-  const double *im[11];
+template<class T>
+struct ModeBlockT {
+  const T *re[11];
+  const T *im[11];
 };
+typedef ModeBlockT<double> ModeBlock;
 
 /* Per-thread scratch space for negative-m modes. */
 class ModeBuffer {
