@@ -57,4 +57,11 @@ executable_S = '../Ricci_S'
 
 Program(executable_S, sources_S)
 
+# Near-horizon coupling code (v slice, horizon expansion of the first-order modes)
+sources_H = ['Coupling.cc', 'field.cc', 'h5wrapper.cc', 'utils.cc'] + \
+            ['R2G_%d.cc' % i for i in range(1, 11)] + ['R2V_%d.cc' % i for i in range(1, 11)] + ['Ricci_H.cc']
+executable_H = '../Ricci_H'
+
+Program(executable_H, sources_H)
+
 Decider('MD5-timestamp')

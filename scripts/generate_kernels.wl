@@ -30,11 +30,28 @@
                 grid-point loop is vectorised across grid points.
    Only the real form matches the current storage; the other two are kept in the git history.
 
-   Usage: WolframKernel -script scripts/generate_kernels.wl [direct|factored|real] *)
+   Slicing (optional argument "vslice"; default: the original t-slice kernels R2G_i):
+     vslice : kernels R2V_i (src/R2V_<i>.cc, include/R2V.h) for d2R on the ingoing (v = t + rstar)
+              slice, in which nothing diverges at the horizon. The output is the same BLS
+              component of d2R, multiplied by exp(i m3 Omega rstar); the inputs are the regular
+              (v, r)-frame components a_j of each first-order mode, defined from the BLS
+              components (PerturbationEquations numbering) by
+                h^1 = a1 + f a2 + f^2 a3/2,  h^2 = a1 + f a2,  h^3 = -a2 - f a3/2,
+                h^5 = a4 + f a5,  h^9 = a8 + f a9,  h^i = a_i otherwise,
+              with h^i = exp(-i m Omega rstar) x (BLS mode on the t slice). For a mode that is
+              regular on the future horizon the a_j are smooth there, and every coefficient of
+              the resulting operator is regular at f = 0 (checked here: the generator stops
+              otherwise), so evaluating it involves no cancellation of divergent terms. The
+              coupling coefficients are the same as for R2G_i (R2C_i is reused; checked).
+
+   Usage: WolframKernel -script scripts/generate_kernels.wl [real] [vslice] *)
 
 root = DirectoryName[$InputFileName] // ParentDirectory;
 form = SelectFirst[Join[$ScriptCommandLine, $CommandLine], MemberQ[{"direct", "factored", "real"}, #] &, "real"];
 Print["code form: ", form];
+vslice = MemberQ[Join[$ScriptCommandLine, $CommandLine], "vslice"];
+kname = If[vslice, "R2V", "R2G"];
+Print["slice: ", If[vslice, "v (regular at the horizon), kernels R2V_i", "t, kernels R2G_i"]];
 If[form =!= "real", Print["only the real form matches the current storage (separate real/imaginary planes); the direct and complex-factored forms are in the git history (commit 0bed18f)"]; Abort[]];
 
 Block[{Print}, << xAct`PerturbationEquations`];
@@ -45,6 +62,7 @@ scale = Switch[First[xAct`PerturbationEquations`$Version], "0.3.0", "0.5", "0.4.
 Print["output scale: ", scale];
 d2R = SchwarzschildQuadraticOperator["d2R", "Lorenz", "BLS", "BLS"];
 d2R = Map[Collect[# //. FrequencyDomainConversion, CInt[__], Simplify] &, d2R];
+cintsT = Association[Table[i -> Union[Cases[d2R[i], _CInt, Infinity]], {i, 1, 10}]];
 
 (* --- conversion to C, as in GenerateCouplingCode.nb ------------------------------- *)
 hRules = Sequence[PD[{1, -BL}][PD[{1, -BL}][hBS[LI[i_], LI[l1], LI[m1]]]] :> ddh1[i], PD[{1, -BL}][hBS[LI[i_], LI[l1], LI[m1]]] :> dh1[i], hBS[LI[i_], LI[l1], LI[m1]] :> h1[i], PD[{1, -BL}][PD[{1, -BL}][hBS[LI[i_], LI[l2], LI[m2]]]] :> ddh2[i], PD[{1, -BL}][hBS[LI[i_], LI[l2], LI[m2]]] :> dh2[i], hBS[LI[i_], LI[l2], LI[m2]] :> h2[i]];
@@ -76,12 +94,41 @@ expandTerms[coef_] := Module[{e = Expand[coef /. xyRules /. {r[] -> rr, f[r[]] -
    Map[Function[t, Module[{x = First[Cases[t, _X, {0, Infinity}]], y = First[Cases[t, _Y, {0, Infinity}]]},
        {Exponent[t, rr], Exponent[t, ff], x, y, t /. {_X -> 1, _Y -> 1, rr -> 1, ff -> 1}}]], ts]];
 
+(* --- v slice: express d2R in terms of the regular (v, r)-frame fields ------------------ *)
+If[vslice,
+  Module[{fx, T, rules, rl, xyR},
+    fx[x_] := 1 - 2 M/x;
+    (* phase-factored BLS components in terms of the a_j *)
+    T[x_] := {a[1][x] + fx[x] a[2][x] + fx[x]^2 a[3][x]/2, a[1][x] + fx[x] a[2][x], -a[2][x] - fx[x] a[3][x]/2,
+      a[4][x], a[4][x] + fx[x] a[5][x], a[6][x], a[7][x], a[8][x], a[8][x] + fx[x] a[9][x], a[10][x]};
+    (* h = exp(-i w rstar) T.a, d rstar / dr = 1/f *)
+    rules[Z_, A_, w_] := Module[{hv = T[x], kp = 1/fx[x], kpp = D[1/fx[x], x], tr},
+      tr = {a[j_][x] :> A[0, j], Derivative[1][a[j_]][x] :> A[1, j], Derivative[2][a[j_]][x] :> A[2, j]};
+      {Z[0, i_] :> (hv[[i]] /. tr /. x -> rr), Z[1, i_] :> ((D[hv[[i]], x] - I w kp hv[[i]]) /. tr /. x -> rr),
+       Z[2, i_] :> ((D[hv[[i]], {x, 2}] - 2 I w kp D[hv[[i]], x] - (I w kpp + w^2 kp^2) hv[[i]]) /. tr /. x -> rr)}];
+    rl = Join[rules[X, XA, \[Omega]1], rules[Y, YA, \[Omega]2]];
+    xyR = {PD[{1, -BL}][PD[{1, -BL}][hBS[LI[i_], LI[l1], LI[m1]]]] :> X[2, i], PD[{1, -BL}][hBS[LI[i_], LI[l1], LI[m1]]] :> X[1, i], hBS[LI[i_], LI[l1], LI[m1]] :> X[0, i],
+      PD[{1, -BL}][PD[{1, -BL}][hBS[LI[i_], LI[l2], LI[m2]]]] :> Y[2, i], PD[{1, -BL}][hBS[LI[i_], LI[l2], LI[m2]]] :> Y[1, i], hBS[LI[i_], LI[l2], LI[m2]] :> Y[0, i]};
+    Do[Module[{e = d2R[i] /. xyR /. r[] -> rr /. f[rr] -> 1 - 2 M/rr /. rl, cs, vars},
+       cs = Union[Cases[e, _CInt, Infinity]];
+       If[cs =!= cintsT[i], Print["component ", i, ": couplings differ from the t slice"]; Abort[]];
+       d2R[i] = Total[Table[
+          vars = Union[Cases[Coefficient[e, c], (XA | YA)[__], Infinity]];
+          c Total[Map[Function[mr, Module[{cc = Together[mr[[2]] /. M -> rr (1 - ff)/2]},
+               If[! FreeQ[Denominator[cc], ff] || ! MatchQ[Denominator[cc] /. {rr -> 1, mu[__] -> 1}, _?NumericQ],
+                 Print["component ", i, ": coefficient not regular at the horizon: ", Denominator[cc]]; Abort[]];
+               (Times @@ (vars^mr[[1]]) /. {XA -> X, YA -> Y}) Expand[Numerator[cc]]/Denominator[cc]]],
+             CoefficientRules[Expand[Coefficient[e, c]], vars]]],
+          {c, cs}]]],
+      {i, 1, 10}];
+    Print["v-slice operator built; all coefficients regular at the horizon"]]];
+
 (* --- per component ------------------------------------------------------------------ *)
 nc = <||>;
 Do[
   expr = d2R[i];
   cints = SortBy[Union[Cases[expr, _CInt, Infinity]], spinOf /@ (List @@ #)[[{3, 6, 9}]] &];
-  If[Simplify[expr - Total[(Coefficient[expr, #] # &) /@ cints]] =!= 0, Print["component ", i, " is not linear in CInt"]; Abort[]];
+  If[! vslice && Simplify[expr - Total[(Coefficient[expr, #] # &) /@ cints]] =!= 0, Print["component ", i, " is not linear in CInt"]; Abort[]];
   terms = Table[
     Module[{coef = Coefficient[expr, c], s = spinOf /@ (List @@ c)[[{3, 6, 9}]], den, req1, req2, code},
       den = Denominator[Together[coef]];
@@ -151,8 +198,9 @@ Do[
   src = StringJoin[
     "/* Generated by scripts/generate_kernels.wl from the PerturbationEquations package\n",
     " * (SchwarzschildQuadraticOperator[\"d2R\", \"Lorenz\", \"BLS\", \"BLS\"]), component i = ", ToString[i], ". */\n",
-    "#include <complex>\n#include <cmath>\n#include <vector>\n#include \"Coupling.h\"\n#include \"R2G.h\"\n\nusing namespace std;\n\n",
-    "void R2G_", ToString[i], "(const double M, const double r0,\n",
+    If[vslice, "/* v slice: inputs are the regular (v, r)-frame fields a_j, output exp(i m3 Omega rstar) d2R_i. */\n", ""],
+    "#include <complex>\n#include <cmath>\n#include <vector>\n#include \"Coupling.h\"\n#include \"", kname, ".h\"\n\nusing namespace std;\n\n",
+    "void ", kname, "_", ToString[i], "(const double M, const double r0,\n",
     "    const vector<double> &r_grid, const vector<double> &f_grid, const vector<double> &fp_grid,\n",
     "    const ModeBlock &h1, const ModeBlock &dh1, const ModeBlock &ddh1,\n",
     "    const ModeBlock &h2, const ModeBlock &dh2, const ModeBlock &ddh2,\n",
@@ -194,14 +242,31 @@ Do[
         StringJoin[("    " <> fieldDecl[#] <> "\n") & /@ fields],
         StringJoin[Table["    if (use" <> ToString[k - 1] <> ") G[" <> ToString[k - 1] <> "][j] += " <> terms[[k, "code"]] <> ";\n", {k, Length[terms]}]]]],
     "  }\n}\n\n"]],
-    "void R2C_", ToString[i], "(int l3, int m3, int l1, int m1, int l2, int m2, double *c)\n{\n",
-    StringJoin[Table["  c[" <> ToString[k - 1] <> "] = " <> scale <> "*Coupling(l3,m3," <> ToString[terms[[k, "s"]][[1]]] <> ",l2,m2," <> ToString[terms[[k, "s"]][[2]]] <> ",l1,m1," <> ToString[terms[[k, "s"]][[3]]] <> ");\n", {k, Length[terms]}]],
-    "}\n"];
-  Export[FileNameJoin[{root, "src", "R2G_" <> ToString[i] <> ".cc"}], src, "Text"];
+    If[vslice, "/* coupling coefficients: R2C_" <> ToString[i] <> " (src/R2G_" <> ToString[i] <> ".cc) */\n",
+    "void R2C_" <> ToString[i] <> "(int l3, int m3, int l1, int m1, int l2, int m2, double *c)\n{\n" <>
+    StringJoin[Table["  c[" <> ToString[k - 1] <> "] = " <> scale <> "*Coupling(l3,m3," <> ToString[terms[[k, "s"]][[1]]] <> ",l2,m2," <> ToString[terms[[k, "s"]][[2]]] <> ",l1,m1," <> ToString[terms[[k, "s"]][[3]]] <> ");\n", {k, Length[terms]}]] <>
+    "}\n"]];
+  Export[FileNameJoin[{root, "src", kname <> "_" <> ToString[i] <> ".cc"}], src, "Text"];
   Print["component ", i, " (", form, "): ", Length[terms], " couplings, ", Length[fields], " field arrays, ",
     If[form === "factored", ToString[Length[consts]] <> " constants, " <> ToString[Length[prods]] <> " products, " <> ToString[Length[rmons]] <> " r/f monomials, ", ""], "requirements ",
     ({#["req1"], #["req2"]} & /@ terms)],
   {i, 1, 10}];
+
+If[vslice,
+header = StringJoin[
+  "/* Generated by scripts/generate_kernels.wl (vslice): the d2R components on the ingoing (v) slice,\n",
+  " *   exp(i m3 Omega r*) d2R_i = sum_k R2C_i(l3, m3, ...)[k] * V_ik,  V_ik from R2V_i,\n",
+  " * taking the regular (v, r)-frame fields a_j of the two first-order modes (see the generator)\n",
+  " * and returning real (Gr) and imaginary (Gi) planes. The coupling coefficients R2C_i, R2_NC\n",
+  " * and R2_NC_MAX are those of R2G.h. */\n",
+  "#pragma once\n#include <complex>\n#include <cstddef>\n#include <vector>\n#include \"modeblock.h\"\n#include \"R2G.h\"\n\n",
+  StringJoin[Table["void R2V_" <> ToString[i] <> "(const double M, const double r0,\n" <>
+     "  const std::vector<double> &r_grid, const std::vector<double> &f_grid, const std::vector<double> &fp_grid,\n" <>
+     "  const ModeBlock &h1, const ModeBlock &dh1, const ModeBlock &ddh1,\n" <>
+     "  const ModeBlock &h2, const ModeBlock &dh2, const ModeBlock &ddh2,\n" <>
+     "  int l1, int m1, int l2, int m2, double *const *Gr, double *const *Gi, std::size_t jb, std::size_t je);\n", {i, 1, 10}]]];
+Export[FileNameJoin[{root, "include", "R2V.h"}], header, "Text"];
+Print["done"]; Exit[]];
 
 header = StringJoin[
   "/* Generated by scripts/generate_kernels.wl: the d2R components split by coupling coefficient,\n",

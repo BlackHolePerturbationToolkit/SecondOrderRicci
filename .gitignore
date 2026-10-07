@@ -3,6 +3,7 @@
 Ricci
 Ricci_M
 Ricci_S
+Ricci_H
 Teukolsky
 data/*
 src.h5
