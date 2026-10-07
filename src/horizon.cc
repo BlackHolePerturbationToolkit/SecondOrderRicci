@@ -8,6 +8,10 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <regex>
+#include <sys/stat.h>
+#include <hdf5.h>
+#include "utils.h"
 #ifdef _OPENMP
 #  include <omp.h>
 #endif
@@ -49,12 +53,13 @@ static Poly psub(const Poly &a, const Poly &b) {
   return c;
 }
 static Poly pscale(Poly a, cplx s) { for (auto &v : a) v *= s; return a; }
-/* divide by x^n; the dropped coefficients vanish for a mode regular on the future horizon */
+/* divide by x^n; the dropped coefficients vanish for a mode regular on the future horizon (to the
+ * accuracy of the input: ~1e-12 relative for h1Lorenz) */
 static Poly pshift(const Poly &a, size_t n, const string &what) {
   double amax = 0.0, low = 0.0;
   for (size_t i = 0; i < a.size(); ++i) amax = max(amax, abs(a[i]));
   for (size_t i = 0; i < min(n, a.size()); ++i) low = max(low, abs(a[i]));
-  if (low > 1e-12*amax && low > 1e-280)
+  if (low > 1e-10*amax && low > 1e-280)
     cerr << "Warning: " << what << " is not regular at the horizon (" << low << " vs " << amax << ")" << endl;
   return a.size() > n ? Poly(a.begin() + n, a.end()) : Poly();
 }
@@ -69,8 +74,68 @@ static void ptaylor(const Poly &p, cplx v[3], cplx d[3], cplx dd[3]) {
   for (int k = 0; k < 3; ++k) { v[k] = c(k); d[k] = double(k + 1)*c(k + 1); dd[k] = double((k + 1)*(k + 2))*c(k + 2); }
 }
 
+/* file numbering of the fields in an h1 mode file (as h1.cc) */
+static vector<int> file_fields(int l, int m)
+{
+  if ((l + m) % 2 == 0) {
+    if (l == 0) return {1, 3, 6, 2};
+    if (l == 1) return {1, 3, 5, 6, 2, 4};
+    return {1, 3, 5, 6, 7, 2, 4};
+  }
+  if (l == 1) return {9, 8};
+  return {9, 10, 8};
+}
+
 void HorizonData::load(const string &source, int lmax)
 {
+  struct stat st;
+  const bool table = stat(source.c_str(), &st) == 0 && S_ISREG(st.st_mode);
+  if (!table) {
+    /* directories of h1 mode files with a "horizon" dataset (K x 2 nf: row n, Re/Im of each
+     * field in file order); a later directory overrides an earlier one */
+    lmax_ = -1; ncoef_ = 0;
+    stringstream dirs(source);
+    string dir;
+    int nfiles = 0;
+    while (getline(dirs, dir, ':')) {
+      if (dir.empty()) continue;
+      for (const string &file : list_files(dir, regex("h1-l([0-9]+)m([0-9]+).h5"))) {
+        const lm_mode lm = filenameToMode(file);
+        if (lm.l > lmax) continue;
+        hid_t fid = H5Fopen(file.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+        if (fid < 0) continue;
+        if (H5Lexists(fid, "horizon", H5P_DEFAULT) > 0) {
+          hid_t did = H5Dopen2(fid, "horizon", H5P_DEFAULT);
+          hid_t sid = H5Dget_space(did);
+          hsize_t dims[2];
+          H5Sget_simple_extent_dims(sid, dims, nullptr);
+          vector<double> data(dims[0]*dims[1]);
+          H5Dread(did, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
+          H5Sclose(sid); H5Dclose(did);
+          const vector<int> fields = file_fields(lm.l, lm.m);
+          if (dims[1] != 2*fields.size())
+            throw runtime_error("unexpected shape of the horizon dataset in " + file);
+          for (size_t k = 0; k < fields.size(); ++k) {
+            Poly c(dims[0]);
+            for (size_t n = 0; n < dims[0]; ++n) c[n] = cplx(data[n*dims[1] + 2*k], data[n*dims[1] + 2*k + 1]);
+            const int ii = fields[k];
+            b_[make_tuple(lm.l, lm.m, (ii == 3) ? 6 : ((ii == 6) ? 3 : ii))] = c;
+          }
+          lmax_ = max(lmax_, lm.l);
+          ncoef_ = max(ncoef_, (int) dims[0]);
+          ++nfiles;
+        }
+        H5Fclose(fid);
+      }
+    }
+    /* every (l, m) up to lmax_ must be present */
+    for (int l = 0; l <= lmax_; ++l)
+      for (int m = 0; m <= l; ++m)
+        if (!b_.count(make_tuple(l, m, (l + m) % 2 == 0 ? 1 : 9)))
+          throw runtime_error("no horizon coefficients for (l, m) = (" + to_string(l) + ", " + to_string(m) + ") in " + source);
+    cout << "Horizon coefficients: l <= " << lmax_ << ", " << ncoef_ << " terms per mode, " << nfiles << " files (" << source << ")" << endl;
+    return;
+  }
   ifstream in(source);
   if (!in) throw runtime_error("cannot read horizon coefficients " + source);
   string line;

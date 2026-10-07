@@ -32,7 +32,9 @@ public:
 
   /* Horizon expansion coefficients of the first-order modes with l <= lmax. `source` is a
    * table "l m i Re b0 Im b0 Re b1 Im b1 ..." (i in the h1 file numbering, as written by the
-   * boundary_data stage). */
+   * boundary_data stage), or a directory (or several, separated by ':', later ones taking
+   * precedence) of h1 mode files h1-l<l>m<m>.h5 with a "horizon" dataset (as written by
+   * h1Lorenz: row n, Re/Im of the coefficient c_n of each field in the order of inhom_left). */
   void load(const std::string &source, int lmax);
   int lmax() const { return lmax_; }
   int num_coefficients() const { return ncoef_; }
