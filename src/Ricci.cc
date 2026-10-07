@@ -47,8 +47,10 @@
  *   Ricci --horizon-only <coeffs> --r0 <r0> --lmax <lmax> [--horizon-lmax <l>]
  *                            : only the horizon coefficients (no first-order field data
  *                              needed), written to horizon.h5.
- *   --infinity <coeffs>[:<log coeffs>]
- *                            : likewise at large r (r > --infinity-attach, default 2000M) from
+ *   --infinity <coeffs>[:<log coeffs>] | <h1 dirs>
+ *                            : likewise at large r (r > --infinity-attach; default "auto": the
+ *                              radius beyond which every first-order mode's truncated expansion
+ *                              is accurate to --infinity-tol (1e-14) of the largest mode) from
  *                              the expansion of the first-order modes at infinity, with kernels
  *                              on the outgoing slice in which nothing cancels (include/farzone.h),
  *                              summed over l1, l2 <= --infinity-lmax (default 20); writes the
@@ -135,7 +137,8 @@ int main(int argc, char* argv[])
   int horizon_lmax = 20, horizon_lout = -1;
   string infinity_file;          /* expansion coefficients of the first-order modes at infinity */
   bool infinity_only = false;
-  double infinity_attach = 2000.0;
+  double infinity_attach = -1.0;  /* < 0: from the coefficients (InfinityData::attach_radius) */
+  double infinity_tol = 1e-14;
   int infinity_lmax = 20;
   for (int a = 1; a < argc; ++a) {
     string s = argv[a];
@@ -148,7 +151,10 @@ int main(int argc, char* argv[])
     } else if (s == "--infinity-only" && a + 1 < argc) {
       infinity_file = argv[++a]; infinity_only = true;
     } else if (s == "--infinity-attach" && a + 1 < argc) {
-      infinity_attach = atof(argv[++a]);
+      const string v = argv[++a];
+      infinity_attach = (v == "auto") ? -1.0 : atof(v.c_str());
+    } else if (s == "--infinity-tol" && a + 1 < argc) {
+      infinity_tol = atof(argv[++a]);
     } else if (s == "--infinity-lmax" && a + 1 < argc) {
       infinity_lmax = atoi(argv[++a]);
     } else if (s == "--horizon-attach" && a + 1 < argc) {
@@ -233,6 +239,7 @@ int main(int argc, char* argv[])
     }
     InfinityData id;
     id.load(infinity_file, infinity_lmax);
+    cout << "Attach radius at large r for tolerance " << infinity_tol << ": " << id.attach_radius(infinity_tol) << endl;
     H5F h5("infinity.h5", H5F_ACC_TRUNC);
     write_infinity(h5, id, horizon_r0, mode_list(horizon_lout));
     cout << "Done" << endl;
@@ -331,6 +338,10 @@ int main(int argc, char* argv[])
   size_t ji = N;
   if (!infinity_file.empty()) {
     infinity.load(infinity_file, infinity_lmax);
+    if (infinity_attach < 0) {
+      infinity_attach = infinity.attach_radius(infinity_tol);
+      cout << "Attach radius at large r from the expansion coefficients (tolerance " << infinity_tol << "): " << infinity_attach << endl;
+    }
     while (ji > 0 && r[ji - 1] > infinity_attach) --ji;
     vector<Interval> clipped;
     for (const Interval &iv : ranges)

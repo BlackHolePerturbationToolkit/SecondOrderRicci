@@ -32,9 +32,15 @@ public:
 
   /* Expansion coefficients at infinity of the first-order modes with l <= lmax. `source` is
    * "<coefficients table>[:<log coefficients table>]" (rows "l m i Re b0 Im b0 Re b1 ...", i in
-   * the h1 file numbering, as written by the boundary_data stage). */
+   * the h1 file numbering, as written by the boundary_data stage), or one or more directories
+   * (':'-separated, later ones taking precedence) of h1 mode files with datasets "infinity" and
+   * "infinity_log" (as written by h1Lorenz and EvenStatic). */
   void load(const std::string &source, int lmax);
   int lmax() const { return lmax_; }
+  /* Smallest radius beyond which the truncated expansion of every first-order mode is accurate to
+   * tol relative to the largest radiative mode (the asymptotic series needs omega r >> 1, and more
+   * so at high l: this depends on l and m through the coefficients). */
+  double attach_radius(double tol) const;
 
   /* exp(-i m3 Omega r*) d2R_ilm on the points r */
   std::vector<std::vector<std::complex<double>>> values(Piece piece, double r0, const std::vector<double> &r,

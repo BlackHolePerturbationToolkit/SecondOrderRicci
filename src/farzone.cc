@@ -10,6 +10,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
+#include <regex>
+#include <sys/stat.h>
+#include <hdf5.h>
 #ifdef _OPENMP
 #  include <omp.h>
 #endif
@@ -102,8 +105,77 @@ static void radial_jets(Jet<YLog> &rinv, Jet<YLog> &f, Jet<YLog> &g, Jet<YLog> &
   g2 = jmul(g, g);
 }
 
+/* file numbering of the fields in an h1 mode file (as h1.cc) */
+static vector<int> file_fields(int l, int m)
+{
+  if ((l + m) % 2 == 0) {
+    if (l == 0) return {1, 3, 6, 2};
+    if (l == 1) return {1, 3, 5, 6, 2, 4};
+    return {1, 3, 5, 6, 7, 2, 4};
+  }
+  if (l == 1) return {9, 8};
+  return {9, 10, 8};
+}
+
+/* read a K x 2nf dataset into per-field coefficient lists; false if absent */
+static bool read_coeffs(hid_t fid, const char *name, vector<vector<cplx>> &out, size_t nf, const string &file)
+{
+  if (H5Lexists(fid, name, H5P_DEFAULT) <= 0) return false;
+  hid_t did = H5Dopen2(fid, name, H5P_DEFAULT);
+  hid_t sid = H5Dget_space(did);
+  hsize_t dims[2];
+  H5Sget_simple_extent_dims(sid, dims, nullptr);
+  vector<double> data(dims[0]*dims[1]);
+  H5Dread(did, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
+  H5Sclose(sid); H5Dclose(did);
+  if (dims[1] != 2*nf) throw runtime_error(string("unexpected shape of ") + name + " in " + file);
+  out.assign(nf, vector<cplx>(dims[0]));
+  for (size_t k = 0; k < nf; ++k)
+    for (size_t n = 0; n < dims[0]; ++n) out[k][n] = cplx(data[n*dims[1] + 2*k], data[n*dims[1] + 2*k + 1]);
+  return true;
+}
+
 void InfinityData::load(const string &source, int lmax)
 {
+  struct stat st;
+  const string first = source.substr(0, source.find(':'));
+  if (stat(first.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
+    /* directories of h1 mode files with datasets "infinity" and "infinity_log" (K x 2 nf: row n,
+     * Re/Im of each field in file order); a later directory overrides an earlier one */
+    lmax_ = -1;
+    stringstream dirs(source);
+    string dir;
+    int nfiles = 0;
+    while (getline(dirs, dir, ':')) {
+      if (dir.empty()) continue;
+      for (const string &file : list_files(dir, regex("h1-l([0-9]+)m([0-9]+).h5"))) {
+        const lm_mode lm = filenameToMode(file);
+        if (lm.l > lmax) continue;
+        hid_t fid = H5Fopen(file.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+        if (fid < 0) continue;
+        const vector<int> fields = file_fields(lm.l, lm.m);
+        vector<vector<cplx>> bb, cc;
+        if (read_coeffs(fid, "infinity", bb, fields.size(), file)) {
+          const bool logs = read_coeffs(fid, "infinity_log", cc, fields.size(), file);
+          for (size_t k = 0; k < fields.size(); ++k) {
+            const int ii = fields[k], ipe = (ii == 3) ? 6 : ((ii == 6) ? 3 : ii);
+            b_[make_tuple(lm.l, lm.m, ipe)] = bb[k];
+            if (logs) c_[make_tuple(lm.l, lm.m, ipe)] = cc[k];
+            else c_.erase(make_tuple(lm.l, lm.m, ipe));
+          }
+          lmax_ = max(lmax_, lm.l);
+          ++nfiles;
+        }
+        H5Fclose(fid);
+      }
+    }
+    for (int l = 0; l <= lmax_; ++l)
+      for (int m = 0; m <= l; ++m)
+        if (!b_.count(make_tuple(l, m, (l + m) % 2 == 0 ? 1 : 9)))
+          throw runtime_error("no coefficients at infinity for (l, m) = (" + to_string(l) + ", " + to_string(m) + ") in " + source);
+    cout << "Coefficients at infinity: l <= " << lmax_ << ", " << nfiles << " files (" << source << ")" << endl;
+    return;
+  }
   const size_t colon = source.find(':');
   const string files[2] = {source.substr(0, colon), colon == string::npos ? string() : source.substr(colon + 1)};
   lmax_ = -1;
@@ -303,3 +375,28 @@ vector<array<cplx, 4>> InfinityData::coefficients(Piece piece, double r0, const 
   if (residual) *residual = big > 0 ? res/big : res;
   return A;
 }
+
+double InfinityData::attach_radius(double tol) const
+{
+  /* smallest r beyond which, for every mode, the last coefficient kept, |b_K-1| + |c_K-1| log r
+   * over r^(K-1), is below tol times the largest leading coefficient of any radiative mode */
+  double big = 0.0;
+  for (const auto &kv : b_)
+    if (get<1>(kv.first) > 0)
+      for (size_t n = 0; n < min<size_t>(3, kv.second.size()); ++n) big = max(big, abs(kv.second[n]));
+  double rmin = 0.0;
+  for (const auto &kv : b_) {
+    const Poly &b = kv.second;
+    if (b.size() < 2) continue;
+    auto it = c_.find(kv.first);
+    const double bl = abs(b.back()), cl = (it != c_.end() && !it->second.empty()) ? abs(it->second.back()) : 0.0;
+    const double p = b.size() - 1.0;
+    double lo = 10.0, hi = 1e8;
+    auto bad = [&](double r) { return (bl + cl*log(r))/pow(r, p) > tol*big; };
+    if (!bad(lo)) continue;
+    for (int it2 = 0; it2 < 100; ++it2) { const double mid = sqrt(lo*hi); (bad(mid) ? lo : hi) = mid; }
+    rmin = max(rmin, hi);
+  }
+  return rmin;
+}
+
