@@ -138,3 +138,32 @@ private:
   std::vector<int> shells_used_;
   double max_seen_ = 0.0;
 };
+
+/*
+ * Levin u-transform of the partial sums S[0..L] of a series with terms c[0..L], using the last
+ * k + 1 partial sums and the remainder estimates (n + beta) c_n:
+ *   L_k = sum_j w_j S_{n0+j}/omega_{n0+j} / sum_j w_j/omega_{n0+j},   n0 = L - k,
+ *   w_j = (-1)^j binom(k, j) ((n0 + j + beta)/(n0 + k + beta))^(k-1).
+ * It is exact for remainders S - S_n = omega_n sum_{i<k} a_i/(n + beta)^i, which covers both the
+ * algebraic convergence (c_s ~ s^-p) of the worldtube pieces at r = r0 and the mixed geometric x
+ * algebraic convergence (c_s ~ rho^s s^-p) away from it. Returns S[L] if a term vanishes.
+ */
+inline std::complex<double> levin_u(const std::complex<double> *S, const std::complex<double> *c, int L, int k, double beta = 1.0)
+{
+  typedef std::complex<double> C;
+  const int n0 = L - k;
+  if (n0 < 0) return S[L];
+  C num(0.0, 0.0), den(0.0, 0.0);
+  double binom = 1.0;
+  for (int j = 0; j <= k; ++j) {
+    const int n = n0 + j;
+    if (c[n] == C(0.0, 0.0)) return S[L];
+    const C om = (n + beta)*c[n];
+    const double w = ((j % 2) ? -1.0 : 1.0)*binom*std::pow((n0 + j + beta)/(n0 + k + beta), k - 1);
+    num += w*S[n]/om;
+    den += w/om;
+    binom = binom*(k - j)/(j + 1.0);
+  }
+  if (den == C(0.0, 0.0) || !std::isfinite(std::abs(num/den))) return S[L];
+  return num/den;
+}

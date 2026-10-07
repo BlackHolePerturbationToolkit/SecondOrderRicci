@@ -35,6 +35,14 @@
  *   --l3-reuse               : parallel tasks are (i3, m3, radial chunk) (--chunks n per
  *                              (i3, m3); default chosen from the number of threads); works
  *                              with and without --adaptive.
+ *   --tail-levin <k>         : (implies --shells) replace the partial sum over the available shells
+ *                              by its Levin u-transform of order k (include/accel.h), from the
+ *                              last k + 1 shells at each point: for the worldtube pieces (RR, RS,
+ *                              SR), whose shell contributions fall off like s^-p (times rho^s away
+ *                              from r = r0), this estimates the tail beyond the first-order lmax.
+ *                              A point keeps the plain sum if the added tail exceeds
+ *                              10 L |c_L|. Writes tail.h5: the tail added and the change of the
+ *                              estimate between L - 1 and L shells (an error estimate).
  *   --horizon <coeffs>       : near the horizon (r < --horizon-attach, default 2.01M) compute
  *                              the source from the horizon expansion of the first-order modes
  *                              with kernels regular there (include/horizon.h), summed over
@@ -131,6 +139,7 @@ int main(int argc, char* argv[])
   double adapt_tol = 1e-10, adapt_floor = 1e-6;
   int adapt_window = 21, adapt_confirm = 3, adapt_min_shells = 6;
   bool adapt_accel = true;
+  int tail_levin = 0;            /* Levin u-transform order for the tail of the shell sum (0: off) */
   string horizon_file;           /* horizon expansion coefficients of the first-order modes */
   bool horizon_only = false;
   double horizon_attach = 2.01, horizon_r0 = 0.0;
@@ -175,6 +184,9 @@ int main(int argc, char* argv[])
       nchunks = atoi(argv[++a]);
     } else if (s == "--shells") {
       shells = true;
+    } else if (s == "--tail-levin" && a + 1 < argc) {
+      shells = true;
+      tail_levin = atoi(argv[++a]);
     } else if (s == "--adaptive" && a + 1 < argc) {
       shells = true; adaptive = true;
       adapt_tol = atof(argv[++a]);
@@ -363,6 +375,8 @@ int main(int argc, char* argv[])
   struct DiagEntry { ilm_mode mode; multi_array<double,3> *data; };
   vector<DiagEntry> diag_store;
   struct ConvEntry { ilm_mode mode; vector<int> shells; vector<char> unconverged; };
+  struct TailEntry { ilm_mode mode; vector<complex<double>> tail; vector<double> err; size_t rejected; };
+  vector<TailEntry> tail_store;
   vector<ConvEntry> conv_store;
   if (adaptive) cout << "Adaptive per-point truncation: tol = " << adapt_tol << ", floor = " << adapt_floor
                      << ", window = " << adapt_window << ", confirm = " << adapt_confirm << ", min shells = " << adapt_min_shells
@@ -629,6 +643,8 @@ int main(int argc, char* argv[])
         vector<complex<double>> shell_acc(N);
         multi_array<double,3> *diag_data = nullptr;
         if (diag) diag_data = new multi_array<double,3>(boost::extents[h1lmax+1][N][2]);
+        /* per-shell contributions, kept for the tail estimate */
+        vector<complex<double>> cs(tail_levin > 0 ? (size_t)(h1lmax + 1)*N : 0, complex<double>(0.0, 0.0));
         for (int sh = 0; sh <= h1lmax; ++sh) {
           vector<LPair> pairs = shell_pairs(l3, sh, dlmax, h1lmax);
           if (pairs.empty()) continue;
@@ -640,8 +656,28 @@ int main(int argc, char* argv[])
           for (const Interval &iv : ranges)
             for (size_t j = iv.jb; j < iv.je; ++j) {
               out[j] += shell_acc[j];
+              if (tail_levin > 0) cs[(size_t)sh*N + j] = shell_acc[j];
               if (diag) { (*diag_data)[sh][j][0] = real(shell_acc[j]); (*diag_data)[sh][j][1] = imag(shell_acc[j]); }
             }
+        }
+        if (tail_levin > 0 && h1lmax > tail_levin + 1) {
+          const int L = h1lmax;
+          TailEntry te{modes[im], vector<complex<double>>(N, 0.0), vector<double>(N, 0.0), 0};
+          vector<complex<double>> c(L + 1), S(L + 1);
+          for (const Interval &iv : ranges)
+            for (size_t j = iv.jb; j < iv.je; ++j) {
+              complex<double> acc(0.0, 0.0);
+              for (int sh = 0; sh <= L; ++sh) { c[sh] = cs[(size_t)sh*N + j]; acc += c[sh]; S[sh] = acc; }
+              const complex<double> est = levin_u(S.data(), c.data(), L, tail_levin);
+              const complex<double> est1 = levin_u(S.data(), c.data(), L - 1, tail_levin);
+              const complex<double> tail = est - S[L];
+              if (abs(tail) > 10.0*L*abs(c[L]) || !isfinite(abs(est))) { ++te.rejected; continue; }
+              out[j] = est;
+              te.tail[j] = tail;
+              te.err[j] = abs(est - est1);
+            }
+#pragma omp critical(tail)
+          tail_store.push_back(te);
         }
         if (diag) {
 #pragma omp critical(diag)
@@ -711,6 +747,24 @@ int main(int argc, char* argv[])
     }
     diag_h5.write_dataset("r", rdata);
     cout << "Wrote per-shell sums for " << diag_store.size() << " modes to shells.h5" << endl;
+  }
+  if (!tail_store.empty()) {
+    H5F tail_h5("tail.h5", H5F_ACC_TRUNC);
+    size_t rejected = 0;
+    for (auto &e : tail_store) {
+      multi_array<double,2> t(boost::extents[N][2]);
+      multi_array<double,1> er(boost::extents[N]);
+      for (size_t j = 0; j < N; ++j) { t[j][0] = real(e.tail[j]); t[j][1] = imag(e.tail[j]); er[j] = e.err[j]; }
+      stringstream a, b;
+      a << "tail i=" << e.mode.i << " l=" << e.mode.l << " m=" << e.mode.m;
+      b << "tailerr i=" << e.mode.i << " l=" << e.mode.l << " m=" << e.mode.m;
+      tail_h5.write_dataset(a.str(), t);
+      tail_h5.write_dataset(b.str(), er);
+      rejected += e.rejected;
+    }
+    tail_h5.write_dataset("r", rdata);
+    cout << "Tail of the shell sum: Levin u-transform of order " << tail_levin << " from the last "
+         << tail_levin + 1 << " shells; " << rejected << " (mode, point) pairs kept the plain sum (tail.h5)" << endl;
   }
   if (!conv_store.empty()) {
     H5F conv_h5("convergence.h5", H5F_ACC_TRUNC);
