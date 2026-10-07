@@ -47,6 +47,15 @@
  *   Ricci --horizon-only <coeffs> --r0 <r0> --lmax <lmax> [--horizon-lmax <l>]
  *                            : only the horizon coefficients (no first-order field data
  *                              needed), written to horizon.h5.
+ *   --infinity <coeffs>[:<log coeffs>]
+ *                            : likewise at large r (r > --infinity-attach, default 2000M) from
+ *                              the expansion of the first-order modes at infinity, with kernels
+ *                              on the outgoing slice in which nothing cancels (include/farzone.h),
+ *                              summed over l1, l2 <= --infinity-lmax (default 20); writes the
+ *                              coefficients {A1, A2, A3, A3log} of exp(-i m Omega r*) d2R as
+ *                              datasets "infinity i= l= m=" (4 x 2). RetRet only.
+ *   Ricci --infinity-only <coeffs>[:<log coeffs>] --r0 <r0> --lmax <lmax> [--infinity-lmax <l>]
+ *                            : only those coefficients, written to infinity.h5.
  */
 
 #include <vector>
@@ -69,6 +78,7 @@
 #include "h5wrapper.h"
 #include "accel.h"
 #include "horizon.h"
+#include "farzone.h"
 
 using namespace std;
 using boost::multi_array;
@@ -123,12 +133,24 @@ int main(int argc, char* argv[])
   bool horizon_only = false;
   double horizon_attach = 2.01, horizon_r0 = 0.0;
   int horizon_lmax = 20, horizon_lout = -1;
+  string infinity_file;          /* expansion coefficients of the first-order modes at infinity */
+  bool infinity_only = false;
+  double infinity_attach = 2000.0;
+  int infinity_lmax = 20;
   for (int a = 1; a < argc; ++a) {
     string s = argv[a];
     if (s == "--horizon" && a + 1 < argc) {
       horizon_file = argv[++a];
     } else if (s == "--horizon-only" && a + 1 < argc) {
       horizon_file = argv[++a]; horizon_only = true;
+    } else if (s == "--infinity" && a + 1 < argc) {
+      infinity_file = argv[++a];
+    } else if (s == "--infinity-only" && a + 1 < argc) {
+      infinity_file = argv[++a]; infinity_only = true;
+    } else if (s == "--infinity-attach" && a + 1 < argc) {
+      infinity_attach = atof(argv[++a]);
+    } else if (s == "--infinity-lmax" && a + 1 < argc) {
+      infinity_lmax = atoi(argv[++a]);
     } else if (s == "--horizon-attach" && a + 1 < argc) {
       horizon_attach = atof(argv[++a]);
     } else if (s == "--horizon-lmax" && a + 1 < argc) {
@@ -190,6 +212,32 @@ int main(int argc, char* argv[])
     }
     cout << "Wrote the horizon coefficients of " << modes.size() << " modes (RetRet and S1)" << endl;
   };
+  /* coefficients at infinity of the RetRet piece, as datasets in h5 */
+  auto write_infinity = [&](H5F &h5, const InfinityData &id, double r0, const vector<ilm_mode> &modes) {
+    double residual = 0.0;
+    const auto A = id.coefficients(InfinityData::Piece::RetRet, r0, modes, &residual);
+    for (size_t im = 0; im < modes.size(); ++im) {
+      multi_array<double,2> data(boost::extents[4][2]);
+      for (int n = 0; n < 4; ++n) { data[n][0] = A[im][n].real(); data[n][1] = A[im][n].imag(); }
+      stringstream ds;
+      ds << "infinity i=" << modes[im].i << " l=" << modes[im].l << " m=" << modes[im].m;
+      h5.write_dataset(ds.str(), data);
+    }
+    cout << "Wrote the coefficients at infinity of " << modes.size() << " modes (terms that should vanish: "
+         << residual << " of the largest)" << endl;
+  };
+  if (infinity_only) {
+    if (horizon_r0 <= 0.0 || horizon_lout < 0) {
+      cout << "Usage: " << argv[0] << " --infinity-only <coeffs>[:<log coeffs>] --r0 <r0> --lmax <lmax> [--infinity-lmax <l>]" << endl;
+      exit(1);
+    }
+    InfinityData id;
+    id.load(infinity_file, infinity_lmax);
+    H5F h5("infinity.h5", H5F_ACC_TRUNC);
+    write_infinity(h5, id, horizon_r0, mode_list(horizon_lout));
+    cout << "Done" << endl;
+    return 0;
+  }
   if (horizon_only) {
     if (horizon_r0 <= 0.0 || horizon_lout < 0) {
       cout << "Usage: " << argv[0] << " --horizon-only <coeffs> --r0 <r0> --lmax <lmax> [--horizon-lmax <l>]" << endl;
@@ -277,6 +325,19 @@ int main(int argc, char* argv[])
     ranges = clipped;
     cout << "Near the horizon: " << jh << " grid points with r < " << horizon_attach
          << " from the horizon expansion (first-order l <= " << horizon.lmax() << ")" << endl;
+  }
+  /* points left to the expansion at infinity */
+  InfinityData infinity;
+  size_t ji = N;
+  if (!infinity_file.empty()) {
+    infinity.load(infinity_file, infinity_lmax);
+    while (ji > 0 && r[ji - 1] > infinity_attach) --ji;
+    vector<Interval> clipped;
+    for (const Interval &iv : ranges)
+      if (min(iv.je, ji) > iv.jb) clipped.push_back({iv.jb, min(iv.je, ji)});
+    ranges = clipped;
+    cout << "At large r: " << (N - ji) << " grid points with r > " << infinity_attach
+         << " from the expansion at infinity (first-order l <= " << infinity.lmax() << ")" << endl;
   }
 
   /* Compute the source */
@@ -598,9 +659,21 @@ int main(int argc, char* argv[])
         src[modes[im].i][modes[im].l][modes[im].m][j] = v[im][j]*exp(complex<double>(0.0, -modes[im].m*Omega*rstar(r[j])));
   }
 
+  /* Points at large r: exp(-i m Omega r*) d2R from the expansion at infinity, back to the t slice */
+  if (ji < N) {
+    const vector<double> rfar(r.begin() + ji, r.end());
+    const auto v = infinity.values(InfinityData::Piece::RetRet, r0, rfar, modes);
+    const double Omega = sqrt(M/(r0*r0*r0));
+    for (size_t im = 0; im < modes.size(); ++im)
+      for (size_t j = ji; j < N; ++j)
+        src[modes[im].i][modes[im].l][modes[im].m][j] = v[im][j - ji]*exp(complex<double>(0.0, modes[im].m*Omega*rstar(r[j])));
+  }
+
   /* Output result */
   cout << "Saving results" << endl;
   H5F src_h5("src.h5", H5F_ACC_TRUNC);
+  if (!infinity_file.empty())
+    write_infinity(src_h5, infinity, r0, modes);
   if (!horizon_file.empty())
     write_horizon(src_h5, horizon, r0, modes);
   for (const ilm_mode &mode : modes) {

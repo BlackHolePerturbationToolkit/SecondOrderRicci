@@ -50,8 +50,12 @@ root = DirectoryName[$InputFileName] // ParentDirectory;
 form = SelectFirst[Join[$ScriptCommandLine, $CommandLine], MemberQ[{"direct", "factored", "real"}, #] &, "real"];
 Print["code form: ", form];
 vslice = MemberQ[Join[$ScriptCommandLine, $CommandLine], "vslice"];
-kname = If[vslice, "R2V", "R2G"];
-Print["slice: ", If[vslice, "v (regular at the horizon), kernels R2V_i", "t, kernels R2G_i"]];
+uslice = MemberQ[Join[$ScriptCommandLine, $CommandLine], "uslice"];
+regular = vslice || uslice;
+(* K = f dk/dr of the time function t = tau - k(r): +1 ingoing (v = t + rstar), -1 outgoing (u = t - rstar) *)
+Kc = If[uslice, -1, 1];
+kname = Which[vslice, "R2V", uslice, "R2U", True, "R2G"];
+Print["slice: ", Which[vslice, "v (regular at the horizon), kernels R2V_i", uslice, "u (no cancellation at large r), kernels R2U_i", True, "t, kernels R2G_i"]];
 If[form =!= "real", Print["only the real form matches the current storage (separate real/imaginary planes); the direct and complex-factored forms are in the git history (commit 0bed18f)"]; Abort[]];
 
 Block[{Print}, << xAct`PerturbationEquations`];
@@ -94,15 +98,15 @@ expandTerms[coef_] := Module[{e = Expand[coef /. xyRules /. {r[] -> rr, f[r[]] -
    Map[Function[t, Module[{x = First[Cases[t, _X, {0, Infinity}]], y = First[Cases[t, _Y, {0, Infinity}]]},
        {Exponent[t, rr], Exponent[t, ff], x, y, t /. {_X -> 1, _Y -> 1, rr -> 1, ff -> 1}}]], ts]];
 
-(* --- v slice: express d2R in terms of the regular (v, r)-frame fields ------------------ *)
-If[vslice,
+(* --- v or u slice: express d2R in terms of the (v, r) or (u, r)-frame fields ----------- *)
+If[regular,
   Module[{fx, T, rules, rl, xyR},
     fx[x_] := 1 - 2 M/x;
     (* phase-factored BLS components in terms of the a_j *)
-    T[x_] := {a[1][x] + fx[x] a[2][x] + fx[x]^2 a[3][x]/2, a[1][x] + fx[x] a[2][x], -a[2][x] - fx[x] a[3][x]/2,
-      a[4][x], a[4][x] + fx[x] a[5][x], a[6][x], a[7][x], a[8][x], a[8][x] + fx[x] a[9][x], a[10][x]};
-    (* h = exp(-i w rstar) T.a, d rstar / dr = 1/f *)
-    rules[Z_, A_, w_] := Module[{hv = T[x], kp = 1/fx[x], kpp = D[1/fx[x], x], tr},
+    T[x_] := {a[1][x] + Kc fx[x] a[2][x] + fx[x]^2 a[3][x]/2, Kc a[1][x] + fx[x] a[2][x], -Kc a[2][x] - fx[x] a[3][x]/2,
+      a[4][x], Kc a[4][x] + fx[x] a[5][x], a[6][x], a[7][x], a[8][x], Kc a[8][x] + fx[x] a[9][x], a[10][x]};
+    (* h = exp(-i w K rstar) T.a, d rstar / dr = 1/f *)
+    rules[Z_, A_, w_] := Module[{hv = T[x], kp = Kc/fx[x], kpp = D[Kc/fx[x], x], tr},
       tr = {a[j_][x] :> A[0, j], Derivative[1][a[j_]][x] :> A[1, j], Derivative[2][a[j_]][x] :> A[2, j]};
       {Z[0, i_] :> (hv[[i]] /. tr /. x -> rr), Z[1, i_] :> ((D[hv[[i]], x] - I w kp hv[[i]]) /. tr /. x -> rr),
        Z[2, i_] :> ((D[hv[[i]], {x, 2}] - 2 I w kp D[hv[[i]], x] - (I w kpp + w^2 kp^2) hv[[i]]) /. tr /. x -> rr)}];
@@ -115,19 +119,23 @@ If[vslice,
        d2R[i] = Total[Table[
           vars = Union[Cases[Coefficient[e, c], (XA | YA)[__], Infinity]];
           c Total[Map[Function[mr, Module[{cc = Together[mr[[2]] /. M -> rr (1 - ff)/2]},
-               If[! FreeQ[Denominator[cc], ff] || ! MatchQ[Denominator[cc] /. {rr -> 1, mu[__] -> 1}, _?NumericQ],
-                 Print["component ", i, ": coefficient not regular at the horizon: ", Denominator[cc]]; Abort[]];
+               If[(vslice && ! FreeQ[Denominator[cc], ff]) || ! MatchQ[Denominator[cc] /. {rr -> 1, ff -> 1, mu[__] -> 1}, _?NumericQ],
+                 Print["component ", i, ": coefficient not regular (", kname, "): ", Denominator[cc]]; Abort[]];
                (Times @@ (vars^mr[[1]]) /. {XA -> X, YA -> Y}) Expand[Numerator[cc]]/Denominator[cc]]],
              CoefficientRules[Expand[Coefficient[e, c]], vars]]],
           {c, cs}]]],
       {i, 1, 10}];
-    Print["v-slice operator built; all coefficients regular at the horizon"]]];
+    Print[If[vslice, "v-slice operator built; all coefficients regular at the horizon", "u-slice operator built"]]]];
 
 (* v slice: the kernel body as a template on the arithmetic type T of the grid quantities,
    fields and outputs (double on the grid, Taylor3 for the series about the horizon); the
    constants stay double. Wrappers: R2V_i on vectors/ModeBlock (as R2G_i) and on Taylor3. *)
-templateKernel[src_, i_, rmons_] := Module[{name = "R2V_" <> ToString[i], parts, pre, loop, impl, sig},
-  If[AnyTrue[rmons, #[[2]] < 0 &], Print["negative power of f in the v-slice kernel ", i]; Abort[]];
+(* series types: v slice, Taylor3 in r - 2M (r and f are Taylor3); u slice, YLog in y = 1/r with
+   polynomials in log r as coefficients (r is the tag type InfR, 1/r gives y) *)
+seriesT = If[uslice, "YLog", "Taylor3"]; seriesR = If[uslice, "InfR", "Taylor3"];
+templateKernel[src_, i_, rmons_] := Module[{name = kname <> "_" <> ToString[i], parts, pre, loop, impl, sig, finvQ},
+  finvQ = AnyTrue[rmons, #[[2]] < 0 &];
+  If[vslice && finvQ, Print["negative power of f in the v-slice kernel ", i]; Abort[]];
   sig = "void " <> name <> "(const double M, const double r0,\n" <>
     "    const vector<double> &r_grid, const vector<double> &f_grid, const vector<double> &fp_grid,\n" <>
     "    const ModeBlock &h1, const ModeBlock &dh1, const ModeBlock &ddh1,\n" <>
@@ -141,22 +149,22 @@ templateKernel[src_, i_, rmons_] := Module[{name = "R2V_" <> ToString[i], parts,
   If[Length[parts] != 2, Print["no simd loop in ", name]; Abort[]];
   impl = StringReplace[parts[[1]], {"const double *__restrict " -> "const T *__restrict ", "  double *__restrict Gr" -> "  T *__restrict Gr",
       "(void) fp_grid; " -> ""}] <> "#pragma omp simd" <>
-    StringReplace[parts[[2]], {"const double rinv = 1.0/r, finv = 1.0/f;\n    (void) rinv; (void) finv;" -> "const T rinv = 1.0/r;\n    (void) rinv;",
+    StringReplace[parts[[2]], {"const double r = r_grid[j];" -> "const TR r = r_grid[j];", "const double rinv = 1.0/r, finv = 1.0/f;\n    (void) rinv; (void) finv;" -> If[finvQ, "const T rinv = 1.0/r, finv = 1.0/f;\n    (void) rinv; (void) finv;", "const T rinv = 1.0/r;\n    (void) rinv;"],
       "const double " -> "const T ", "double gr = 0.0, gi = 0.0;" -> "T gr = 0.0, gi = 0.0;"}];
   If[StringContainsQ[StringSplit[impl, "#pragma omp simd"][[2]], "double"], Print["double left in the loop of ", name]; Abort[]];
   parts[[1]] <> "" ;
   StringSplit[StringReplace[src, sig -> "@@SIG@@"], "@@SIG@@"][[1]] <>
-   "template<class T>\nstatic inline void " <> name <> "_impl(const double M, const double r0, const T *r_grid, const T *f_grid,\n" <>
+   "template<class T, class TR>\nstatic inline void " <> name <> "_impl(const double M, const double r0, const TR *r_grid, const T *f_grid,\n" <>
    "    const ModeBlockT<T> &h1, const ModeBlockT<T> &dh1, const ModeBlockT<T> &ddh1,\n" <>
    "    const ModeBlockT<T> &h2, const ModeBlockT<T> &dh2, const ModeBlockT<T> &ddh2,\n" <>
    "    int l1, int m1, int l2, int m2, T *const *Gr, T *const *Gi, size_t jb, size_t je)\n{\n" <>
    StringSplit[impl, "/* coupling coefficients"][[1]] <>
-   sig <> "  (void) fp_grid;\n  " <> name <> "_impl<double>(M, r0, r_grid.data(), f_grid.data(), h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, jb, je);\n}\n\n" <>
-   "void " <> name <> "(const double M, const double r0, const Taylor3 *r, const Taylor3 *f,\n" <>
-   "    const ModeBlockT<Taylor3> &h1, const ModeBlockT<Taylor3> &dh1, const ModeBlockT<Taylor3> &ddh1,\n" <>
-   "    const ModeBlockT<Taylor3> &h2, const ModeBlockT<Taylor3> &dh2, const ModeBlockT<Taylor3> &ddh2,\n" <>
-   "    int l1, int m1, int l2, int m2, Taylor3 *const *Gr, Taylor3 *const *Gi)\n{\n  " <>
-   name <> "_impl<Taylor3>(M, r0, r, f, h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, 0, 1);\n}\n\n" <>
+   sig <> "  (void) fp_grid;\n  " <> name <> "_impl<double, double>(M, r0, r_grid.data(), f_grid.data(), h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, jb, je);\n}\n\n" <>
+   "void " <> name <> "(const double M, const double r0, const " <> seriesR <> " *r, const " <> seriesT <> " *f,\n" <>
+   "    const ModeBlockT<" <> seriesT <> "> &h1, const ModeBlockT<" <> seriesT <> "> &dh1, const ModeBlockT<" <> seriesT <> "> &ddh1,\n" <>
+   "    const ModeBlockT<" <> seriesT <> "> &h2, const ModeBlockT<" <> seriesT <> "> &dh2, const ModeBlockT<" <> seriesT <> "> &ddh2,\n" <>
+   "    int l1, int m1, int l2, int m2, " <> seriesT <> " *const *Gr, " <> seriesT <> " *const *Gi)\n{\n  " <>
+   name <> "_impl<" <> seriesT <> ", " <> seriesR <> ">(M, r0, r, f, h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, 0, 1);\n}\n\n" <>
    "/* coupling coefficients" <> StringSplit[impl, "/* coupling coefficients"][[2]]];
 
 (* --- per component ------------------------------------------------------------------ *)
@@ -164,7 +172,7 @@ nc = <||>;
 Do[
   expr = d2R[i];
   cints = SortBy[Union[Cases[expr, _CInt, Infinity]], spinOf /@ (List @@ #)[[{3, 6, 9}]] &];
-  If[! vslice && Simplify[expr - Total[(Coefficient[expr, #] # &) /@ cints]] =!= 0, Print["component ", i, " is not linear in CInt"]; Abort[]];
+  If[! regular && Simplify[expr - Total[(Coefficient[expr, #] # &) /@ cints]] =!= 0, Print["component ", i, " is not linear in CInt"]; Abort[]];
   terms = Table[
     Module[{coef = Coefficient[expr, c], s = spinOf /@ (List @@ c)[[{3, 6, 9}]], den, req1, req2, code},
       den = Denominator[Together[coef]];
@@ -234,7 +242,8 @@ Do[
   src = StringJoin[
     "/* Generated by scripts/generate_kernels.wl from the PerturbationEquations package\n",
     " * (SchwarzschildQuadraticOperator[\"d2R\", \"Lorenz\", \"BLS\", \"BLS\"]), component i = ", ToString[i], ". */\n",
-    If[vslice, "/* v slice: inputs are the regular (v, r)-frame fields a_j, output exp(i m3 Omega rstar) d2R_i. */\n", ""],
+    Which[vslice, "/* v slice: inputs are the regular (v, r)-frame fields a_j, output exp(i m3 Omega rstar) d2R_i. */\n",
+      uslice, "/* u slice: inputs are the (u, r)-frame fields a_j, output exp(-i m3 Omega rstar) d2R_i. */\n", True, ""],
     "#include <complex>\n#include <cmath>\n#include <vector>\n#include \"Coupling.h\"\n#include \"", kname, ".h\"\n\nusing namespace std;\n\n",
     "void ", kname, "_", ToString[i], "(const double M, const double r0,\n",
     "    const vector<double> &r_grid, const vector<double> &f_grid, const vector<double> &fp_grid,\n",
@@ -278,36 +287,40 @@ Do[
         StringJoin[("    " <> fieldDecl[#] <> "\n") & /@ fields],
         StringJoin[Table["    if (use" <> ToString[k - 1] <> ") G[" <> ToString[k - 1] <> "][j] += " <> terms[[k, "code"]] <> ";\n", {k, Length[terms]}]]]],
     "  }\n}\n\n"]],
-    If[vslice, "/* coupling coefficients: R2C_" <> ToString[i] <> " (src/R2G_" <> ToString[i] <> ".cc) */\n",
+    If[regular, "/* coupling coefficients: R2C_" <> ToString[i] <> " (src/R2G_" <> ToString[i] <> ".cc) */\n",
     "void R2C_" <> ToString[i] <> "(int l3, int m3, int l1, int m1, int l2, int m2, double *c)\n{\n" <>
     StringJoin[Table["  c[" <> ToString[k - 1] <> "] = " <> scale <> "*Coupling(l3,m3," <> ToString[terms[[k, "s"]][[1]]] <> ",l2,m2," <> ToString[terms[[k, "s"]][[2]]] <> ",l1,m1," <> ToString[terms[[k, "s"]][[3]]] <> ");\n", {k, Length[terms]}]] <>
     "}\n"]];
-  If[vslice, src = templateKernel[src, i, rmons]];
+  If[regular, src = templateKernel[src, i, rmons]];
   Export[FileNameJoin[{root, "src", kname <> "_" <> ToString[i] <> ".cc"}], src, "Text"];
   Print["component ", i, " (", form, "): ", Length[terms], " couplings, ", Length[fields], " field arrays, ",
     If[form === "factored", ToString[Length[consts]] <> " constants, " <> ToString[Length[prods]] <> " products, " <> ToString[Length[rmons]] <> " r/f monomials, ", ""], "requirements ",
     ({#["req1"], #["req2"]} & /@ terms)],
   {i, 1, 10}];
 
-If[vslice,
+If[regular,
 header = StringJoin[
-  "/* Generated by scripts/generate_kernels.wl (vslice): the d2R components on the ingoing (v) slice,\n",
-  " *   exp(i m3 Omega r*) d2R_i = sum_k R2C_i(l3, m3, ...)[k] * V_ik,  V_ik from R2V_i,\n",
+  If[vslice,
+  "/* Generated by scripts/generate_kernels.wl (vslice): the d2R components on the ingoing (v) slice,\n" <>
+  " *   exp(i m3 Omega r*) d2R_i = sum_k R2C_i(l3, m3, ...)[k] * V_ik,  V_ik from R2V_i,\n" <>
   " * taking the regular (v, r)-frame fields a_j of the two first-order modes (see the generator)\n",
-  " * and returning real (Gr) and imaginary (Gi) planes; the Taylor3 overloads return the first three\n",
-  " * Taylor coefficients in r - 2M (one point, r = 2M + x). The coupling coefficients R2C_i, R2_NC\n",
+  "/* Generated by scripts/generate_kernels.wl (uslice): the d2R components on the outgoing (u) slice,\n" <>
+  " *   exp(-i m3 Omega r*) d2R_i = sum_k R2C_i(l3, m3, ...)[k] * U_ik,  U_ik from R2U_i,\n" <>
+  " * taking the (u, r)-frame fields a_j of the two first-order modes (see the generator)\n"],
+  " * and returning real (Gr) and imaginary (Gi) planes; the series overloads (one point) return the\n",
+  If[vslice, " * first three Taylor coefficients in r - 2M (Taylor3, r = 2M + x).", " * expansion in y = 1/r with powers of log r (YLog)."] <> " The coupling coefficients R2C_i, R2_NC\n",
   " * and R2_NC_MAX are those of R2G.h. */\n",
-  "#pragma once\n#include <complex>\n#include <cstddef>\n#include <vector>\n#include \"modeblock.h\"\n#include \"taylor.h\"\n#include \"R2G.h\"\n\n",
-  StringJoin[Table["void R2V_" <> ToString[i] <> "(const double M, const double r0,\n" <>
+  "#pragma once\n#include <complex>\n#include <cstddef>\n#include <vector>\n#include \"modeblock.h\"\n#include \"taylor.h\"\n#include \"yseries.h\"\n#include \"R2G.h\"\n\n",
+  StringJoin[Table["void " <> kname <> "_" <> ToString[i] <> "(const double M, const double r0,\n" <>
      "  const std::vector<double> &r_grid, const std::vector<double> &f_grid, const std::vector<double> &fp_grid,\n" <>
      "  const ModeBlock &h1, const ModeBlock &dh1, const ModeBlock &ddh1,\n" <>
      "  const ModeBlock &h2, const ModeBlock &dh2, const ModeBlock &ddh2,\n" <>
      "  int l1, int m1, int l2, int m2, double *const *Gr, double *const *Gi, std::size_t jb, std::size_t je);\n" <>
-     "void R2V_" <> ToString[i] <> "(const double M, const double r0, const Taylor3 *r, const Taylor3 *f,\n" <>
-     "  const ModeBlockT<Taylor3> &h1, const ModeBlockT<Taylor3> &dh1, const ModeBlockT<Taylor3> &ddh1,\n" <>
-     "  const ModeBlockT<Taylor3> &h2, const ModeBlockT<Taylor3> &dh2, const ModeBlockT<Taylor3> &ddh2,\n" <>
-     "  int l1, int m1, int l2, int m2, Taylor3 *const *Gr, Taylor3 *const *Gi);\n", {i, 1, 10}]]];
-Export[FileNameJoin[{root, "include", "R2V.h"}], header, "Text"];
+     "void " <> kname <> "_" <> ToString[i] <> "(const double M, const double r0, const " <> seriesR <> " *r, const " <> seriesT <> " *f,\n" <>
+     "  const ModeBlockT<" <> seriesT <> "> &h1, const ModeBlockT<" <> seriesT <> "> &dh1, const ModeBlockT<" <> seriesT <> "> &ddh1,\n" <>
+     "  const ModeBlockT<" <> seriesT <> "> &h2, const ModeBlockT<" <> seriesT <> "> &dh2, const ModeBlockT<" <> seriesT <> "> &ddh2,\n" <>
+     "  int l1, int m1, int l2, int m2, " <> seriesT <> " *const *Gr, " <> seriesT <> " *const *Gi);\n", {i, 1, 10}]]];
+Export[FileNameJoin[{root, "include", kname <> ".h"}], header, "Text"];
 Print["done"]; Exit[]];
 
 header = StringJoin[

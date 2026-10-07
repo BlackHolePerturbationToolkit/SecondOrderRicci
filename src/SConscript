@@ -35,8 +35,8 @@ env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '
 env['CXX']      = ARGUMENTS.get('CXX', 'g++')
 
 # Common source files
-sources = ['Coupling.cc', 'field.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc', 'horizon.cc'] + \
-          ['R2G_%d.cc' % i for i in range(1, 11)] + ['R2V_%d.cc' % i for i in range(1, 11)]
+sources = ['Coupling.cc', 'field.cc', 'h1.cc', 'h5wrapper.cc', 'utils.cc', 'horizon.cc', 'farzone.cc'] + \
+          ['R2G_%d.cc' % i for i in range(1, 11)] + ['R2V_%d.cc' % i for i in range(1, 11)] + ['R2U_%d.cc' % i for i in range(1, 11)]
 
 # Main coupling code
 sources_Ricci = sources + ['Ricci.cc']

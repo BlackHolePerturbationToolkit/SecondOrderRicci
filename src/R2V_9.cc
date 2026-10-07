@@ -9,8 +9,8 @@
 
 using namespace std;
 
-template<class T>
-static inline void R2V_9_impl(const double M, const double r0, const T *r_grid, const T *f_grid,
+template<class T, class TR>
+static inline void R2V_9_impl(const double M, const double r0, const TR *r_grid, const T *f_grid,
     const ModeBlockT<T> &h1, const ModeBlockT<T> &dh1, const ModeBlockT<T> &ddh1,
     const ModeBlockT<T> &h2, const ModeBlockT<T> &dh2, const ModeBlockT<T> &ddh2,
     int l1, int m1, int l2, int m2, T *const *Gr, T *const *Gi, size_t jb, size_t je)
@@ -314,7 +314,7 @@ static inline void R2V_9_impl(const double M, const double r0, const T *r_grid, 
   (void) Omega;
 #pragma omp simd
   for (size_t j = jb; j < je; ++j) {
-    const T r = r_grid[j];
+    const TR r = r_grid[j];
     const T f = f_grid[j];
     const T rinv = 1.0/r;
     (void) rinv;
@@ -973,7 +973,7 @@ void R2V_9(const double M, const double r0,
     int l1, int m1, int l2, int m2, double *const *Gr, double *const *Gi, size_t jb, size_t je)
 {
   (void) fp_grid;
-  R2V_9_impl<double>(M, r0, r_grid.data(), f_grid.data(), h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, jb, je);
+  R2V_9_impl<double, double>(M, r0, r_grid.data(), f_grid.data(), h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, jb, je);
 }
 
 void R2V_9(const double M, const double r0, const Taylor3 *r, const Taylor3 *f,
@@ -981,7 +981,7 @@ void R2V_9(const double M, const double r0, const Taylor3 *r, const Taylor3 *f,
     const ModeBlockT<Taylor3> &h2, const ModeBlockT<Taylor3> &dh2, const ModeBlockT<Taylor3> &ddh2,
     int l1, int m1, int l2, int m2, Taylor3 *const *Gr, Taylor3 *const *Gi)
 {
-  R2V_9_impl<Taylor3>(M, r0, r, f, h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, 0, 1);
+  R2V_9_impl<Taylor3, Taylor3>(M, r0, r, f, h1, dh1, ddh1, h2, dh2, ddh2, l1, m1, l2, m2, Gr, Gi, 0, 1);
 }
 
 /* coupling coefficients: R2C_9 (src/R2G_9.cc) */
