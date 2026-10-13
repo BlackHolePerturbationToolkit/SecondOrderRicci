@@ -43,6 +43,9 @@
  *                              A point keeps the plain sum if the added tail exceeds
  *                              10 L |c_L|. Writes tail.h5: the tail added and the change of the
  *                              estimate between L - 1 and L shells (an error estimate).
+ *                              With --adaptive: applied to the points that did not converge
+ *                              (whose Wynn estimate the q <= 0.9 guard rejects, e.g. just
+ *                              outside the worldtube at large r0), from the last k + 2 shells.
  *   --horizon <coeffs>       : near the horizon (r < --horizon-attach, default 2.01M) compute
  *                              the source from the horizon expansion of the first-order modes
  *                              with kernels regular there (include/horizon.h), summed over
@@ -433,8 +436,13 @@ int main(int argc, char* argv[])
         if (modes[k].i == i3 && modes[k].l == l3 && modes[k].m == m3) return (int)k;
       return -1;
     };
+    vector<vector<complex<double>>> lev_tail(modes.size());
+    vector<vector<double>> lev_err(modes.size());
+    vector<size_t> lev_rej(modes.size(), 0);
     if (adaptive)
       for (size_t k = 0; k < modes.size(); ++k) { conv_shells[k].assign(N, 0); conv_unconv[k].assign(N, 0); }
+    if (adaptive && tail_levin > 0)
+      for (size_t k = 0; k < modes.size(); ++k) { lev_tail[k].assign(N, 0.0); lev_err[k].assign(N, 0.0); }
 
     int done = 0;
 #pragma omp parallel
@@ -535,12 +543,20 @@ int main(int argc, char* argv[])
                   if (abs(m3 - m1) <= l2) do_group(l1, m1, l2, act, targets);
               }
             for (size_t a = 0; a < nl; ++a)
-              if (shell_has[a]) conv[a].update(out[a] + jb);
+              if (shell_has[a]) conv[a].update(out[a] + jb, sh);
           }
           for (size_t a = 0; a < nl; ++a) {
+            const int mi = mode_index(i3, t.l3s[a], m3);
+            if (tail_levin > 0) {
+              vector<complex<double>> tl;
+              vector<double> te;
+              const size_t rej = conv[a].levin_tail(tail_levin, tl, te);
+              for (size_t j = 0; j < len; ++j) { lev_tail[mi][jb + j] = tl[j]; lev_err[mi][jb + j] = te[j]; }
+#pragma omp atomic
+              lev_rej[mi] += rej;
+            }
             const vector<complex<double>> &est = conv[a].estimates();
             for (size_t j = 0; j < len; ++j) out[a][jb + j] = est[j];
-            const int mi = mode_index(i3, t.l3s[a], m3);
             const vector<int> &sh = conv[a].shells_used();
             const vector<char> uc = conv[a].unconverged();
             for (size_t j = 0; j < len; ++j) { conv_shells[mi][jb + j] = sh[j]; conv_unconv[mi][jb + j] = uc[j]; }
@@ -556,6 +572,9 @@ int main(int argc, char* argv[])
     if (adaptive)
       for (size_t k = 0; k < modes.size(); ++k)
         conv_store.push_back({modes[k], conv_shells[k], conv_unconv[k]});
+    if (adaptive && tail_levin > 0)
+      for (size_t k = 0; k < modes.size(); ++k)
+        tail_store.push_back({modes[k], lev_tail[k], lev_err[k], lev_rej[k]});
     status = num_modes;
   } else {
 #pragma omp parallel
@@ -628,7 +647,13 @@ int main(int argc, char* argv[])
             for (int m1 = -p.l1; m1 <= p.l1; ++m1)
               if (abs(m3 - m1) <= p.l2)
                 add_term_on(act, p.l1, m1, p.l2, out);
-          conv.update(out);
+          conv.update(out, sh);
+        }
+        if (tail_levin > 0) {
+          TailEntry te{modes[im], {}, {}, 0};
+          te.rejected = conv.levin_tail(tail_levin, te.tail, te.err);
+#pragma omp critical(tail)
+          tail_store.push_back(te);
         }
         const vector<complex<double>> &est = conv.estimates();
         for (const Interval &iv : ranges)

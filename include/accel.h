@@ -51,6 +51,8 @@ inline std::complex<double> wynn_epsilon(const std::complex<double> *s, int n)
   return best;
 }
 
+inline std::complex<double> levin_u(const std::complex<double> *S, const std::complex<double> *c, int L, int k, double beta = 1.0);
+
 class ShellConvergence {
 public:
   typedef std::complex<double> C;
@@ -73,7 +75,8 @@ public:
   /* Record the partial sums S (all points; only active ones are used) after one more
    * non-empty shell, update estimates and convergence flags. Returns the number of points
    * that became converged. */
-  std::size_t update(const C *S) {
+  std::size_t update(const C *S, int shell = -1) {
+    last_shell_ = shell >= 0 ? shell : static_cast<int>(nhist_);
     const std::size_t slot = static_cast<std::size_t>(nhist_ % window_);
     for (std::size_t j = 0; j < N_; ++j)
       if (active_[j]) hist_[slot*N_ + j] = S[j];
@@ -116,6 +119,39 @@ public:
     return newly;
   }
 
+  /* Tail of the sum at the points that did not converge (still active when the shells ran
+   * out): replace the estimate by the Levin u-transform of order k (levin_u, below) of the last
+   * k + 2 partial sums, with the shell index as n. Unlike the Wynn estimate, whose guard only
+   * admits tails with ratio q <= 0.9, this keeps any tail up to 10 L |c_L| (the --tail-levin
+   * guard), so slowly converging points just outside the worldtube (q ~ r0/(r0 + dr0)) get
+   * their tail. tail[j], err[j]: the tail added and |estimate(L) - estimate(L-1)|; points that
+   * fail the guard keep their estimate. Returns the number of those. Call after the last update. */
+  std::size_t levin_tail(int k, std::vector<C> &tail, std::vector<double> &err) {
+    tail.assign(N_, C(0.0, 0.0));
+    err.assign(N_, 0.0);
+    const int n = static_cast<int>(std::min<long>(nhist_, window_));
+    if (k < 1 || n < k + 3) return 0;
+    const int L = last_shell_;
+    std::size_t rejected = 0;
+    std::vector<C> Sx(L + 1, C(0.0, 0.0)), cx(L + 1, C(0.0, 0.0));
+    for (std::size_t j = 0; j < N_; ++j) {
+      if (!active_[j]) continue;
+      /* the last k + 3 partial sums -> S, c at shells L - k - 2 .. L (S at L - k - 2 only for c) */
+      for (int i = 0; i < k + 3; ++i) {
+        const long idx = (nhist_ - (k + 3) + i) % window_;
+        Sx[L - (k + 2) + i] = hist_[static_cast<std::size_t>(idx)*N_ + j];
+      }
+      for (int sh = L - k - 1; sh <= L; ++sh) cx[sh] = Sx[sh] - Sx[sh - 1];
+      const C est = levin_u(Sx.data(), cx.data(), L, k);
+      const C est1 = levin_u(Sx.data(), cx.data(), L - 1, k);
+      const C t = est - Sx[L];
+      if (!std::isfinite(std::abs(est)) || std::abs(t) > 10.0*L*std::abs(cx[L])) { ++rejected; continue; }
+      est_[j] = est;
+      tail[j] = t;
+      err[j] = std::abs(est - est1);
+    }
+    return rejected;
+  }
   /* Final values: the estimate for every point that was computed (converged or not). */
   const std::vector<C> &estimates() const { return est_; }
   const std::vector<int> &shells_used() const { return shells_used_; }
@@ -137,6 +173,7 @@ private:
   std::vector<char> active_;
   std::vector<int> shells_used_;
   double max_seen_ = 0.0;
+  int last_shell_ = -1;
 };
 
 /*
@@ -148,7 +185,7 @@ private:
  * algebraic convergence (c_s ~ s^-p) of the worldtube pieces at r = r0 and the mixed geometric x
  * algebraic convergence (c_s ~ rho^s s^-p) away from it. Returns S[L] if a term vanishes.
  */
-inline std::complex<double> levin_u(const std::complex<double> *S, const std::complex<double> *c, int L, int k, double beta = 1.0)
+inline std::complex<double> levin_u(const std::complex<double> *S, const std::complex<double> *c, int L, int k, double beta)
 {
   typedef std::complex<double> C;
   const int n0 = L - k;
