@@ -29,6 +29,13 @@ env['CPPPATH']  = ['/usr/local/include', '/usr/include/hdf5/serial', '../include
 for prefix in ['/opt/homebrew']:
   if os.path.isdir(prefix):
     env.Prepend(LIBPATH=[prefix + '/lib'], CPPPATH=[prefix + '/include'])
+# an active conda environment (e.g. miniforge with gsl, hdf5, boost): its headers and libraries first
+conda = os.environ.get('CONDA_PREFIX')
+if conda and os.path.isdir(conda):
+  env.Prepend(LIBPATH=[conda + '/lib'], CPPPATH=[conda + '/include'])
+  env.Append(RPATH=[conda + '/lib'])
+# the compiler runs with the caller's environment (PATH, CPATH/LIBRARY_PATH from environment modules)
+env['ENV'] = dict(os.environ)
 env['CXXFLAGS'] = ['-O3', '-DBOOST_DISABLE_ASSERTS', '-fopenmp', '-std=c++11', '-g',
                    '-Wall', '-Wno-unused-local-typedefs', '-DH5_USE_110_API',
                    '$(-D__GIT_VERSION="\\"' + git_version() + '\\""$)']
